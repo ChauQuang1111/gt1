@@ -1,0 +1,753 @@
+Range Sum Query - Mutable
+from typing import List
+
+class NumArray:
+    def __init__(self, nums: List[int]):
+        self.n = len(nums)
+        self.nums = nums[:]  # lưu mảng gốc
+        self.bit = [0] * (self.n + 1)  # Fenwick Tree 1-based
+        # khởi tạo Fenwick Tree
+        for i, num in enumerate(nums):
+            self._add(i, num)
+
+    def update(self, index: int, val: int) -> None:
+        delta = val - self.nums[index]   # hiệu chỉnh
+        self.nums[index] = val           # cập nhật mảng gốc
+        self._add(index, delta)          # cập nhật Fenwick Tree
+
+    def sumRange(self, left: int, right: int) -> int:
+        return self._prefix_sum(right) - self._prefix_sum(left - 1)
+
+    # --------- helper functions ---------
+    def _add(self, index: int, delta: int):
+        """Thêm delta vào vị trí index (0-based)"""
+        index += 1  # chuyển sang 1-based
+        while index <= self.n:
+            self.bit[index] += delta
+            index += index & -index
+
+    def _prefix_sum(self, index: int) -> int:
+        """Tính tổng từ 0 -> index"""
+        if index < 0:
+            return 0
+        index += 1  # chuyển sang 1-based
+        res = 0
+        while index > 0:
+            res += self.bit[index]
+            index -= index & -index
+        return res
+		
+Ok, mình giải thích kỹ cho dòng code này nhé:
+
+```python
+self.bit = [0] * (self.n + 1)
+```
+
+### Giải thích:
+
+* `self.bit` chính là **Fenwick Tree** (hay Binary Indexed Tree – BIT).
+* Ta cần một mảng để lưu cấu trúc dữ liệu này.
+
+👉 Tại sao phải dùng **`self.n + 1`** thay vì chỉ `self.n`?
+
+1. **Fenwick Tree dùng chỉ số 1-based**
+
+   * Trong thuật toán Fenwick Tree, mọi thao tác (cộng, truy vấn tổng) dựa trên **bit thấp nhất còn set (LSB – Least Significant Bit)**.
+   * Vì vậy, ta cần chuyển mảng từ **0-based** sang **1-based**.
+   * Nếu mảng gốc có `n` phần tử thì mảng `bit` phải có `n+1` phần tử để chứa từ `1..n`.
+   * Vị trí `0` sẽ **không dùng đến**.
+
+2. **Khởi tạo bằng 0**
+
+   * Ban đầu, tất cả giá trị trong BIT đều bằng `0`.
+   * Sau đó, ta sẽ gọi hàm `_add` để cập nhật giá trị tương ứng với mảng gốc.
+
+---
+
+### Ví dụ minh họa:
+
+Giả sử mảng gốc:
+
+```
+nums = [2, 4, 5, 7]
+```
+
+* `n = 4`
+* `self.bit = [0, 0, 0, 0, 0]`  (có 5 phần tử, index 0 bỏ trống)
+* Khi gọi `_add`, BIT sẽ dần được cập nhật.
+
+---
+
+👉 Tóm lại:
+`self.bit = [0] * (self.n + 1)` tạo mảng Fenwick Tree, có thêm 1 ô vì ta dùng **1-based indexing** để thuận tiện cho thao tác cập nhật và tính tổng.
+
+---
+
+Bạn có muốn mình **vẽ sơ đồ minh họa Fenwick Tree** để thấy rõ cách mảng `bit` lưu tổng các đoạn con không?
+Rồi 👍 mình giải thích chi tiết hàm **`update`** trong Fenwick Tree nhé:
+
+```python
+def update(self, index: int, val: int) -> None:
+    delta = val - self.nums[index]   # hiệu chỉnh
+    self.nums[index] = val           # cập nhật mảng gốc
+    self._add(index, delta)          # cập nhật Fenwick Tree
+```
+
+---
+
+### Ý nghĩa của hàm `update`
+
+Hàm này dùng để **cập nhật một phần tử trong mảng gốc** từ giá trị cũ sang giá trị mới.
+
+Nhưng Fenwick Tree không lưu trực tiếp toàn bộ mảng, nó chỉ lưu **tổng các đoạn con (prefix sums)**. Vì vậy khi thay đổi 1 phần tử, ta phải **điều chỉnh Fenwick Tree** sao cho các tổng vẫn đúng.
+
+---
+
+### Giải thích từng dòng:
+
+#### 1.
+
+```python
+delta = val - self.nums[index]
+```
+
+* `self.nums[index]` là **giá trị cũ** tại vị trí `index`.
+* `val` là **giá trị mới** mà ta muốn gán.
+* `delta` = (mới – cũ) = **độ chênh lệch cần thêm vào BIT**.
+  👉 Vì BIT đang lưu các tổng, chỉ cần cộng thêm `delta` thay vì phải xây lại từ đầu.
+
+---
+
+#### 2.
+
+```python
+self.nums[index] = val
+```
+
+* Cập nhật lại **mảng gốc** để giá trị tại `index` bằng `val`.
+* Giúp ta nhớ trạng thái hiện tại của mảng, để sau này còn tính delta cho các lần update khác.
+
+---
+
+#### 3.
+
+```python
+self._add(index, delta)
+```
+
+* Gọi hàm `_add` để cộng `delta` vào vị trí `index` trong BIT.
+* Hàm `_add` sẽ lan truyền giá trị này lên các node tổ tiên trong Fenwick Tree để duy trì đúng **tổng đoạn**.
+
+---
+
+### Ví dụ minh họa:
+
+Giả sử mảng gốc ban đầu:
+
+```
+nums = [2, 4, 5]
+```
+
+Fenwick Tree tương ứng được xây xong.
+
+Bây giờ ta gọi:
+
+```python
+update(1, 10)
+```
+
+Tức là thay `nums[1]` từ `4` thành `10`.
+
+* `delta = 10 - 4 = 6`
+* `self.nums[1] = 10` → mảng gốc trở thành `[2, 10, 5]`
+* Cộng thêm `6` vào BIT ở vị trí `1` và các node tổ tiên của nó.
+
+Kết quả: Fenwick Tree được cập nhật đúng, không cần xây lại từ đầu.
+
+---
+
+👉 Tóm lại:
+
+* `update` tính **chênh lệch delta** giữa giá trị mới và giá trị cũ.
+* Cập nhật mảng gốc.
+* Cập nhật BIT bằng cách cộng `delta` vào các vị trí liên quan.
+
+---
+
+Bạn có muốn mình viết thêm **sơ đồ cây BIT minh họa update cụ thể** để dễ hình dung hơn không?
+Hay lắm 👌, mình giải thích đoạn này chi tiết nha:
+
+```python
+def sumRange(self, left: int, right: int) -> int:
+    return self._prefix_sum(right) - self._prefix_sum(left - 1)
+```
+
+---
+
+### 1. Ý nghĩa của `sumRange(left, right)`
+
+Hàm này trả về **tổng các phần tử từ chỉ số `left` đến `right` trong mảng gốc**.
+Tức là tính:
+[
+\text{sumRange(left, right)} = nums[left] + nums[left+1] + \dots + nums[right]
+]
+
+---
+
+### 2. `_prefix_sum(index)`
+
+Hàm `_prefix_sum(index)` trả về **tổng từ 0 → index** (bao gồm index).
+Ví dụ:
+
+* `_prefix_sum(3)` = `nums[0] + nums[1] + nums[2] + nums[3]`.
+* `_prefix_sum(0)` = `nums[0]`.
+
+---
+
+### 3. Tại sao lại cần `- _prefix_sum(left - 1)`?
+
+Đây là thủ thuật toán học để lấy tổng trong một đoạn bất kỳ.
+
+👉 Công thức:
+[
+\text{sumRange}(l, r) = \text{prefix}(r) - \text{prefix}(l - 1)
+]
+
+Giải thích:
+
+* `prefix(r)` = tổng từ `0 → r`.
+* `prefix(l-1)` = tổng từ `0 → (l-1)`.
+* Lấy hiệu thì chỉ còn lại đoạn từ `l → r`.
+
+---
+
+### 4. Ví dụ minh họa
+
+Mảng:
+
+```
+nums = [2, 5, 3, 7, 1]
+```
+
+* Gọi `sumRange(1, 3)`
+  tức là cần tính `nums[1] + nums[2] + nums[3] = 5 + 3 + 7 = 15`.
+
+Theo công thức:
+
+* `_prefix_sum(3)` = `2 + 5 + 3 + 7 = 17`
+* `_prefix_sum(0)` = `nums[0] = 2`
+* Vậy: `17 - 2 = 15 ✅`
+
+---
+
+### 5. Trường hợp đặc biệt
+
+* Nếu `left = 0`:
+  công thức trở thành `_prefix_sum(right) - _prefix_sum(-1)`.
+  Mà trong code `_prefix_sum(-1)` được xử lý trả về `0`.
+  → vẫn đúng.
+
+---
+
+👉 Tóm lại:
+
+* `-1` ở đây là để loại bỏ phần tổng **trước `left`**, giữ lại tổng trong đoạn `[left, right]`.
+
+---
+
+Bạn có muốn mình **vẽ timeline prefix sums** (kiểu bảng giá trị prefix) để minh họa rõ hơn không?
+Rồi 👍, mình giải thích thật kỹ hàm `_add` trong Fenwick Tree nhé:
+
+```python
+def _add(self, index: int, delta: int):
+    """Thêm delta vào vị trí index (0-based)"""
+    index += 1  # chuyển sang 1-based
+    while index <= self.n:
+        self.bit[index] += delta
+        index += index & -index
+```
+
+---
+
+## 🔎 Ý nghĩa
+
+Hàm này dùng để **cập nhật** giá trị tại một vị trí `index` trong mảng gốc `nums`, và đồng thời điều chỉnh lại Fenwick Tree (`self.bit`) để các phép tính tổng sau này vẫn đúng.
+
+---
+
+## 1. `index += 1`
+
+Fenwick Tree được cài đặt theo **chỉ số 1-based** để tính toán dễ hơn.
+→ Nếu `index` trong mảng gốc là 0-based, ta cộng thêm 1 để chuyển sang 1-based.
+
+Ví dụ:
+
+* Mảng gốc `nums = [2, 5, 3, 7]`
+* Nếu cập nhật `index = 0`, thì trong Fenwick Tree nó tương ứng với vị trí `1`.
+
+---
+
+## 2. `self.bit[index] += delta`
+
+`delta` chính là **phần chênh lệch** giữa giá trị mới và cũ.
+Ta cộng dồn `delta` vào `self.bit[index]` để cập nhật nút Fenwick Tree.
+
+---
+
+## 3. `index += index & -index`
+
+Đây là bước quan trọng 🔥.
+`index & -index` lấy **bit phải nhất bằng 1** trong số nhị phân của `index`.
+
+* Nó cho biết **độ dài đoạn mà nút này đang quản lý**.
+* Cộng vào `index` tức là đi đến **node cha** trong Fenwick Tree.
+
+Ví dụ:
+
+* Nếu `index = 4 (100b)` → `index & -index = 4` → đi đến `8`.
+* Nếu `index = 6 (110b)` → `index & -index = 2` → đi đến `8`.
+* Nếu `index = 7 (111b)` → `index & -index = 1` → đi đến `8`.
+
+Cứ thế, ta cập nhật tất cả các node cha bao phủ `index`.
+
+---
+
+## 4. Ví dụ minh họa
+
+Mảng: `nums = [2, 5, 3, 7]`
+Fenwick Tree ban đầu rỗng: `bit = [0, 0, 0, 0, 0]` (1-based).
+
+Gọi `_add(0, 2)` (cập nhật index 0 thêm 2):
+
+* `index = 0 + 1 = 1`
+  → `bit[1] += 2` → `bit = [0, 2, 0, 0, 0]`
+  → `index = 1 + (1 & -1) = 2`
+* `bit[2] += 2` → `bit = [0, 2, 2, 0, 0]`
+  → `index = 2 + (2 & -2) = 4`
+* `bit[4] += 2` → `bit = [0, 2, 2, 0, 2]`
+  → `index = 8 > n` → dừng.
+
+👉 Kết quả: mọi node cha đều được cập nhật.
+
+---
+
+## ✅ Tóm lại
+
+* `index += 1`: đổi từ 0-based sang 1-based.
+* `bit[index] += delta`: cập nhật giá trị tại node Fenwick.
+* `index += index & -index`: nhảy sang node cha bao phủ `index`.
+* Vòng lặp: đảm bảo mọi node liên quan đến `index` đều được cập nhật.
+
+---
+
+Bạn có muốn mình vẽ **cây Fenwick Tree dạng hình sơ đồ** (kiểu node cha, con) để thấy rõ quan hệ cha–con này không?
+Hay, bạn hỏi đúng chỗ quan trọng nhất trong Fenwick Tree rồi 👌.
+Mình giải thích chi tiết `index & -index` nhé:
+
+---
+
+## 1. `index & -index` là gì?
+
+* Trong số nhị phân, `x & -x` sẽ **giữ lại bit 1 thấp nhất (LSB – Least Significant Bit)** của `x` và đặt tất cả bit khác thành `0`.
+* Đây chính là “quy mô” (size) của đoạn mà một node trong Fenwick Tree đang quản lý.
+
+---
+
+## 2. Vì sao ra được như vậy?
+
+👉 `-index` trong máy tính được biểu diễn bằng **two’s complement** (bù 2):
+
+```
+-index = ~index + 1
+```
+
+Khi ta làm `index & -index`, chỉ còn lại **bit phải nhất bằng 1** trong `index`.
+
+---
+
+## 3. Ví dụ minh họa
+
+### Ví dụ 1:
+
+`index = 6`
+
+* Nhị phân: `0110`
+* `-index = ~0110 + 1 = 1001 + 1 = 1010`
+* `0110 & 1010 = 0010 = 2` ✅
+
+👉 Kết quả: `index & -index = 2` (nút 6 quản lý đoạn dài 2).
+
+---
+
+### Ví dụ 2:
+
+`index = 12`
+
+* Nhị phân: `1100`
+* `-index = ~1100 + 1 = 0011 + 1 = 0100`
+* `1100 & 0100 = 0100 = 4` ✅
+
+👉 Kết quả: `index & -index = 4` (nút 12 quản lý đoạn dài 4).
+
+---
+
+## 4. Ý nghĩa trong Fenwick Tree
+
+* `index & -index` cho ta **kích thước đoạn mà node hiện tại đại diện**.
+* Khi cộng `index += index & -index`, ta **nhảy đến node cha**, vì cha quản lý đoạn dài hơn.
+
+Ví dụ:
+
+* `index = 4 (100b)` → `index & -index = 4` → cha = `4+4=8`
+* `index = 6 (110b)` → `index & -index = 2` → cha = `6+2=8`
+* `index = 7 (111b)` → `index & -index = 1` → cha = `7+1=8`
+
+Tất cả đều nhảy về `8`, nghĩa là node `8` bao phủ đoạn [1..8].
+
+---
+
+## ✅ Tóm lại
+
+* `index & -index` = bit 1 thấp nhất của `index`.
+* Nó cho biết **độ dài đoạn** mà node Fenwick Tree đang quản lý.
+* Dùng để **tìm node cha/con** trong cấu trúc Fenwick.
+
+---
+
+Bạn có muốn mình vẽ **bảng giá trị `index`, `binary`, `index & -index`** từ 1 đến 8 để thấy rõ cách Fenwick Tree phân đoạn không?
+Ok 👍, mình sẽ giải thích kỹ hai hàm `_add` và `_prefix_sum` trong Fenwick Tree (Binary Indexed Tree).
+
+---
+
+## 1. Hàm `_add(self, index, delta)`
+
+Mục đích: **cập nhật giá trị tại một vị trí trong mảng gốc** và đồng thời cập nhật các node liên quan trong Fenwick Tree.
+
+```python
+def _add(self, index: int, delta: int):
+    """Thêm delta vào vị trí index (0-based)"""
+    index += 1  # chuyển sang 1-based
+    while index <= self.n:
+        self.bit[index] += delta
+        index += index & -index
+```
+
+### Giải thích:
+
+* `index += 1`: vì Fenwick Tree dùng **1-based index** để thuận tiện tính toán.
+* `self.bit[index] += delta`: cộng thêm `delta` (sự thay đổi giá trị) vào node hiện tại.
+* `index += index & -index`: nhảy đến **node cha** trong Fenwick Tree để cập nhật, vì cha bao phủ luôn cả node con.
+
+👉 Kết quả: tất cả các node quản lý đoạn chứa `index` đều được cập nhật.
+
+---
+
+## 2. Hàm `_prefix_sum(self, index)`
+
+Mục đích: **tính tổng từ 0 → index** trong mảng gốc.
+
+```python
+def _prefix_sum(self, index: int) -> int:
+    """Tính tổng từ 0 -> index"""
+    if index < 0:
+        return 0
+    index += 1  # chuyển sang 1-based
+    res = 0
+    while index > 0:
+        res += self.bit[index]
+        index -= index & -index
+    return res
+```
+
+### Giải thích:
+
+* `if index < 0: return 0`: nếu `index` âm (ví dụ khi gọi `sumRange(left, right)` mà left=0 thì ta sẽ tính `_prefix_sum(-1)`), thì trả về 0.
+* `index += 1`: đổi sang 1-based.
+* `while index > 0:`
+
+  * `res += self.bit[index]`: cộng giá trị ở node hiện tại (node này chứa tổng một đoạn con của mảng).
+  * `index -= index & -index`: nhảy về **node con** trong Fenwick Tree để tiếp tục cộng.
+* Lặp đến khi `index = 0`.
+
+👉 Kết quả: tính đúng tổng đoạn `[0..index]`.
+
+---
+
+## 3. Cách phối hợp hai hàm này
+
+* `_add`: cập nhật **một phần tử** trong O(log n).
+* `_prefix_sum`: tính **tổng từ đầu → index** trong O(log n).
+
+Và nhờ đó, ta dễ dàng tính:
+
+```python
+sumRange(left, right) = _prefix_sum(right) - _prefix_sum(left - 1)
+```
+
+---
+
+## 4. Ví dụ minh họa
+
+Mảng gốc: `nums = [2, 5, 3, 7]`
+
+* Gọi `_add(0, 2)` → cập nhật index=0 thêm 2 → `bit` trở thành `[0,2,2,0,2]`.
+* Gọi `_add(1, 5)` → cập nhật index=1 thêm 5 → `bit` trở thành `[0,2,7,0,7]`.
+* Gọi `_prefix_sum(1)` → tính tổng từ 0→1 = `nums[0] + nums[1] = 7`.
+  Cách tính trong Fenwick:
+
+  * `index=2` → `res+=bit[2]=7` → nhảy `index=0` → dừng → trả 7. ✅
+
+---
+
+👉 Tóm lại:
+
+* `_add` đi **từ con lên cha** để cập nhật.
+* `_prefix_sum` đi **từ cha xuống con** để cộng dồn.
+* Cả hai đều dùng `index & -index` để tìm node tiếp theo trong Fenwick Tree.
+
+---
+
+Bạn có muốn mình vẽ **bảng chi tiết các bước chạy `_prefix_sum(3)` trên mảng `[2,5,3,7]`** để thấy rõ nó cộng những node nào không?
+Ok 👍 mình sẽ làm ví dụ cụ thể và chi tiết từng bước chạy `_prefix_sum(3)` trên mảng `nums = [2, 5, 3, 7]` để bạn thấy rõ cách Fenwick Tree hoạt động nhé.
+
+---
+
+## 1. Chuẩn bị ban đầu
+
+Mảng gốc:
+
+```
+nums = [2, 5, 3, 7]
+```
+
+Khi khởi tạo, ta lần lượt gọi `_add` cho từng phần tử:
+
+| Bước | Gọi `_add(i, nums[i])` | Cập nhật BIT (1-based) |
+| ---- | ---------------------- | ---------------------- |
+| 1    | `_add(0, 2)`           | bit = [0, 2, 2, 0, 2]  |
+| 2    | `_add(1, 5)`           | bit = [0, 2, 7, 0, 7]  |
+| 3    | `_add(2, 3)`           | bit = [0, 2, 7, 3, 10] |
+| 4    | `_add(3, 7)`           | bit = [0, 2, 7, 3, 17] |
+
+👉 Sau khi khởi tạo:
+
+```
+Fenwick Tree (bit) = [0, 2, 7, 3, 17]
+```
+
+---
+
+## 2. Tính `_prefix_sum(3)`
+
+Mục tiêu: tổng từ `nums[0]` → `nums[3]` = `2 + 5 + 3 + 7 = 17`.
+
+Hàm chạy:
+
+```python
+def _prefix_sum(index: int):
+    index += 1       # chuyển sang 1-based → index = 4
+    res = 0
+    while index > 0:
+        res += bit[index]
+        index -= index & -index
+    return res
+```
+
+### Chi tiết từng vòng lặp:
+
+* **Bắt đầu**: `index = 3 + 1 = 4`, `res = 0`
+
+1️⃣ Vòng 1:
+
+* `res += bit[4] = 17` → `res = 17`
+* `index = 4 - (4 & -4) = 4 - 4 = 0`
+
+2️⃣ Vòng 2:
+
+* `index = 0` → dừng
+
+---
+
+## 3. Kết quả
+
+`_prefix_sum(3) = 17`, đúng bằng tổng `2+5+3+7`. ✅
+
+---
+
+## 4. Giải thích trực quan
+
+* `index = 4` trong BIT **quản lý đoạn [1..4]**, tức toàn bộ `nums[0..3]`.
+* Vì vậy chỉ cần đọc `bit[4]` là ra ngay tổng.
+
+Nếu bạn thử `_prefix_sum(2)` (tổng từ `nums[0..2]`):
+
+* `index = 3` → lấy `bit[3] = 3`
+* nhảy xuống `index = 2` → cộng `bit[2] = 7`
+* tổng = `3 + 7 = 10` (đúng: `2+5+3=10`).
+
+---
+
+👉 Như vậy:
+
+* `_prefix_sum` đi **ngược từ index về 0**, cộng dần các node cha quản lý từng đoạn.
+* Mỗi `bit[k]` đại diện cho **tổng của một đoạn con** trong mảng gốc.
+
+---
+
+Bạn có muốn mình làm thêm **bảng chi tiết `_prefix_sum` cho từng `index = 0..3`** để thấy rõ hơn node nào được cộng mỗi lần không?
+Tốt 👌, mình sẽ làm bảng chi tiết cho ***prefix_sum(index)* với index = 0..3** trên mảng `nums = [2, 5, 3, 7]`.
+Fenwick Tree (sau khi build) ta có:
+
+```
+bit (1-based) = [0, 2, 7, 3, 17]
+```
+
+---
+
+## 🔹 Trường hợp 1: `_prefix_sum(0)`
+
+Tổng từ `nums[0]` → `nums[0]` = 2
+
+* `index = 0 + 1 = 1`
+* `res = 0`
+
+| Bước | index          | res        | Giải thích             |
+| ---- | -------------- | ---------- | ---------------------- |
+| 1    | 1              | 0+bit[1]=2 | cộng giá trị `nums[0]` |
+| 2    | 1 - (1&-1) = 0 | dừng       |                        |
+
+👉 Kết quả = **2** ✅
+
+---
+
+## 🔹 Trường hợp 2: `_prefix_sum(1)`
+
+Tổng từ `nums[0]` → `nums[1]` = 2 + 5 = 7
+
+* `index = 1 + 1 = 2`
+* `res = 0`
+
+| Bước | index          | res        | Giải thích                              |
+| ---- | -------------- | ---------- | --------------------------------------- |
+| 1    | 2              | 0+bit[2]=7 | `bit[2]` chứa tổng `[nums[0], nums[1]]` |
+| 2    | 2 - (2&-2) = 0 | dừng       |                                         |
+
+👉 Kết quả = **7** ✅
+
+---
+
+## 🔹 Trường hợp 3: `_prefix_sum(2)`
+
+Tổng từ `nums[0]` → `nums[2]` = 2 + 5 + 3 = 10
+
+* `index = 2 + 1 = 3`
+* `res = 0`
+
+| Bước | index          | res         | Giải thích                         |
+| ---- | -------------- | ----------- | ---------------------------------- |
+| 1    | 3              | 0+bit[3]=3  | `bit[3]` quản lý riêng `nums[2]`   |
+| 2    | 3 - (3&-3) = 2 | index=2     |                                    |
+| 3    | 2              | 3+bit[2]=10 | `bit[2]` chứa `[nums[0], nums[1]]` |
+| 4    | 2 - (2&-2) = 0 | dừng        |                                    |
+
+👉 Kết quả = **10** ✅
+
+---
+
+## 🔹 Trường hợp 4: `_prefix_sum(3)`
+
+Tổng từ `nums[0]` → `nums[3]` = 2 + 5 + 3 + 7 = 17
+
+* `index = 3 + 1 = 4`
+* `res = 0`
+
+| Bước | index          | res         | Giải thích                              |
+| ---- | -------------- | ----------- | --------------------------------------- |
+| 1    | 4              | 0+bit[4]=17 | `bit[4]` quản lý toàn bộ `[nums[0..3]]` |
+| 2    | 4 - (4&-4) = 0 | dừng        |                                         |
+
+👉 Kết quả = **17** ✅
+
+---
+
+## 📊 Tổng hợp bảng kết quả
+
+| index | `_prefix_sum(index)` | Tổng thật trong nums |
+| ----- | -------------------- | -------------------- |
+| 0     | 2                    | 2                    |
+| 1     | 7                    | 2+5=7                |
+| 2     | 10                   | 2+5+3=10             |
+| 3     | 17                   | 2+5+3+7=17           |
+
+---
+
+👉 Bạn thấy không, mỗi lần gọi `_prefix_sum(index)` là ta cộng một số node trong Fenwick Tree, mỗi node tương ứng với **một đoạn con của mảng gốc**. Nhờ vậy tổng chỉ cần **O(log n)** thay vì O(n).
+
+---
+
+Bạn có muốn mình vẽ **sơ đồ cây Fenwick Tree** (kiểu các node 1..n và đoạn mà nó bao phủ) để hình dung rõ ai là cha, ai là con không?
+Ok, mình giải thích chi tiết nhé 👇
+
+Bạn có 2 hàm quan trọng trong **Fenwick Tree (Binary Indexed Tree)**: `_add` và `_prefix_sum`.
+
+---
+
+### 1. Hàm `_add(self, index, delta)`
+
+```python
+def _add(self, index: int, delta: int):
+    index += 1  # chuyển sang 1-based
+    while index <= self.n:
+        self.bit[index] += delta
+        index += index & -index
+```
+
+👉 Ý nghĩa:
+
+* Dùng để **cập nhật** giá trị `delta` vào `nums[index]` (và đồng thời sửa các nút liên quan trong cây BIT).
+* `index & -index` lấy **LSB (least significant bit)** → cho biết kích thước đoạn mà node hiện tại quản lý.
+* `index += index & -index` → nhảy đến **nút cha** (quản lý đoạn dài hơn).
+
+📌 Ví dụ: nếu `index = 4 (100b)` → `index & -index = 4` → nhảy sang `index = 8`.
+
+---
+
+### 2. Hàm `_prefix_sum(self, index)`
+
+```python
+def _prefix_sum(self, index: int) -> int:
+    if index < 0:
+        return 0
+    index += 1  # chuyển sang 1-based
+    res = 0
+    while index > 0:
+        res += self.bit[index]
+        index -= index & -index
+    return res
+```
+
+👉 Ý nghĩa:
+
+* Dùng để **tính tổng từ 0 → index**.
+* `res` cộng dần giá trị từ các node BIT.
+* `index -= index & -index` → đi ngược lên **cha** nhỏ hơn (quản lý đoạn ngắn hơn).
+
+📌 Ví dụ: muốn tính `prefix_sum(13)`
+
+* `index = 14 (1110b)` → lấy `bit[14]`, rồi `index -= 2 → 12`
+* `index = 12 (1100b)` → lấy `bit[12]`, rồi `index -= 4 → 8`
+* `index = 8 (1000b)` → lấy `bit[8]`, rồi `index -= 8 → 0` → dừng.
+  => Kết quả cộng đủ các đoạn bao phủ [0..13].
+
+---
+
+### 🔑 Tóm tắt
+
+* `_add`: đi **xuống các node cha lớn hơn** (index tăng dần).
+* `_prefix_sum`: đi **ngược về cha nhỏ hơn** (index giảm dần).
+* Cặp này đảm bảo ta vừa cập nhật nhanh (O(log n)), vừa query nhanh (O(log n)).
+
+---
+
+Bạn có muốn mình vẽ sơ đồ cây BIT minh họa cập nhật và query (bằng ASCII) để dễ hình dung không?
+

@@ -1,0 +1,208 @@
+Valid Triangle Numberjava
+public static int triangleNumber(int[] nums) {
+        // Bước 1: sắp xếp mảng
+        Arrays.sort(nums);
+        int n = nums.length;
+        int count = 0;
+
+        // Bước 2: chọn nums[k] làm cạnh lớn nhất, duyệt từ cuối về
+        for (int k = n - 1; k >= 2; k--) {
+            int i = 0, j = k - 1; // i: nhỏ nhất, j: ngay trước k
+
+            // Dùng 2 con trỏ để tìm cặp (i, j)
+            while (i < j) {
+                // Nếu nums[i] + nums[j] > nums[k]
+                if (nums[i] + nums[j] > nums[k]) {
+                    // Thì tất cả cặp (i..j-1, j) đều hợp lệ
+                    count += (j - i);
+                    j--; // giảm j để thử cặp nhỏ hơn
+                } else {
+                    i++; // tăng i để làm tổng lớn hơn
+                }
+            }
+        }
+        return count;
+    }
+}
+À, mình giải thích ngay nhé 👇
+
+Trong đoạn code Java:
+
+```java
+Arrays.sort(nums);       // sắp xếp mảng tăng dần
+int n = nums.length;     // lấy độ dài của mảng
+int count = 0;           // biến đếm số tam giác hợp lệ
+```
+
+### Ý nghĩa:
+
+* `nums.length` là **số phần tử trong mảng `nums`**.
+* Ta gán nó vào biến `n` để:
+
+  1. Viết code ngắn gọn hơn (khỏi phải lặp đi lặp lại `nums.length`).
+  2. Giúp dễ đọc, vì sau này trong vòng lặp ta thường phải dùng `n` rất nhiều lần.
+
+Ví dụ:
+Nếu `nums = [2, 3, 4, 5]` thì:
+
+```java
+nums.length = 4
+=> n = 4
+```
+
+Vậy khi ta chạy vòng for:
+
+```java
+for (int k = n - 1; k >= 2; k--) {
+    ...
+}
+```
+
+sẽ tương đương:
+
+```java
+for (int k = 3; k >= 2; k--) { ... }
+```
+
+→ tức là `k` duyệt từ chỉ số **cuối mảng** (`n-1`) về đến `2`.
+
+---
+
+👉 Nói ngắn gọn:
+`n = nums.length` chỉ đơn giản là **lấy số phần tử của mảng** và lưu vào biến `n` để dùng trong toàn bộ thuật toán.
+
+Bạn có muốn mình viết lại code mà **bỏ `n` đi, thay trực tiếp `nums.length`** để bạn dễ đối chiếu không?
+Rồi 👍 mình giải thích chi tiết nhé:
+
+Đoạn code:
+
+```java
+for (int k = n - 1; k >= 2; k--) {
+    int i = 0, j = k - 1;
+    ...
+}
+```
+
+---
+
+### 1. Vì sao `k >= 2`?
+
+* `k` đang đại diện cho **cạnh lớn nhất** của tam giác (sau khi mảng đã sắp xếp tăng dần).
+* Chỉ số mảng bắt đầu từ `0`, nên:
+
+  * `k = n-1` → phần tử cuối (lớn nhất).
+  * `k` giảm dần để thử tất cả cạnh lớn nhất còn lại.
+* Ta cần ít nhất **3 cạnh** để tạo thành tam giác.
+  → Vì vậy `k` phải **≥ 2** (nghĩa là mảng con từ `0..k` còn ít nhất 3 phần tử).
+  Nếu `k < 2` thì không thể chọn đủ 3 cạnh nữa.
+
+---
+
+### 2. Vì sao `i = 0, j = k - 1`?
+
+* Khi đã cố định `nums[k]` làm **cạnh lớn nhất**, ta cần tìm 2 cạnh còn lại trong khoảng `[0..k-1]`.
+* Để làm điều này ta dùng **kỹ thuật hai con trỏ**:
+
+  * `i = 0` (trỏ vào cạnh nhỏ nhất).
+  * `j = k - 1` (trỏ vào cạnh lớn thứ 2, ngay trước `k`).
+* Sau đó dịch chuyển `i` hoặc `j` để kiểm tra điều kiện `nums[i] + nums[j] > nums[k]` (điều kiện bất đẳng thức tam giác).
+
+---
+
+### Ví dụ minh họa:
+
+`nums = [2, 3, 4, 5]` (đã sort)
+
+* `n = 4`
+
+* Lần đầu: `k = 3` → cạnh lớn nhất là `5`
+
+  * Ta set `i = 0` (nums[0] = 2), `j = 2` (nums[2] = 4).
+  * Kiểm tra `nums[i] + nums[j] > nums[k]` → `2 + 4 > 5` ✅ → hợp lệ.
+
+* Sau đó ta dịch `i` hoặc `j` để thử các cặp khác trong `[0..2]`.
+
+---
+
+👉 Tóm gọn:
+
+* `k >= 2` vì cần tối thiểu 3 cạnh.
+* `i = 0, j = k - 1` để tìm cặp nhỏ nhất và lớn nhất trong đoạn `[0..k-1]` làm 2 cạnh còn lại, dùng 2-pointer để quét nhanh.
+
+---
+
+Bạn có muốn mình vẽ sơ đồ **các con trỏ i, j, k chạy** trên ví dụ `[2,3,4,5]` để thấy rõ từng bước không?
+Không sai đâu bạn 👍, mình giải thích rõ nhé:
+
+---
+
+### Trường hợp `k = 2`
+
+* Khi `k = 2`, tức là ta đang chọn **nums[2]** làm cạnh lớn nhất.
+* Khi đó ta vẫn còn các cạnh ở vị trí `0` và `1` (nums[0], nums[1]) để làm hai cạnh còn lại.
+* Như vậy ta vẫn có đủ **3 cạnh** để kiểm tra.
+
+👉 Đó chính là lý do vòng for dùng điều kiện `k >= 2`.
+Nếu `k < 2` (tức `k = 1` hay `0`) thì:
+
+* Với `k = 1` → chỉ có 2 cạnh (`nums[0], nums[1]`), không thể tạo tam giác.
+* Với `k = 0` → chỉ có 1 cạnh, càng không tạo được.
+
+---
+
+### Ví dụ khi `k = 2`
+
+Giả sử mảng đã sort: `nums = [2, 3, 4]`
+
+* `n = 3`
+* Lặp đầu tiên: `k = 2` → cạnh lớn nhất = `4`.
+* Đặt `i = 0`, `j = 1`.
+* Kiểm tra `nums[i] + nums[j] > nums[k]` → `2 + 3 > 4` ✅ → tạo thành 1 tam giác hợp lệ.
+
+Vậy khi `k = 2` thì **vẫn kiểm tra được trường hợp cuối cùng với đúng 3 cạnh**, không hề sai.
+
+---
+
+👉 Tóm lại:
+
+* `k = n-1` → duyệt từ cạnh lớn nhất xuống.
+* `k >= 2` để đảm bảo luôn còn đủ ít nhất 3 cạnh.
+* `k = 2` là **trường hợp nhỏ nhất nhưng vẫn hợp lệ** (3 cạnh đúng bằng số cạnh tối thiểu cần để tạo tam giác).
+
+---
+
+Bạn có muốn mình viết lại code Java kèm ví dụ chạy thử **từng bước khi k=2** để thấy rõ i, j di chuyển không?
+✅ Đúng rồi bạn. Khi ta viết:
+
+```java
+for (int k = n - 1; k >= 2; k--) {
+    ...
+}
+```
+
+thì nghĩa là:
+
+* Bắt đầu với `k = n-1` → tức là phần tử cuối cùng trong mảng (cạnh lớn nhất).
+* Sau đó giảm dần `k` (`k--`) → xét lần lượt các cạnh nhỏ hơn làm **cạnh lớn nhất** của tam giác.
+* Dừng lại ở `k = 2` vì phải có ít nhất 2 cạnh khác (`i` và `j`) để so với `nums[k]`.
+
+👉 Nói cách khác, **ta đang duyệt từ cuối mảng về đầu mảng** để chọn cạnh lớn nhất trước, rồi dùng **two pointer (i, j)** để tìm hai cạnh còn lại.
+
+---
+
+Ví dụ:
+
+Mảng `nums = [2, 3, 4, 5, 6]` (đã sort)
+
+* Lần 1: `k = 4` → cạnh lớn nhất = `6`.
+* Lần 2: `k = 3` → cạnh lớn nhất = `5`.
+* Lần 3: `k = 2` → cạnh lớn nhất = `4`.
+* Xong (vì k ≥ 2).
+
+---
+
+👉 Duyệt từ cuối lên giúp ta dễ áp dụng two-pointer, vì khi `nums[i] + nums[j] > nums[k]`, thì ta biết ngay tất cả cặp `(i..j-1, j)` đều hợp lệ (do mảng đã sort).
+
+---
+
+Bạn có muốn mình vẽ sơ đồ minh họa **i, j chạy như thế nào** khi `k` giảm dần không?

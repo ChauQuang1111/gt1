@@ -1,0 +1,499 @@
+Compare Version Numbers(23/09/2025)
+class Solution {
+    public int compareVersion(String version1, String version2) {
+        int i = 0, j = 0;
+        int n = version1.length(), m = version2.length();
+
+        while (i < n || j < m) {
+            long num1 = 0, num2 = 0; // long to avoid overflow
+
+            while (i < n && version1.charAt(i) != '.') {
+                num1 = num1 * 10 + (version1.charAt(i) - '0');
+                i++;
+            }
+
+            while (j < m && version2.charAt(j) != '.') {
+                num2 = num2 * 10 + (version2.charAt(j) - '0');
+                j++;
+            }
+
+            if (num1 > num2) return 1;
+            if (num1 < num2) return -1;
+
+            // skip dots
+            if (i < n && version1.charAt(i) == '.') i++;
+            if (j < m && version2.charAt(j) == '.') j++;
+        }
+
+        return 0;
+    }
+}
+Rồi 👍 mình giải thích từng phần nha:
+
+---
+
+### 1. `version1.charAt(i)`
+
+* Đây là **hàm của String trong Java**.
+* Nó trả về **ký tự tại vị trí `i`** trong chuỗi `version1`.
+* Ví dụ:
+
+  ```java
+  String s = "1.23";
+  System.out.println(s.charAt(0)); // '1'
+  System.out.println(s.charAt(1)); // '.'
+  System.out.println(s.charAt(2)); // '2'
+  ```
+
+👉 `charAt` = “character at index”.
+
+---
+
+### 2. Điều kiện trong code
+
+```java
+if (i < n && version1.charAt(i) == '.') i++;
+if (j < m && version2.charAt(j) == '.') j++;
+```
+
+* **`i < n`** → để chắc chắn con trỏ `i` vẫn còn nằm trong phạm vi chuỗi `version1` (tránh lỗi `IndexOutOfBounds`).
+* **`version1.charAt(i) == '.'`** → kiểm tra ký tự hiện tại có phải dấu `.` không.
+
+Nếu **đúng**, thì `i++` nghĩa là **bỏ qua dấu chấm**, để tiếp tục đọc số ở revision tiếp theo.
+
+---
+
+### 3. Ý nghĩa
+
+Ví dụ `version1 = "1.02.3"`, khi đang ở vị trí sau số `2`, ta sẽ gặp ký tự `'.'`.
+
+* Lúc đó `charAt(i) == '.'` → ta tăng `i++` để bỏ qua `'.'`.
+* Như vậy con trỏ sẽ nhảy đến vị trí chữ số tiếp theo (`3`).
+
+👉 Mục đích: **bỏ qua dấu chấm** sau khi đã so sánh xong một đoạn số.
+
+---
+
+Bạn có muốn mình viết lại một ví dụ chạy **từng bước** với `version1 = "1.0.1"` và `version2 = "1"` để thấy rõ vai trò của đoạn `if ... charAt ...` này không?
+Ok, mình cho bạn ví dụ cụ thể để thấy rõ tác dụng 2 dòng này nhé 👇
+
+---
+
+### Ví dụ:
+
+```
+version1 = "1.0.1"
+version2 = "1"
+```
+
+### Bước chạy:
+
+1. **Lần 1 đọc số**
+
+   * `num1 = 1`, `num2 = 1`
+   * So sánh: bằng nhau → tiếp tục.
+   * Lúc này:
+
+     * `i = 1`, `version1.charAt(1) = '.'`
+     * `j = 1`, `version2` đã hết chuỗi (`j == m`).
+
+2. **Xử lý dấu `.`**
+
+   * `if (i < n && version1.charAt(i) == '.') i++;`
+     → `i = 2`, tức con trỏ đã bỏ qua dấu `.` và chuyển sang số `0`.
+   * `if (j < m && version2.charAt(j) == '.') j++;`
+     → `j = 1`, nhưng `j == m` (chuỗi `version2` đã hết) nên không làm gì.
+
+3. **Lần 2 đọc số**
+
+   * `num1 = 0` (từ `version1`)
+   * `num2 = 0` (mặc định vì `version2` hết rồi)
+   * So sánh: bằng nhau → tiếp tục.
+
+4. **Xử lý dấu `.` lần nữa**
+
+   * `i = 3`, nhảy qua dấu `.` → chuẩn bị đọc số tiếp theo `1`.
+
+5. **Lần 3 đọc số**
+
+   * `num1 = 1`
+   * `num2 = 0` (vì version2 hết)
+   * So sánh: `1 > 0` → trả về `1` (nghĩa là `version1 > version2`).
+
+---
+
+👉 Nếu **không có 2 dòng `if (charAt(i) == '.') i++`** thì con trỏ sẽ bị đứng yên ở dấu `.` và vòng lặp không thể tiếp tục đọc số kế tiếp được → thuật toán sai.
+
+---
+
+Bạn có muốn mình vẽ **minh họa bằng bảng trạng thái con trỏ (i, j) theo từng bước chạy** để nhìn trực quan hơn không?
+Ok, mình sẽ vẽ bảng trạng thái của con trỏ `i` và `j` (vị trí trong chuỗi) để bạn dễ hình dung cách 2 dòng
+
+```java
+if (i < n && version1.charAt(i) == '.') i++;
+if (j < m && version2.charAt(j) == '.') j++;
+```
+
+giúp “bỏ qua dấu `.`” nhé 👇
+
+---
+
+### Ví dụ:
+
+```
+version1 = "1.0.1"
+version2 = "1"
+```
+
+---
+
+### Bảng trạng thái
+
+| Vòng lặp  | version1 (i)         | Ký tự        | num1 | version2 (j)    | Ký tự | num2 | So sánh | Hành động tiếp theo            |
+| --------- | -------------------- | ------------ | ---- | --------------- | ----- | ---- | ------- | ------------------------------ |
+| Lần 1 đọc | i=0                  | '1'          | 1    | j=0             | '1'   | 1    | 1==1    | so sánh bằng → tiếp            |
+| Sau skip  | i=1 → skip '.' → i=2 | '.' → bỏ qua | -    | j=1 (hết chuỗi) | -     | -    | -       | chuẩn bị đọc số tiếp           |
+| Lần 2 đọc | i=2                  | '0'          | 0    | j=1 (hết)       | null  | 0    | 0==0    | so sánh bằng → tiếp            |
+| Sau skip  | i=3 → skip '.' → i=4 | '.' → bỏ qua | -    | j=1 (hết)       | -     | -    | -       | chuẩn bị đọc số tiếp           |
+| Lần 3 đọc | i=4                  | '1'          | 1    | j=1 (hết)       | null  | 0    | 1>0     | return 1 (version1 > version2) |
+
+---
+
+✅ Nhờ 2 dòng `if (charAt(i) == '.') i++` và `if (charAt(j) == '.') j++`, chương trình mới **bỏ qua dấu `.` và tiếp tục đọc số tiếp theo trong phiên bản**.
+Nếu không có bước này thì con trỏ sẽ dừng ở dấu `.` → vòng lặp không chạy đúng.
+
+---
+
+Bạn có muốn mình viết lại thuật toán này theo **cách dùng `split(".")` để tách các phần của version** (ngắn gọn hơn) không?
+Rồi 👍 mình giải thích chi tiết đoạn này:
+
+```java
+while (i < n || j < m) {
+    long num1 = 0, num2 = 0; // long to avoid overflow
+
+    // đọc 1 "block số" trong version1 (giữa 2 dấu '.')
+    while (i < n && version1.charAt(i) != '.') {
+        num1 = num1 * 10 + (version1.charAt(i) - '0');
+        i++;
+    }
+
+    // đọc 1 "block số" trong version2 (giữa 2 dấu '.')
+    while (j < m && version2.charAt(j) != '.') {
+        num2 = num2 * 10 + (version2.charAt(j) - '0');
+        j++;
+    }
+}
+```
+
+---
+
+### Ý nghĩa từng phần:
+
+* `while (i < n || j < m)`
+  → còn ký tự nào chưa đọc trong `version1` **hoặc** `version2` thì tiếp tục so sánh.
+
+* `long num1 = 0, num2 = 0;`
+  → tạo 2 số nguyên để lưu **giá trị của block số hiện tại**.
+  Ví dụ `"123.4.56"` thì các block số lần lượt là `123`, `4`, `56`.
+
+---
+
+### Phần đọc số của `version1`:
+
+```java
+while (i < n && version1.charAt(i) != '.') {
+    num1 = num1 * 10 + (version1.charAt(i) - '0');
+    i++;
+}
+```
+
+* Duyệt qua từng ký tự của chuỗi `version1` cho đến khi gặp dấu `.` hoặc hết chuỗi.
+* `(version1.charAt(i) - '0')`: chuyển ký tự số `'3'` thành số nguyên `3`.
+* `num1 = num1 * 10 + digit`: cộng dồn để ghép thành số.
+
+👉 Ví dụ:
+
+* `version1 = "1.02.3"`, tại block đầu:
+
+  * `i=0`, ký tự `'1'` → num1 = 1
+  * gặp dấu `.` → dừng → block = 1
+
+* sang block thứ 2 `"02"`:
+
+  * `'0'` → num1 = 0
+  * `'2'` → num1 = 2
+    → block = 2 (chương trình tự loại bỏ số 0 ở đầu).
+
+---
+
+### Phần đọc số của `version2` làm tương tự.
+
+---
+
+### Mục đích tổng thể
+
+Ở mỗi vòng lặp:
+
+* Ta đọc **1 block số** trong `version1` → lưu vào `num1`.
+* Ta đọc **1 block số** trong `version2` → lưu vào `num2`.
+* Sau đó so sánh `num1` và `num2`. Nếu khác nhau thì trả kết quả ngay. Nếu bằng thì tiếp tục sang block tiếp theo.
+
+---
+
+👉 Nói cách khác: đoạn này chính là **chuyển từng phần (segment) giữa các dấu chấm trong version từ dạng chuỗi sang số để so sánh**.
+
+Bạn có muốn mình làm ví dụ cụ thể với:
+
+```
+version1 = "1.01.5"
+version2 = "1.1.3"
+```
+
+để minh họa cách `num1` và `num2` được tính ở từng vòng lặp không?
+Ok 👍 mình sẽ cho một ví dụ thật cụ thể nhé.
+
+Giả sử:
+
+```java
+String version1 = "203.45";
+int i = 0, n = version1.length();
+long num1 = 0;
+```
+
+---
+
+### Chạy đoạn code:
+
+```java
+while (i < n && version1.charAt(i) != '.') {
+    num1 = num1 * 10 + (version1.charAt(i) - '0');
+    i++;
+}
+```
+
+---
+
+#### Lần 1:
+
+* `i = 0`, `version1.charAt(0) = '2'`
+* `'2' - '0' = 2`
+* `num1 = 0 * 10 + 2 = 2`
+* tăng `i = 1`
+
+---
+
+#### Lần 2:
+
+* `i = 1`, `version1.charAt(1) = '0'`
+* `'0' - '0' = 0`
+* `num1 = 2 * 10 + 0 = 20`
+* tăng `i = 2`
+
+---
+
+#### Lần 3:
+
+* `i = 2`, `version1.charAt(2) = '3'`
+* `'3' - '0' = 3`
+* `num1 = 20 * 10 + 3 = 203`
+* tăng `i = 3`
+
+---
+
+#### Lần 4:
+
+* `i = 3`, `version1.charAt(3) = '.'`
+* Điều kiện `version1.charAt(i) != '.'` **sai** → vòng lặp dừng.
+
+---
+
+✅ Kết quả:
+
+* `num1 = 203`
+* `i = 3` (đang trỏ vào dấu chấm)
+
+---
+
+👉 Ý nghĩa: đoạn `while` này đọc liên tục các ký tự số trong `version1` và biến chúng thành số nguyên `num1`. Nó chỉ dừng lại khi gặp dấu `.` hoặc hết chuỗi.
+
+---
+
+Bạn có muốn mình làm thêm ví dụ `"007"` để thấy rõ cách code loại bỏ số 0 ở đầu không?
+Hay, mình lấy ví dụ `version1 = "1.01"` nhé 👇
+
+---
+
+### Khởi tạo:
+
+```java
+String version1 = "1.01";
+int i = 0, n = version1.length();  // n = 4
+long num1 = 0;
+```
+
+---
+
+### Vòng lặp đầu tiên (`while (i < n && version1.charAt(i) != '.')`):
+
+* `i = 0`, `version1.charAt(0) = '1'`
+* `'1' - '0' = 1`
+* `num1 = 0 * 10 + 1 = 1`
+* tăng `i = 1`
+
+👉 Bây giờ `i = 1`, `version1.charAt(1) = '.'` → điều kiện sai → vòng lặp dừng.
+✅ Kết quả đầu tiên: `num1 = 1`, `i = 1` (đang đứng ở dấu chấm).
+
+---
+
+### Sau đó code có đoạn:
+
+```java
+if (i < n && version1.charAt(i) == '.') i++;
+```
+
+* Vì `i = 1` và `version1.charAt(1) = '.'` → bỏ qua dấu chấm.
+* Tăng `i = 2`.
+
+---
+
+### Vòng lặp tiếp theo (lấy số sau dấu chấm):
+
+```java
+num1 = 0;
+while (i < n && version1.charAt(i) != '.') {
+    num1 = num1 * 10 + (version1.charAt(i) - '0');
+    i++;
+}
+```
+
+* `i = 2`, `version1.charAt(2) = '0'`
+
+  * `'0' - '0' = 0`
+  * `num1 = 0 * 10 + 0 = 0`
+  * tăng `i = 3`
+
+* `i = 3`, `version1.charAt(3) = '1'`
+
+  * `'1' - '0' = 1`
+  * `num1 = 0 * 10 + 1 = 1`
+  * tăng `i = 4`
+
+* `i = 4` → hết chuỗi. Vòng lặp dừng.
+
+✅ Kết quả tiếp theo: `num1 = 1`
+
+---
+
+👉 Tóm lại với `"1.01"`:
+
+* Phần trước dấu `.` = `1`
+* Phần sau dấu `.` = `1` (không quan tâm số 0 ở đầu).
+
+---
+
+Bạn có muốn mình minh họa thêm ví dụ `"1.001.05"` để thấy rõ khi có nhiều dấu chấm thì code xử lý từng "block" số như thế nào không?
+À, mình giải thích kỹ nha 🙂
+
+Trong đoạn code:
+
+```java
+while (i < n && version1.charAt(i) != '.') {
+    num1 = num1 * 10 + (version1.charAt(i) - '0');
+    i++;
+}
+```
+
+👉 Điều kiện `version1.charAt(i) != '.'` có nghĩa là:
+**"Còn duyệt ký tự số, dừng lại khi gặp dấu chấm `.`".**
+
+---
+
+### Ý nghĩa cụ thể:
+
+* `version1.charAt(i)` lấy **ký tự thứ i** trong chuỗi `version1`.
+* Nếu ký tự đó **khác `'.'`** → tức là nó là **một chữ số** (`0`–`9`) → ta cộng dồn vào `num1`.
+* Nếu ký tự đó là dấu `.` → tức là đã hết một “phần” của số phiên bản → vòng lặp **ngừng**.
+
+---
+
+### Ví dụ 1: `"1.01"`
+
+* `version1.charAt(0) = '1'` ≠ `'.'` → thêm vào số `num1 = 1`.
+* Sau đó `i = 1`, `version1.charAt(1) = '.'` → **thoát vòng lặp** (kết thúc phần đầu tiên của phiên bản).
+
+---
+
+### Ví dụ 2: `"12.3"`
+
+* `version1.charAt(0) = '1'` ≠ `'.'` → `num1 = 1`.
+* `version1.charAt(1) = '2'` ≠ `'.'` → `num1 = 12`.
+* `version1.charAt(2) = '.'` → thoát vòng lặp (phần đầu tiên là `12`).
+
+---
+
+✅ Tóm lại:
+`version1.charAt(i) != '.'` giúp **tách các số giữa các dấu chấm ra**, vì mỗi số giữa các dấu chấm là **một block** cần so sánh riêng.
+
+---
+
+Bạn có muốn mình viết 1 đoạn code Java nhỏ **in ra từng block số khi tách bằng điều kiện `charAt(i) != '.'`** để bạn nhìn rõ hơn không?
+Ok mình giải thích chi tiết nhé 👇
+
+Công thức này rất phổ biến trong lập trình khi **chuyển chuỗi số → số nguyên**.
+
+---
+
+### Câu lệnh:
+
+```java
+num1 = num1 * 10 + (version1.charAt(i) - '0');
+```
+
+---
+
+### Ý nghĩa từng phần:
+
+1. **`version1.charAt(i)`**
+   → lấy ký tự thứ `i` trong chuỗi (ví dụ `'1'`, `'0'`, `'5'`...).
+
+2. **`version1.charAt(i) - '0'`**
+
+   * Trong Java, ký tự (`char`) thực chất là một số nguyên ASCII/Unicode.
+   * `'0'` có mã 48, `'1'` có mã 49, `'2'` có mã 50, …
+   * Nếu lấy `'5' - '0'` → `53 - 48 = 5`.
+     👉 Tức là chuyển từ ký tự số sang số nguyên.
+
+3. **`num1 * 10 + ...`**
+
+   * Nhân `num1` với 10 để **dịch sang hàng chục**.
+   * Sau đó cộng chữ số mới vào.
+
+---
+
+### Ví dụ 1: chuỗi `"123"`
+
+* Bắt đầu: `num1 = 0`.
+* `i=0`, char = `'1'` → `'1' - '0' = 1` → `num1 = 0*10 + 1 = 1`.
+* `i=1`, char = `'2'` → `'2' - '0' = 2` → `num1 = 1*10 + 2 = 12`.
+* `i=2`, char = `'3'` → `'3' - '0' = 3` → `num1 = 12*10 + 3 = 123`.
+
+👉 Kết quả: `num1 = 123`.
+
+---
+
+### Ví dụ 2: `"01"`
+
+* `i=0`, char = `'0'` → `'0' - '0' = 0` → `num1 = 0*10 + 0 = 0`.
+* `i=1`, char = `'1'` → `'1' - '0' = 1` → `num1 = 0*10 + 1 = 1`.
+
+👉 Kết quả: `num1 = 1` (bỏ luôn số 0 ở đầu).
+
+---
+
+✅ Tóm lại:
+`num1 = num1 * 10 + (version1.charAt(i) - '0');`
+là cách **xây dựng dần dần số nguyên từ các ký tự số trong chuỗi**.
+
+---
+
+Bạn có muốn mình minh họa đoạn này bằng **một vòng lặp in ra từng bước num1 khi đọc `"123"`** để thấy rõ hơn cách nó tăng dần không?

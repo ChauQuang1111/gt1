@@ -1,0 +1,173 @@
+Smallest Missing Non-negative Integer After Operations
+class Solution {
+    public int findSmallestInteger(int[] nums, int value) {
+        int[] modularDivisionRes = new int[value];
+        for (int n : nums) {
+            int modDivValue = n % value;
+            if (modDivValue < 0) {
+                modDivValue += value;
+            }
+            modularDivisionRes[modDivValue]++;
+        }
+
+        int min = modularDivisionRes[0];
+        int position = 0;
+        for (int i = 0; i < value; i++) {
+            if (modularDivisionRes[i] < min) {
+                position = i;
+                min = modularDivisionRes[i];
+            }
+        }
+        return value * min + position;
+    }
+}
+Hay lắm — để mình giải thích kỹ chỗ này nha 👇
+
+Giả sử:
+
+```java
+int[] nums = {1, 5, 7, -2};
+int value = 4;
+```
+
+Ta duyệt từng phần tử:
+
+| Bước | n  | n % 4       | Sau xử lý âm | Giải thích                       | modularDivisionRes (sau khi tăng) |
+| ---- | -- | ----------- | ------------ | -------------------------------- | --------------------------------- |
+| 1    | 1  | 1           | 1            | 1 chia 4 dư 1                    | [0, 1, 0, 0]                      |
+| 2    | 5  | 1           | 1            | 5 chia 4 dư 1                    | [0, 2, 0, 0]                      |
+| 3    | 7  | 3           | 3            | 7 chia 4 dư 3                    | [0, 2, 0, 1]                      |
+| 4    | -2 | -2 → +4 = 2 | 2            | vì -2 % 4 = -2, ta +4 để thành 2 | [0, 2, 1, 1]                      |
+
+---
+
+📘 Giải thích dòng **“Có 1 số dư 3”**:
+
+Ở bước thứ 3, `n = 7`:
+
+* `7 % 4 = 3`, tức là **7 chia 4 dư 3**.
+* Do đó ta tăng `modularDivisionRes[3]` thêm 1.
+  → Trước đó mảng là `[0, 2, 0, 0]`, sau bước này thành `[0, 2, 0, 1]`.
+  → Có **1 số** (là 7) có **phần dư = 3** khi chia cho 4.
+
+---
+
+👉 Tóm lại:
+
+* “Có 1 số dư 3” nghĩa là chỉ có **một phần tử trong nums** (ở đây là 7) **chia cho 4 dư 3**.
+* Vì vậy trong mảng `modularDivisionRes`, phần tử tại chỉ số 3 là `1`.
+Rồi 👇 mình sẽ giải thích **từng dòng một** cho đoạn code này — đây là phần **tìm kết quả nhỏ nhất có thể bị thiếu sau các phép cộng/trừ `value`**.
+
+---
+
+```java
+int min = modularDivisionRes[0];
+int position = 0;
+for (int i = 0; i < value; i++) {
+    if (modularDivisionRes[i] < min) {
+        position = i;
+        min = modularDivisionRes[i];
+    }
+}
+return value * min + position;
+```
+
+---
+
+### 🎯 Mục tiêu đoạn này:
+
+Sau khi đếm tần suất phần dư (ở mảng `modularDivisionRes`), ta sẽ:
+
+1. Tìm **phần dư xuất hiện ít nhất** (`min`).
+2. Ghi lại **vị trí phần dư đó** (`position`).
+3. Dựa vào đó tính ra **số nguyên nhỏ nhất chưa thể tạo ra được** sau khi thêm/bớt `value` nhiều lần cho các phần tử.
+
+---
+
+### 🔍 Giải thích từng dòng:
+
+#### 1️⃣ `int min = modularDivisionRes[0];`
+
+* Giả định **phần dư 0** là phần dư có tần suất nhỏ nhất ban đầu.
+* `min` sẽ lưu số lần xuất hiện nhỏ nhất.
+* Ví dụ: `modularDivisionRes = [3, 4, 2, 5]` → ban đầu `min = 3`.
+
+---
+
+#### 2️⃣ `int position = 0;`
+
+* Lưu lại **chỉ số (phần dư)** có số lần xuất hiện nhỏ nhất.
+* Bắt đầu với 0 (phần dư 0).
+
+---
+
+#### 3️⃣ `for (int i = 0; i < value; i++) { ... }`
+
+* Duyệt qua toàn bộ các phần dư từ `0 → value-1`
+* (vì có đúng `value` phần dư có thể có).
+
+---
+
+#### 4️⃣ `if (modularDivisionRes[i] < min) { ... }`
+
+* Nếu tần suất của phần dư `i` nhỏ hơn `min` hiện tại
+  → cập nhật lại `min` và `position`.
+
+Ví dụ:
+
+| i | modularDivisionRes[i] | min (trước) | Điều kiện | min (sau) | position |
+| - | --------------------- | ----------- | --------- | --------- | -------- |
+| 0 | 3                     | 3           | ❌         | 3         | 0        |
+| 1 | 4                     | 3           | ❌         | 3         | 0        |
+| 2 | 2                     | 3           | ✅         | 2         | 2        |
+| 3 | 5                     | 2           | ❌         | 2         | 2        |
+
+→ Kết quả: `min = 2`, `position = 2`
+
+---
+
+#### 5️⃣ `return value * min + position;`
+
+Đây là **công thức tính số nguyên nhỏ nhất chưa thể tạo ra**.
+
+Cụ thể:
+
+* Mỗi lần ta “dùng hết” 1 vòng của `value`, tức là ta đã có đủ `value` số cho mỗi phần dư.
+* Nếu phần dư `position` có ít hơn (`min` lần), thì số nhỏ nhất bị thiếu sẽ nằm ở vòng tiếp theo.
+
+👉 **Giải thích công thức:**
+
+```
+Kết quả = (số vòng đã đầy đủ) * value + (phần dư còn thiếu)
+```
+
+---
+
+### 📘 Ví dụ minh họa:
+
+Giả sử `value = 4`,
+và `modularDivisionRes = [3, 4, 2, 5]`.
+
+* Phần dư 0 có 3 lần
+* Phần dư 1 có 4 lần
+* Phần dư 2 có 2 lần (ít nhất)
+* Phần dư 3 có 5 lần
+
+👉 `min = 2`, `position = 2`
+→ `return 4 * 2 + 2 = 10`
+
+✅ **Kết quả:** số nguyên nhỏ nhất chưa thể tạo ra là `10`.
+
+---
+
+Tóm tắt nhanh:
+
+| Biến                     | Ý nghĩa                                       |
+| ------------------------ | --------------------------------------------- |
+| `min`                    | Số lần xuất hiện ít nhất của một phần dư      |
+| `position`               | Phần dư tương ứng có ít nhất lần xuất hiện đó |
+| `value * min + position` | Số nhỏ nhất chưa thể tạo ra                   |
+
+---
+
+Nếu bạn muốn, mình có thể vẽ **timeline ví dụ cụ thể** (như `nums = [1,5,7,-2]`, `value=4`) để minh họa cách ra được kết quả cuối. Bạn muốn không?

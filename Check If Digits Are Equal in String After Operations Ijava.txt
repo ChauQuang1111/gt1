@@ -1,0 +1,360 @@
+Check If Digits Are Equal in String After Operations I
+class Solution {
+  public boolean hasSameDigits(String s) {
+    int[] arr = new int[s.length()];
+
+    for (int i = 0; i < arr.length; i++)
+      arr[i] = s.charAt(i) - '0';
+    
+    for (int length = arr.length; length > 2; length--) {
+      for (int i = 0; i < length - 1; i++) {
+        arr[i] = (arr[i] + arr[i + 1]) % 10;
+      }
+    }
+
+    return arr[0] == arr[1];
+      
+  }
+}
+Dòng code này trong Java:
+
+```java
+for (int i = 0; i < arr.length; i++)
+    arr[i] = s.charAt(i) - '0';
+```
+
+👉 **Giải thích từng phần:**
+
+* `s.charAt(i)`
+  → Lấy **ký tự** tại vị trí thứ `i` trong chuỗi `s`.
+  Ví dụ: nếu `s = "1234"`, thì:
+
+  * `s.charAt(0)` = `'1'`
+  * `s.charAt(1)` = `'2'`
+
+* `'0'` là ký tự số 0 trong bảng mã ASCII (giá trị 48).
+
+* Khi ta trừ `'0'` (tức là `48`) khỏi một ký tự số, ta sẽ nhận được **giá trị số thực** của ký tự đó.
+  Ví dụ:
+
+  * `'1' - '0'` = 49 - 48 = **1**
+  * `'9' - '0'` = 57 - 48 = **9**
+
+👉 **Tóm lại:**
+Dòng này **chuyển chuỗi chữ số** (ví dụ `"1234"`) thành **mảng số nguyên** `[1, 2, 3, 4]`.
+
+---
+
+**Ví dụ cụ thể:**
+
+```java
+String s = "456";
+int[] arr = new int[s.length()];
+for (int i = 0; i < arr.length; i++)
+    arr[i] = s.charAt(i) - '0';
+```
+
+Sau vòng lặp:
+
+```
+arr = [4, 5, 6]
+```
+
+---
+
+📘 **Lý do dùng cách này:**
+Trong Java, không thể lấy số nguyên trực tiếp từ chuỗi ký tự, nên ta phải dùng mẹo `'chữ_số' - '0'` để chuyển đổi nhanh và hiệu quả.
+Rất hay — đoạn code này chính là **phần cốt lõi** của bài toán **“Same Digits After Transformations” (hoặc HasSameDigits)** 🧠.
+Giờ mình sẽ **giải thích chi tiết từng bước** nhé 👇
+
+---
+
+### 🔹 Code:
+
+```java
+for (int length = arr.length; length > 2; length--) {
+    for (int i = 0; i < length - 1; i++) {
+        arr[i] = (arr[i] + arr[i + 1]) % 10;
+    }
+}
+```
+
+---
+
+### 🔹 Ý tưởng tổng quát
+
+Đoạn code này **mô phỏng một quá trình “biến đổi dãy số” lặp lại nhiều lần**:
+Ở mỗi vòng, ta **thay thế dãy bằng tổng mod 10 của các cặp phần tử kề nhau**, cho đến khi chỉ còn 2 phần tử cuối cùng.
+
+---
+
+### 🔹 Giải thích từng dòng:
+
+#### 1️⃣ `for (int length = arr.length; length > 2; length--)`
+
+* `length` ban đầu là độ dài của mảng `arr` (ví dụ `arr.length = 5` nếu có 5 chữ số).
+* Sau mỗi lần biến đổi, độ dài dãy giảm đi 1 phần tử (vì mỗi cặp tạo ra 1 giá trị mới).
+* Khi `length > 2`, ta tiếp tục biến đổi cho đến khi chỉ còn 2 phần tử cuối.
+
+👉 Nghĩa là: **lặp lại việc rút gọn dãy** đến khi chỉ còn 2 phần tử.
+
+---
+
+#### 2️⃣ `for (int i = 0; i < length - 1; i++)`
+
+* Duyệt qua từng **cặp phần tử kề nhau** trong dãy hiện tại:
+
+  * `(arr[i], arr[i+1])`
+
+---
+
+#### 3️⃣ `arr[i] = (arr[i] + arr[i + 1]) % 10;`
+
+* Cập nhật phần tử `arr[i]` thành **tổng của nó và phần tử kế tiếp**, lấy **mod 10** (giữ lại chữ số hàng đơn vị).
+
+🧮 Ví dụ:
+
+```
+arr = [1, 2, 3, 4]
+Bước 1:
+i=0: arr[0] = (1+2)%10 = 3
+i=1: arr[1] = (2+3)%10 = 5
+i=2: arr[2] = (3+4)%10 = 7
+Kết quả sau vòng: arr = [3, 5, 7, 4]
+```
+
+Ở vòng tiếp theo, `length` giảm đi 1, nên ta chỉ xét `[3, 5, 7]`, rồi `[3, 5]`, … cho đến còn 2 số cuối cùng.
+
+---
+
+### 🔹 Mục đích
+
+Sau khi thực hiện quá trình này, ta có thể **so sánh hai kết quả cuối cùng** để kiểm tra xem dãy ban đầu có tạo ra hai chữ số giống nhau không.
+
+---
+
+### 🔹 Ví dụ minh họa hoàn chỉnh
+
+Giả sử:
+
+```
+s = "1234"
+arr = [1, 2, 3, 4]
+```
+
+➡ Lần 1 (`length=4`):
+
+```
+arr[0] = (1+2)%10 = 3
+arr[1] = (2+3)%10 = 5
+arr[2] = (3+4)%10 = 7
+→ arr = [3,5,7,4]
+```
+
+➡ Lần 2 (`length=3`):
+
+```
+arr[0] = (3+5)%10 = 8
+arr[1] = (5+7)%10 = 2
+→ arr = [8,2,7,4]
+```
+
+➡ Lần 3 (`length=2`):
+Dừng lại (vì điều kiện `length > 2` không còn đúng).
+
+→ Hai chữ số đầu là `[8, 2]`, có thể dùng để kiểm tra tính đối xứng.
+
+---
+
+### ✅ Tóm tắt
+
+| Phần                | Giải thích                                                                |
+| ------------------- | ------------------------------------------------------------------------- |
+| `length`            | Giảm dần sau mỗi vòng để mô phỏng dãy ngắn đi                             |
+| `arr[i] + arr[i+1]` | Tổng hai phần tử liền kề                                                  |
+| `% 10`              | Giữ lại chữ số hàng đơn vị                                                |
+| Mục tiêu            | Rút gọn dãy số cho đến còn 2 chữ số để kiểm tra chúng có giống nhau không |
+
+---
+
+Bạn có muốn mình thêm **hàm `main` + chú thích chi tiết** cho đoạn Java này để bạn chạy thử luôn không?
+Câu lệnh này:
+
+```java
+return arr[0] == arr[1];
+```
+
+rất ngắn, nhưng lại là **phần quyết định kết quả cuối cùng** của toàn bộ thuật toán 💡
+Mình sẽ giải thích rõ từng phần nhé 👇
+
+---
+
+### 🧩 Ngữ cảnh
+
+Trước đó, ta có đoạn:
+
+```java
+for (int length = arr.length; length > 2; length--) {
+    for (int i = 0; i < length - 1; i++) {
+        arr[i] = (arr[i] + arr[i + 1]) % 10;
+    }
+}
+```
+
+Sau khi vòng lặp này kết thúc, **chỉ còn 2 phần tử đầu tiên của `arr` là có giá trị hợp lệ** (vì dãy đã được "rút gọn" dần qua từng bước).
+
+---
+
+### ⚙️ Cơ chế
+
+Giả sử ban đầu bạn có một chuỗi số, ví dụ:
+
+```
+s = "1234"
+arr = [1, 2, 3, 4]
+```
+
+Sau quá trình biến đổi:
+
+```
+→ arr còn lại [8, 2, ...]
+```
+
+(chỉ hai phần tử đầu `[8,2]` là có ý nghĩa)
+
+---
+
+### ✅ Ý nghĩa của dòng `return arr[0] == arr[1];`
+
+Dòng này **kiểm tra xem hai chữ số cuối cùng còn lại sau tất cả biến đổi có giống nhau không**.
+
+Nếu:
+
+* `arr[0] == arr[1]` → trả về `true`
+  → nghĩa là dãy số ban đầu **có tính “đối xứng” theo quy tắc phép cộng mod 10**.
+* Ngược lại, `false` → không đối xứng.
+
+---
+
+### 💡 Ví dụ cụ thể
+
+```
+s = "1234"
+arr = [1, 2, 3, 4]
+
+→ Sau khi biến đổi: arr[0] = 8, arr[1] = 2
+→ 8 != 2 → return false
+```
+
+```
+s = "141"
+arr = [1, 4, 1]
+
+→ Sau biến đổi: arr[0] = (1+4)%10 = 5
+                 arr[1] = (4+1)%10 = 5
+→ return arr[0] == arr[1] → true ✅
+```
+
+---
+
+### 🔎 Tóm lại
+
+| Thành phần                 | Ý nghĩa                                             |
+| -------------------------- | --------------------------------------------------- |
+| `arr[0]` và `arr[1]`       | Hai chữ số cuối cùng sau toàn bộ phép biến đổi      |
+| `==`                       | So sánh xem hai số có bằng nhau không               |
+| `return arr[0] == arr[1];` | Kết luận chuỗi có “đối xứng” sau biến đổi hay không |
+
+---
+
+👉 Nói ngắn gọn:
+
+> Dòng `return arr[0] == arr[1];` **là bước kiểm tra kết quả cuối cùng của toàn bộ quá trình biến đổi dãy số.**
+> Nếu hai giá trị còn lại bằng nhau → chuỗi ban đầu “hợp lệ” hoặc “đối xứng”.
+Câu hỏi rất hay 👏 — đây là **trọng tâm** của bài toán “Check If Digits Are Equal in String After Operations”.
+Giờ mình sẽ giải thích rõ **tại sao phải lấy `% 10` (mod 10)** nhé 👇
+
+---
+
+### 🧮 1️⃣ Bản chất của bài toán
+
+Bài này nói về **các chữ số thập phân (0–9)** trong một chuỗi.
+Trong mỗi bước biến đổi, ta tạo **một dãy mới bằng cách cộng hai chữ số kề nhau**.
+
+Ví dụ:
+
+```
+s = "3902"
+arr = [3, 9, 0, 2]
+```
+
+Bước 1:
+
+```
+(3+9)%10 = 12%10 = 2
+(9+0)%10 = 9
+(0+2)%10 = 2
+→ arr = [2, 9, 2]
+```
+
+Bước 2:
+
+```
+(2+9)%10 = 1
+(9+2)%10 = 1
+→ arr = [1, 1]
+```
+
+Bước 3:
+`arr[0] == arr[1] → 1 == 1 → true ✅`
+
+---
+
+### 🔢 2️⃣ Vì sao phải `% 10`
+
+Nếu bạn **không** lấy mod 10, kết quả có thể **vượt quá 9**.
+Ví dụ `(8 + 9) = 17` — mà 17 **không còn là một chữ số**, nên không còn nằm trong phạm vi “digit” (0–9) nữa.
+
+Bài toán yêu cầu **mọi bước đều chỉ xử lý “chữ số”**,
+vì vậy sau khi cộng, ta phải:
+
+```
+(arr[i] + arr[i+1]) % 10
+```
+
+để đảm bảo **kết quả vẫn nằm trong 0–9**.
+
+---
+
+### ⚙️ 3️⃣ Giống nguyên tắc “cộng trong hệ cơ số 10”
+
+Khi bạn cộng số trong hệ thập phân, ví dụ:
+
+```
+8 + 9 = 17
+```
+
+bạn **chỉ giữ lại chữ số hàng đơn vị (7)**,
+còn phần “hàng chục” (1) được “carry” sang vị trí khác.
+Ở đây, ta **bỏ qua phần carry**, nên `%10` giúp **lấy lại phần đơn vị**.
+
+---
+
+### 💡 4️⃣ Kết luận
+
+| Lý do                                   | Giải thích                                      |
+| --------------------------------------- | ----------------------------------------------- |
+| ✅ Giữ kết quả trong khoảng 0–9          | Vì đây là bài toán xử lý chữ số (digits)        |
+| 🔄 Giống quy tắc cộng trong hệ cơ số 10 | Giữ lại hàng đơn vị, bỏ hàng chục               |
+| ⚙️ Giúp thuật toán “ổn định”            | Nếu không có `%10`, dãy sẽ vượt giới hạn chữ số |
+
+---
+
+👉 **Tóm gọn lại:**
+
+> Lấy `% 10` để mô phỏng việc “cộng hai chữ số” trong hệ thập phân,
+> và đảm bảo mọi kết quả trung gian **vẫn là một chữ số (0–9)**.
+
+---
+
+Nếu bạn muốn, mình có thể minh họa bằng một ví dụ Java chạy từng bước có/không có `%10` để bạn thấy rõ sự khác biệt không?

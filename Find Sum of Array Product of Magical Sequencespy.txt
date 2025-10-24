@@ -1,0 +1,545 @@
+Find Sum of Array Product of Magical Sequences
+MOD = 1_000_000_007
+MX = 31
+
+fac = [0] * MX
+fac[0] = 1
+for i in range(1, MX):
+    fac[i] = fac[i - 1] * i % MOD
+
+inv_f = [0] * MX
+inv_f[-1] = pow(fac[-1], -1, MOD)
+for i in range(MX - 1, 0, -1):
+    inv_f[i - 1] = inv_f[i] * i % MOD
+
+class Solution:
+    def magicalSum(self, m: int, k: int, nums: List[int]) -> int:
+        n = len(nums)
+        pow_v = [[1] * (m + 1) for _ in range(n)]
+        for i in range(n):
+            for j in range(1, m + 1):
+                pow_v[i][j] = pow_v[i][j - 1] * nums[i] % MOD
+
+        @cache
+        def dfs(i: int, left_m: int, x: int, left_k: int) -> int:
+            c1 = x.bit_count()
+            if c1 + left_m < left_k:
+                return 0
+            if i == n:
+                return 1 if left_m == 0 and c1 == left_k else 0
+            res = 0
+            for j in range(left_m + 1):
+                bit = (x + j) & 1
+                if bit <= left_k:
+                    r = dfs(i + 1, left_m - j, (x + j) >> 1, left_k - bit)
+                    res += r * pow_v[i][j] * inv_f[j]
+            return res % MOD
+
+        return dfs(0, m, 0, k) * fac[m] % MOD
+
+Rất hay 👏 — đoạn này chính là phần **xử lý tiền tính (precompute)** để **tăng tốc** cho các phép toán sau trong thuật toán.
+Giờ mình giải thích từng dòng thật dễ hiểu nhé 👇
+
+---
+
+## 💡 Mục tiêu của đoạn code
+
+Tạo ra một bảng `pow_v[i][j]` sao cho:
+
+[
+\text{pow_v[i][j]} = (\text{nums[i]}^j) \bmod MOD
+]
+
+tức là — mỗi phần tử `nums[i]` sẽ được mũ lên từ `0 → m`,
+và lưu kết quả vào bảng để **khỏi phải tính lại nhiều lần**.
+
+---
+
+## 🧩 Giải thích từng dòng
+
+### 🔹 Dòng 1:
+
+```python
+n = len(nums)
+```
+
+→ Lấy độ dài của mảng `nums`, tức là số phần tử bạn có.
+
+---
+
+### 🔹 Dòng 2:
+
+```python
+pow_v = [[1] * (m + 1) for _ in range(n)]
+```
+
+→ Tạo **một ma trận 2D** kích thước `n x (m+1)`
+(vì chỉ số chạy từ `0` đến `m`, nên cần `m+1` cột).
+
+Ban đầu, gán tất cả phần tử = `1`.
+
+Ví dụ:
+
+```
+nums = [2, 3], m = 3
+pow_v = [
+  [1, 1, 1, 1],  # cho 2
+  [1, 1, 1, 1]   # cho 3
+]
+```
+
+---
+
+### 🔹 Vòng lặp chính:
+
+```python
+for i in range(n):
+    for j in range(1, m + 1):
+        pow_v[i][j] = pow_v[i][j - 1] * nums[i] % MOD
+```
+
+→ Với mỗi số `nums[i]`, ta tính lũy thừa dần dần như sau:
+
+| j | Công thức                                               | Giá trị      |
+| - | ------------------------------------------------------- | ------------ |
+| 0 | `pow_v[i][0] = 1`                                       | theo quy ước |
+| 1 | `pow_v[i][1] = 1 * nums[i] % MOD = nums[i]`             |              |
+| 2 | `pow_v[i][2] = pow_v[i][1] * nums[i] % MOD = nums[i]^2` |              |
+| 3 | `pow_v[i][3] = pow_v[i][2] * nums[i] % MOD = nums[i]^3` |              |
+
+→ Cứ thế, sau vòng lặp, ta có bảng:
+
+```
+pow_v[i] = [nums[i]^0, nums[i]^1, nums[i]^2, ..., nums[i]^m] % MOD
+```
+
+---
+
+## 🧠 Vì sao làm như vậy?
+
+✅ Tăng tốc — vì nếu bạn tính `nums[i]^j` mỗi lần gọi DFS hay DP thì sẽ rất chậm (O(m log j)),
+nhưng nhờ **tính sẵn**, sau này chỉ cần truy cập `pow_v[i][j]` là O(1).
+
+✅ Dùng modulo `% MOD` để tránh tràn số (vì kết quả có thể rất lớn).
+
+---
+
+### 🔹 Ví dụ cụ thể:
+
+Giả sử:
+
+```python
+nums = [2, 3]
+m = 3
+```
+
+→ Sau đoạn code:
+
+```
+pow_v[0] = [1, 2, 4, 8]   # 2^0, 2^1, 2^2, 2^3
+pow_v[1] = [1, 3, 9, 27]  # 3^0, 3^1, 3^2, 3^3
+```
+
+---
+
+👉 **Tóm lại:**
+Đoạn này **tính trước tất cả lũy thừa của mỗi phần tử trong `nums` từ 0 đến m**,
+để về sau dùng nhanh trong hàm `dfs` mà không cần tính lại.
+
+---
+
+Bạn có muốn mình minh họa thêm **code Java tương đương** với ví dụ nhỏ (in ra bảng powV) để thấy rõ không?
+Rất hay 👏 — đoạn này chính là **phần khởi tạo giai thừa và nghịch đảo giai thừa** (factorial & inverse factorial) để phục vụ cho các phép toán tổ hợp (combinatorial math).
+Mình sẽ giải thích thật kỹ, từng dòng, và minh họa bằng ví dụ nhé 👇
+
+---
+
+## 🎯 Mục đích
+
+Ta muốn **tính nhanh tổ hợp** (combination):
+
+[
+C(n, k) = \frac{n!}{k! \cdot (n-k)!} \pmod{MOD}
+]
+
+→ Để tính nhanh, ta cần có:
+
+* `fac[i] = i! % MOD`
+* `inv_f[i] = (i!)^{-1} % MOD`  ← gọi là **nghịch đảo giai thừa**
+
+---
+
+## 🔹 Bước 1: Khai báo và tính giai thừa
+
+```python
+MOD = 1_000_000_007  # số nguyên tố rất lớn, dùng để tránh tràn và hỗ trợ nghịch đảo modulo
+MX = 31               # Giới hạn tối đa, vì m <= 30 trong bài
+
+fac = [0] * MX
+fac[0] = 1
+for i in range(1, MX):
+    fac[i] = fac[i - 1] * i % MOD
+```
+
+### 🧩 Giải thích:
+
+* `fac[i]` lưu giá trị của `i! mod MOD`
+* Dòng `fac[i] = fac[i - 1] * i % MOD` nghĩa là:
+  [
+  fac[i] = (fac[i-1] \times i) \bmod MOD
+  ]
+
+### 📘 Ví dụ:
+
+| i | fac[i] | Ý nghĩa |
+| - | ------ | ------- |
+| 0 | 1      | 0! = 1  |
+| 1 | 1      | 1! = 1  |
+| 2 | 2      | 2! = 2  |
+| 3 | 6      | 3! = 6  |
+| 4 | 24     | 4! = 24 |
+| … | …      | …       |
+
+---
+
+## 🔹 Bước 2: Khởi tạo mảng nghịch đảo giai thừa
+
+```python
+inv_f = [0] * MX
+inv_f[-1] = pow(fac[-1], -1, MOD)
+```
+
+### 🧩 Giải thích:
+
+* `fac[-1]` là `fac[MX-1]` (tức `(MX-1)!`)
+* `pow(fac[-1], -1, MOD)` = **nghịch đảo modulo** của `(MX-1)!`
+
+Theo **Định lý Fermat nhỏ (Fermat’s Little Theorem):**
+[
+a^{-1} \equiv a^{MOD - 2} \pmod{MOD} \quad \text{khi MOD là số nguyên tố}
+]
+
+nên `pow(fac[-1], -1, MOD)` trong Python sẽ tự tính ra giá trị đó.
+
+---
+
+## 🔹 Bước 3: Tính ngược lại các nghịch đảo giai thừa còn lại
+
+```python
+for i in range(MX - 1, 0, -1):
+    inv_f[i - 1] = inv_f[i] * i % MOD
+```
+
+### 🧩 Giải thích:
+
+Ta biết:
+[
+(i-1)! = \frac{i!}{i} \Rightarrow (i-1)!^{-1} = i!^{-1} \times i
+]
+
+→ Từ `inv_f[i] = (i!)^{-1}`, ta có thể tính `inv_f[i-1]`.
+
+### 📘 Ví dụ minh họa:
+
+Giả sử:
+
+```
+fac[5] = 120
+inv_f[5] = (120)^{-1} mod MOD = X
+```
+
+thì:
+
+```
+inv_f[4] = inv_f[5] * 5 % MOD
+```
+
+bởi vì (4!)⁻¹ = (5!)⁻¹ × 5
+
+---
+
+## ✅ Kết quả cuối cùng:
+
+Sau khi chạy xong:
+
+* `fac[i] = i! % MOD`
+* `inv_f[i] = (i!)⁻¹ % MOD`
+
+---
+
+## 📘 Ví dụ cụ thể
+
+Giả sử `MX = 6`, ta có:
+
+| i | fac[i] | inv_f[i] (nghịch đảo) |
+| - | ------ | --------------------- |
+| 0 | 1      | 1                     |
+| 1 | 1      | 1                     |
+| 2 | 2      | 500000004             |
+| 3 | 6      | 166666668             |
+| 4 | 24     | 41666667              |
+| 5 | 120    | 808333339             |
+
+*(vì 2 × 500000004 ≡ 1 mod 1e9+7, v.v.)*
+
+---
+
+## 🧠 Tóm lại:
+
+| Biến       | Ý nghĩa                                               | Vai trò                                   |
+| ---------- | ----------------------------------------------------- | ----------------------------------------- |
+| `fac[i]`   | `i! mod MOD`                                          | Giai thừa dùng cho tổ hợp                 |
+| `inv_f[i]` | `(i!)⁻¹ mod MOD`                                      | Nghịch đảo giai thừa để chia trong modulo |
+| `% MOD`    | Giữ kết quả nhỏ, tránh tràn, hỗ trợ tính toán modular |                                           |
+
+---
+
+Bạn có muốn mình viết lại **phiên bản Java tương đương** với phần này (kèm ví dụ in ra `fac` và `INV_F`) để bạn thấy rõ cách tính từng bước không?
+Rất hay 👏 — đây chính là phần **trọng tâm** của thuật toán trong bài “3539. Find Sum of Array Product of Magical Sequences”.
+Mình sẽ giải thích **từng dòng, từng công thức** cho bạn, kèm trực giác để hiểu *vì sao* công thức này hình thành nhé 👇
+
+---
+
+## 🎯 Mục tiêu của bài toán
+
+Bài yêu cầu tính **tổng các tích “ma thuật”** (magical sequences) tạo thành từ m lần chọn phần tử của `nums`, sao cho **tổng số bit `1` trong tổng nhị phân của chỉ số chọn** bằng `k`.
+
+Thuật toán này giải bằng **quy hoạch động có ghi nhớ (DFS + memo)** kết hợp với **công thức tổ hợp modulo**.
+
+---
+
+## 🔹 Các biến đầu vào trong `dfs`
+
+```python
+def dfs(i: int, left_m: int, x: int, left_k: int) -> int:
+```
+
+| Tham số  | Ý nghĩa                                                |
+| -------- | ------------------------------------------------------ |
+| `i`      | Đang xét đến phần tử thứ `i` trong mảng `nums`         |
+| `left_m` | Số lần chọn còn lại (vì tổng cộng ta cần chọn `m` lần) |
+| `x`      | Tổng "nhị phân" tạm thời (lưu trạng thái cộng dồn bit) |
+| `left_k` | Số lượng bit `1` cần còn lại trong tổng cuối cùng      |
+
+---
+
+## 🔹 `c1 = x.bit_count()`
+
+→ Đếm xem hiện tại trong `x` có bao nhiêu bit `1`.
+
+---
+
+## 🔹 `if c1 + left_m < left_k: return 0`
+
+> Nếu **số bit 1 hiện có + số phép chọn còn lại** < `left_k`
+> → không thể nào đạt đủ số bit `1` cần, nên **dừng sớm (cắt nhánh)**.
+
+Ví dụ:
+
+* Giả sử hiện có `c1 = 2`, còn `left_m = 1`, mà `left_k = 5`
+  → Dù có chọn tiếp thế nào, cũng không thể đạt 5 bit `1` → return 0.
+
+---
+
+## 🔹 `if i == n: return 1 if left_m == 0 and c1 == left_k else 0`
+
+> Nếu đã duyệt hết `nums`:
+>
+> * Nếu đã dùng hết số lần chọn (`left_m == 0`) **và** đúng đủ `k` bit `1`, thì có **1 cách hợp lệ**.
+> * Ngược lại, không hợp lệ → return 0.
+
+---
+
+## 🔹 Vòng lặp chính: `for j in range(left_m + 1):`
+
+Ta thử **chọn j phần tử** từ `nums[i]`.
+
+* Có thể chọn `0` phần tử (không dùng `nums[i]`)
+* Hoặc chọn `1, 2, ..., left_m` phần tử (nếu còn chỗ để chọn).
+
+---
+
+## 🔹 Công thức chính
+
+```python
+bit = (x + j) & 1
+if bit <= left_k:
+    r = dfs(i + 1, left_m - j, (x + j) >> 1, left_k - bit)
+    res += r * pow_v[i][j] * inv_f[j]
+```
+
+Ta phân tích **rất kỹ** nhé 👇
+
+### 🧩 `(x + j) & 1`
+
+* `(x + j)` là phép cộng nhị phân (binary sum).
+* `& 1` lấy **bit cuối cùng** (LSB – least significant bit).
+* Bit này thể hiện xem khi cộng `j` phần tử của `nums[i]`, có tạo ra “bit 1” mới ở vị trí này hay không.
+
+---
+
+### 🧩 `(x + j) >> 1`
+
+* Dịch phải 1 bit → nghĩa là **chuyển sang xử lý bit kế tiếp** trong phép cộng nhị phân.
+* Tưởng tượng như bạn đang làm phép cộng bit thủ công, bit thấp nhất xử lý xong rồi thì “carry” sang bên trái.
+
+---
+
+### 🧩 `left_k - bit`
+
+* Nếu bit cuối vừa rồi là 1, thì ta giảm số bit 1 cần đạt (`left_k`) xuống 1.
+* Nếu bit cuối là 0 thì không thay đổi.
+
+---
+
+### 🧩 `r * pow_v[i][j] * inv_f[j]`
+
+Đây là **công thức tổ hợp**:
+
+| Thành phần    | Ý nghĩa                                                                                                          |
+| ------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `r`           | Số cách hợp lệ từ các phần tử còn lại (kết quả từ đệ quy con)                                                    |
+| `pow_v[i][j]` | `nums[i]^j % MOD` (sức mạnh khi chọn `j` lần giá trị `nums[i]`)                                                  |
+| `inv_f[j]`    | `1 / j! mod MOD` — dùng để chia cho hoán vị lặp (vì chọn `j` phần tử giống nhau từ cùng 1 vị trí là hoán vị lặp) |
+
+---
+
+### 🧩 Cộng dồn:
+
+```python
+res += r * pow_v[i][j] * inv_f[j]
+```
+
+→ Cộng dồn tất cả cách chọn `j` phần tử cho vị trí `i`.
+
+Cuối cùng:
+
+```python
+return res % MOD
+```
+
+→ Trả về tổng số cách hợp lệ (modulo 1e9+7).
+
+---
+
+## 🔹 Kết quả cuối cùng:
+
+```python
+return dfs(0, m, 0, k) * fac[m] % MOD
+```
+
+### 🧠 Giải thích:
+
+* `dfs(0, m, 0, k)` tính tổng các **tổ hợp chia theo thứ tự chọn**, có chia cho `j!` (tức là **đã bỏ trùng**).
+* Nhân lại với `fac[m]` để **phục hồi toàn bộ thứ tự (hoán vị)** vì ban đầu ta chia cho factorial để tránh trùng lặp.
+* Cuối cùng lấy `% MOD` để đảm bảo không tràn số.
+
+---
+
+## 🧩 Tóm tắt ý tưởng:
+
+| Bước | Giải thích                                                             |
+| ---- | ---------------------------------------------------------------------- |
+| 1️⃣  | Duyệt từng phần tử `nums[i]`, xem chọn bao nhiêu lần `j`               |
+| 2️⃣  | Cập nhật tổng nhị phân `x`, và số bit `1` còn lại (`left_k`)           |
+| 3️⃣  | Dùng đệ quy DFS để tính tổng cách chọn hợp lệ                          |
+| 4️⃣  | Nhân với giá trị `nums[i]^j` và chia cho `j!` để loại bỏ hoán vị trùng |
+| 5️⃣  | Nhân toàn bộ kết quả cuối cùng với `m!` để phục hồi thứ tự chọn        |
+
+---
+
+## 📘 Tóm lại:
+
+Thuật toán này là **đệ quy động kết hợp tổ hợp học modulo**, xử lý chặt chẽ bit nhị phân và đếm tổ hợp chọn phần tử sao cho có đúng `k` bit `1` trong tổng chỉ số.
+
+---
+
+Nếu bạn muốn, mình có thể **viết lại đoạn DFS này kèm ví dụ cụ thể nhỏ** (ví dụ `nums = [2,3], m=2, k=1`) và giải thích từng bước cách đệ quy chạy.
+Bạn có muốn mình làm phần đó không?
+Rất hay — đoạn này chính là **trái tim của thuật toán đệ quy (DFS)**, nên ta phân tích kỹ từng phần nhé 👇
+
+---
+
+### 🧠 Mục tiêu của DFS
+
+Ta đang duyệt qua từng phần tử `nums[i]` để tạo ra tất cả **cách chọn số mũ (j)** sao cho tổng số mũ = `m`, và số bit 1 sau khi cộng & dịch phải bằng `k`.
+
+---
+
+### 🔍 Phân tích từng dòng:
+
+#### 1️⃣ `for j in range(left_m + 1):`
+
+* `left_m` là **số lượng mũ còn lại** có thể phân phối.
+* `j` là **số mũ mà ta chọn cho nums[i]** tại vị trí hiện tại.
+* Vì tổng mũ phải đúng bằng `m`, nên ta thử mọi giá trị từ `0 → left_m`.
+
+---
+
+#### 2️⃣ `bit = (x + j) & 1`
+
+* Đây là mẹo dùng **bitwise** để tính **bit 1** sinh ra khi ta cộng `x + j`.
+
+Giải thích:
+
+* `x` là phần dư (carry) nhị phân từ bước trước.
+* `(x + j)` là tổng mới khi cộng thêm `j`.
+* `& 1` nghĩa là **lấy bit thấp nhất** (tức là giá trị chẵn/lẻ):
+
+  * Nếu `(x + j)` chẵn → `bit = 0`
+  * Nếu `(x + j)` lẻ → `bit = 1`
+
+=> `bit` đại diện cho số **bit 1 sinh ra** ở vị trí này.
+
+---
+
+#### 3️⃣ `if bit <= left_k:`
+
+* Nếu `bit` (số bit 1 vừa thêm) **vượt quá số bit 1 còn cần (`left_k`)** thì bỏ qua (vì không thể đủ điều kiện sau này).
+  → Giúp cắt tỉa nhanh nhánh vô nghiệm trong DFS.
+
+---
+
+#### 4️⃣ `r = dfs(i + 1, left_m - j, (x + j) >> 1, left_k - bit)`
+
+* Gọi đệ quy sang phần tử tiếp theo:
+
+  * `i + 1`: sang số kế tiếp.
+  * `left_m - j`: đã dùng `j` mũ → còn lại `left_m - j`.
+  * `(x + j) >> 1`: dịch phải 1 bit (tức là truyền **phần carry nhị phân** sang bước kế).
+  * `left_k - bit`: đã sử dụng `bit` bit 1, nên còn `left_k - bit` cần đạt.
+
+---
+
+#### 5️⃣ `res += r * pow_v[i][j] * inv_f[j]`
+
+Công thức này tính giá trị kết hợp:
+
+* `r`: số kết quả hợp lệ từ các bước sau.
+* `pow_v[i][j]`: giá trị `nums[i]^j` (đã mod sẵn).
+* `inv_f[j]`: nghịch đảo giai thừa (chia cho `j!` để tránh đếm trùng thứ tự).
+
+👉 Đây là ý tưởng **tổ hợp có trọng số** — mỗi cách chọn `j` mũ đóng góp một phần giá trị cho tổng.
+
+---
+
+#### 6️⃣ `return res % MOD`
+
+Kết quả được lấy **modulo 1e9+7** để tránh tràn và đúng theo yêu cầu bài toán.
+
+---
+
+### ✳️ Tóm tắt quy trình:
+
+Ở mỗi bước:
+
+1. Chọn một `j` (số mũ cho phần tử thứ `i`).
+2. Tính bit 1 sinh ra.
+3. Nếu còn khả thi → đệ quy sang bước tiếp.
+4. Cộng dồn kết quả có trọng số (`nums[i]^j / j!`).
+
+Cuối cùng, ở bước gốc ta nhân thêm `fac[m]` để khôi phục lại tổ hợp ban đầu.
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ đệ quy (tree DFS)** để minh họa cách `(x+j)>>1` và `bit` lan truyền giữa các bước — bạn có muốn mình làm phần đó không?

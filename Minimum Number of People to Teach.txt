@@ -1,0 +1,606 @@
+LeetCode 1733 – Minimum Number of People to Teach.
+from typing import List
+class Solution:
+    def minimumTeachings(self, n: int, languages: List[List[int]], friendships: List[List[int]]) -> int:
+        
+        # Bước 1: Chuyển danh sách ngôn ngữ của mỗi người sang tập hợp (set).
+        # Sử dụng set giúp việc kiểm tra ngôn ngữ chung (giao điểm) rất nhanh chóng.
+        learned = list(map(set, languages))
+
+        # Bước 2: Khởi tạo các biến để theo dõi
+        
+        # 'total' đếm tổng số người duy nhất cần được dạy.
+        total = 0
+        
+        # 'vis' (visited) là một mảng boolean để đánh dấu những người đã được thêm vào nhóm cần dạy.
+        # Điều này giúp tránh việc đếm một người nhiều lần.
+        vis = [False] * len(languages)
+        
+        # 'cnt' (count) là một mảng để đếm số người trong nhóm cần dạy đã biết mỗi ngôn ngữ.
+        # Kích thước n + 1 để chỉ mục tương ứng với ID ngôn ngữ.
+        cnt = [0] * (n + 1)
+
+        def add(u: int) -> None:
+            """
+            Hàm này thêm một người vào nhóm cần dạy và cập nhật bộ đếm ngôn ngữ.
+            
+            Args:
+                u (int): Chỉ mục của người cần thêm.
+            """
+            if vis[u]:
+                # Nếu người này đã được thêm, không làm gì cả.
+                return
+            
+            # Đánh dấu người này đã được thăm để tránh đếm lại.
+            vis[u] = True
+            
+            # Sử dụng nonlocal để thay đổi biến 'total' ở phạm vi bao bọc.
+            nonlocal total
+            total += 1
+            
+            # Với mỗi ngôn ngữ mà người này biết, tăng bộ đếm tương ứng.
+            for x in languages[u]:
+                cnt[x] += 1
+
+        # Bước 3: Duyệt qua các cặp bạn bè và xác định những người cần dạy.
+        for u, v in friendships:
+            # Chỉ số trong Python bắt đầu từ 0, trong khi ID người bắt đầu từ 1.
+            # Vì vậy, ta cần trừ 1.
+            
+            # .isdisjoint() là một phương thức của set, trả về True nếu hai set không có phần tử chung.
+            if learned[u - 1].isdisjoint(learned[v - 1]):
+                # Nếu họ không có ngôn ngữ chung, thêm cả hai vào nhóm cần dạy.
+                add(u - 1)
+                add(v - 1)
+
+        # Bước 4: Tính toán kết quả cuối cùng.
+        # Kết quả bằng tổng số người cần dạy trừ đi số người đã biết ngôn ngữ được dạy.
+        # max(cnt) tìm ra ngôn ngữ được biết bởi nhiều người nhất.
+        return total - max(cnt)
+		
+		
+À mình hiểu rồi 👍. Bạn đang thắc mắc cụ thể đoạn hàm `add(u)` này hoạt động như thế nào. Mình giải thích chi tiết từng dòng nhé:
+
+---
+
+### Code
+
+```python
+def add(u: int) -> None:
+    if vis[u]:
+        return
+    vis[u] = True
+    nonlocal total
+    total += 1
+    for x in languages[u]:
+        cnt[x] += 1
+```
+
+---
+
+### Giải thích từng bước
+
+1. **`if vis[u]: return`**
+
+   * `vis` là mảng đánh dấu, để kiểm tra xem người `u` đã được thêm vào danh sách “cần dạy” chưa.
+   * Nếu đã thêm rồi (`vis[u] = True`), thì **không làm gì nữa**, tránh cộng trùng lặp.
+
+2. **`vis[u] = True`**
+
+   * Đánh dấu rằng người `u` đã nằm trong danh sách “cần xem xét để dạy”.
+
+3. **`nonlocal total`**
+
+   * `total` được định nghĩa ở ngoài hàm `add`.
+   * Muốn thay đổi giá trị của nó trong hàm thì phải khai báo `nonlocal`.
+   * Đây là tổng số **người cần dạy tiềm năng**.
+
+4. **`total += 1`**
+
+   * Mỗi lần thêm một người mới (chưa được xét trước đó) thì tăng tổng số người cần dạy thêm 1.
+
+5. **`for x in languages[u]: cnt[x] += 1`**
+
+   * `languages[u]` là danh sách các ngôn ngữ người `u` biết.
+   * Với mỗi ngôn ngữ `x`, ta cộng thêm 1 vào `cnt[x]`.
+   * Ý nghĩa: trong nhóm “cần dạy”, có thêm một người nữa đã biết ngôn ngữ `x`.
+
+---
+
+### 📌 Ý nghĩa chung của `add(u)`
+
+Hàm `add(u)` sẽ:
+
+* Đánh dấu người `u` cần dạy (nếu chưa có).
+* Tăng bộ đếm tổng số người cần dạy (`total`).
+* Cập nhật thống kê `cnt[x]` = số người trong nhóm cần dạy đã biết ngôn ngữ `x`.
+
+---
+
+### 📌 Vì sao cần `cnt[x]`?
+
+* Sau khi gom đủ tất cả người cần dạy, ta sẽ chọn **một ngôn ngữ** để dạy cho họ.
+* Nếu nhiều người trong nhóm đã biết ngôn ngữ `x`, thì ta **tiết kiệm số người phải dạy mới**.
+* Công thức cuối: `total - max(cnt)`
+
+  * `total`: tổng số người cần dạy.
+  * `max(cnt)`: số người trong nhóm đã biết ngôn ngữ nhiều nhất.
+  * Kết quả = số người còn lại phải học ngôn ngữ đó.
+
+---
+
+👉 Ví dụ nhỏ:
+
+* Có 3 người cần dạy:
+
+  * Người A biết {1,2}
+  * Người B biết {2}
+  * Người C biết {3}
+
+Khi gọi `add` cho A, B, C:
+
+* `total = 3`
+* `cnt[1] = 1` (A biết)
+* `cnt[2] = 2` (A, B biết)
+* `cnt[3] = 1` (C biết)
+
+→ `max(cnt) = 2` (ngôn ngữ 2 có nhiều người biết nhất)
+→ Kết quả = `3 - 2 = 1` → chỉ cần dạy thêm 1 người (C học ngôn ngữ 2).
+
+---
+
+Bạn có muốn mình làm lại cả ví dụ **với code chạy từng bước (in ra total, cnt, vis)** để thấy rõ `add(u)` hoạt động như thế nào không?
+Ok, mình giải thích thuật toán trong đoạn code `minimumTeachings` này nhé. Đây là một bài toán trên **LeetCode 1733 – Minimum Number of People to Teach**.
+
+---
+
+### 📌 Đề bài (tóm tắt):
+
+* Có `n` ngôn ngữ (1 → n).
+* Có `m` người, mỗi người biết một số ngôn ngữ (danh sách `languages`).
+* Có một số cặp bạn bè (`friendships`).
+* Hai người là bạn mà **không có ngôn ngữ chung** thì không thể giao tiếp.
+* Bạn được chọn **một ngôn ngữ duy nhất** để dạy cho một số người, sao cho tất cả các cặp bạn bè đều có thể nói chuyện.
+* Hỏi: số **người ít nhất cần dạy** là bao nhiêu?
+
+---
+
+### 📌 Ý tưởng thuật toán:
+
+1. **Tìm những cặp bạn bè không thể nói chuyện với nhau**:
+
+   * Nếu `learned[u] ∩ learned[v] = ∅` (không có giao nhau), thì cả hai `u, v` cần được xét để dạy thêm.
+
+2. **Xác định tập hợp người cần dạy**:
+
+   * Gọi `add(u)` để đánh dấu người `u` vào danh sách cần dạy.
+   * Đồng thời cập nhật `cnt[x]` = số người trong danh sách này **đã biết ngôn ngữ x**.
+
+3. **Chọn ngôn ngữ tối ưu để dạy**:
+
+   * Nếu ta dạy ngôn ngữ `x`, thì tất cả những người đã biết `x` trong danh sách sẽ không cần học nữa.
+   * Nên số người cần dạy = `total - cnt[x]`.
+   * Do đó, chọn ngôn ngữ `x` có `cnt[x]` lớn nhất để giảm số người phải dạy.
+
+4. **Trả kết quả**:
+
+   * `total - max(cnt)`.
+
+---
+
+### 📌 Giải thích code:
+
+```python
+learned = list(map(set, languages))   # mỗi người -> tập ngôn ngữ họ biết
+vis = [False] * len(languages)        # đánh dấu ai đã thêm vào danh sách cần dạy
+cnt = [0] * (n + 1)                   # đếm số người biết mỗi ngôn ngữ trong nhóm cần dạy
+total = 0
+
+def add(u):
+    if vis[u]: return
+    vis[u] = True
+    nonlocal total
+    total += 1
+    for x in languages[u]:
+        cnt[x] += 1                   # cộng dồn ngôn ngữ của u
+
+# duyệt các cặp bạn bè
+for u, v in friendships:
+    if learned[u - 1].isdisjoint(learned[v - 1]): # nếu u và v không có ngôn ngữ chung
+        add(u - 1)
+        add(v - 1)
+
+return total - max(cnt)               # chọn ngôn ngữ có nhiều người biết nhất để dạy
+```
+
+---
+
+### 📌 Ví dụ minh họa:
+
+```
+n = 3
+languages = [[2],[1,3],[1,2],[3]]
+friendships = [[1,4],[1,2],[2,3],[3,4]]
+```
+
+* Người 1: biết {2}
+* Người 2: biết {1,3}
+* Người 3: biết {1,2}
+* Người 4: biết {3}
+
+Các cặp cần xét:
+
+* (1,4): {2} ∩ {3} = ∅  → cần dạy thêm
+* (1,2): {2} ∩ {1,3} = ∅  → cần dạy thêm
+* (2,3): {1,3} ∩ {1,2} ≠ ∅  (có chung 1) → OK
+* (3,4): {1,2} ∩ {3} = ∅  → cần dạy thêm
+
+Nhóm cần dạy = {1,2,4,3} (tất cả).
+
+* cnt\[1] = 2 (người 2,3)
+* cnt\[2] = 2 (người 1,3)
+* cnt\[3] = 2 (người 2,4)
+
+→ `total = 4`, `max(cnt) = 2`
+→ kết quả = `4 - 2 = 2`.
+
+Nghĩa là chỉ cần dạy **2 người** ngôn ngữ thích hợp (ví dụ dạy ngôn ngữ 1 cho người 1 và 4).
+
+---
+
+👉 Thuật toán này có độ phức tạp **O(F \* L)**, với `F = số cặp bạn bè`, `L = số ngôn ngữ trung bình mỗi người biết`, vì mỗi lần add sẽ cộng vào `cnt`.
+
+---
+
+Bạn có muốn mình vẽ **timeline trực quan (ai học thêm ngôn ngữ gì để kết nối bạn bè)** để dễ hiểu hơn không?
+À, cái này rất hay bị thắc mắc 👍
+
+Trong code có dòng:
+
+```python
+cnt = [0] * (n + 1)
+```
+
+---
+
+### 📌 Vì sao phải là `n + 1`?
+
+* Bài toán cho có `n` ngôn ngữ, đánh số từ **1 → n**.
+* Nhưng trong Python, **chỉ số mảng bắt đầu từ 0**.
+
+Ví dụ: nếu có `n = 3` ngôn ngữ, thì ngôn ngữ được đánh số:
+
+```
+1, 2, 3
+```
+
+Nếu ta tạo mảng `cnt = [0] * n`, tức là `cnt = [0,0,0]`, thì chỉ số hợp lệ là `0,1,2`.
+→ Lúc cần truy cập `cnt[3]` (ngôn ngữ số 3), sẽ bị lỗi **IndexError**.
+
+👉 Vì vậy, ta tạo mảng độ dài `n+1`, tức là `cnt[0..n]`.
+
+* `cnt[0]` **không dùng**, để trống.
+* `cnt[1] ... cnt[n]` dùng cho ngôn ngữ 1 đến n.
+
+---
+
+### 📌 Ví dụ nhỏ:
+
+Giả sử `n = 3` (3 ngôn ngữ).
+
+```python
+cnt = [0] * (n+1)   # [0,0,0,0]
+```
+
+* `cnt[1]` → số người biết ngôn ngữ 1
+* `cnt[2]` → số người biết ngôn ngữ 2
+* `cnt[3]` → số người biết ngôn ngữ 3
+* `cnt[0]` → bỏ qua
+
+---
+
+👉 Tóm lại: `n+1` là để dễ dàng đánh chỉ số theo **số ngôn ngữ** (1-based index), tránh lỗi tràn mảng.
+
+---
+
+Bạn có muốn mình viết lại đoạn code để dùng **0-based index cho cnt** (không cần `n+1`) cho dễ hiểu hơn không?
+À mình hiểu rồi 👍. Bạn thấy đoạn này giống **DFS** đúng không? Mình giải thích:
+
+---
+
+### Đoạn code bạn nói đến
+
+```python
+for u, v in friendships:
+    if learned[u - 1].isdisjoint(learned[v - 1]):
+        add(u - 1)
+        add(v - 1)
+```
+
+---
+
+### 📌 So sánh với DFS
+
+* Trong **DFS (Depth First Search)**:
+
+  * Ta đi từ một đỉnh `u`, đánh dấu `visited[u] = True`.
+  * Sau đó đi tiếp đến các đỉnh kề và gọi đệ quy/stack để duyệt tiếp.
+  * Mục tiêu: duyệt hết toàn bộ thành phần liên thông.
+
+* Trong **đoạn code này**:
+
+  * Ta duyệt **từng cặp bạn bè** một.
+  * Nếu cặp đó không có ngôn ngữ chung → gọi `add(u)` và `add(v)` để thêm họ vào nhóm cần dạy.
+  * Trong `add(u)` có đánh dấu `vis[u] = True` giống hệt như DFS đánh dấu `visited`.
+  * Nhưng khác chỗ: ở đây **không có đệ quy**, không đi theo cạnh tiếp theo.
+
+---
+
+### 📌 Vậy tại sao lại “giống DFS”?
+
+* Vì cũng có:
+
+  * Một mảng `vis` (visited) để **đánh dấu người đã xét**.
+  * Một hàm `add(u)` giống như “thăm” một đỉnh.
+* Nhưng thực chất nó chỉ **chọn lọc các node cần xử lý**, chứ không lan rộng như DFS.
+
+---
+
+### 📌 Khác biệt chính
+
+* **DFS**: đi sâu, duyệt tất cả đỉnh kề, thường có đệ quy hoặc stack.
+* **Code này**: chỉ đơn giản **lấy tất cả người trong các cặp không giao tiếp được** và gom lại thành một tập hợp. Không cần đi sâu tiếp.
+
+---
+
+👉 Nói cách khác: **nó mượn ý tưởng “visited” giống DFS để không đếm trùng**, nhưng không phải là DFS thật sự.
+
+---
+
+Bạn có muốn mình viết lại đoạn này theo kiểu **DFS thật sự trên đồ thị** (người là đỉnh, cạnh là tình bạn) để so sánh trực quan hơn không?
+Ok 👍, mình sẽ giải thích **toàn bộ thuật toán** (đặc biệt là đoạn cuối cùng bạn chỉ ra) một cách thật rõ ràng:
+
+---
+
+## 📌 Ý tưởng chính của bài toán
+
+Ta cần chọn **một ngôn ngữ duy nhất** để dạy thêm cho một số người, sao cho tất cả các cặp bạn bè đều có thể giao tiếp.
+
+Thuật toán làm như sau:
+
+---
+
+## 📌 Các bước chi tiết
+
+### 1. Xác định cặp bạn bè không giao tiếp được
+
+```python
+for u, v in friendships:
+    if learned[u - 1].isdisjoint(learned[v - 1]):
+        add(u - 1)
+        add(v - 1)
+```
+
+* `learned[i]` = tập hợp ngôn ngữ mà người `i` biết.
+* `isdisjoint` = kiểm tra xem hai tập có giao nhau không.
+
+  * Nếu **không giao nhau** (disjoint) → cặp đó không nói chuyện được.
+  * Khi đó, ta phải thêm cả 2 người vào danh sách **“người cần xét để dạy”**.
+
+👉 Đây là bước **tìm ra tập người có nguy cơ phải học thêm ngôn ngữ**.
+
+---
+
+### 2. Gom tất cả người “cần dạy” và thống kê họ biết ngôn ngữ nào
+
+Trong hàm `add(u)`:
+
+* `total += 1` → tăng số người cần dạy.
+* Với mỗi ngôn ngữ `x` mà người `u` biết: `cnt[x] += 1`.
+
+  * Ý nghĩa: trong nhóm người cần dạy, có `cnt[x]` người đã biết ngôn ngữ `x`.
+
+👉 Sau bước này ta có:
+
+* `total` = số người **bị buộc phải tham gia nhóm cần học**.
+* `cnt[x]` = số người trong nhóm đã biết sẵn ngôn ngữ `x`.
+
+---
+
+### 3. Chọn ngôn ngữ dạy tối ưu
+
+```python
+return total - max(cnt)
+```
+
+* Nếu ta chọn dạy ngôn ngữ `x`, thì:
+
+  * Những người **đã biết `x`** thì không cần học lại.
+  * Những người **chưa biết `x`** phải học thêm.
+* Số người cần dạy = `total - cnt[x]`.
+* Để tối ưu, ta chọn ngôn ngữ có `cnt[x]` lớn nhất (nhiều người biết sẵn nhất).
+
+👉 Vậy kết quả cuối cùng = `total - max(cnt)`.
+
+---
+
+## 📌 Ví dụ minh họa
+
+```
+n = 3
+languages = [[2],[1,3],[1,2],[3]]
+friendships = [[1,4],[1,2],[2,3],[3,4]]
+```
+
+* Người 1: {2}
+* Người 2: {1,3}
+* Người 3: {1,2}
+* Người 4: {3}
+
+Các cặp bạn bè:
+
+* (1,4): {2} ∩ {3} = ∅ → add(1), add(4)
+* (1,2): {2} ∩ {1,3} = ∅ → add(1), add(2)
+* (2,3): có chung {1} → ok
+* (3,4): {1,2} ∩ {3} = ∅ → add(3), add(4)
+
+→ Nhóm cần dạy = {1,2,3,4}, `total = 4`.
+
+Thống kê `cnt`:
+
+* cnt\[1] = 2 (người 2,3 biết)
+* cnt\[2] = 2 (người 1,3 biết)
+* cnt\[3] = 2 (người 2,4 biết)
+
+Kết quả:
+
+```
+total - max(cnt) = 4 - 2 = 2
+```
+
+👉 Nghĩa là chỉ cần dạy **2 người** một ngôn ngữ phù hợp (ví dụ dạy ngôn ngữ 1 cho người 1 và 4).
+
+---
+
+✅ Tóm lại:
+
+* **Bước 1**: tìm tất cả bạn bè không nói chuyện được.
+* **Bước 2**: gom họ lại, đếm xem họ biết ngôn ngữ nào.
+* **Bước 3**: chọn ngôn ngữ mà nhiều người trong nhóm đã biết nhất → dạy những người còn lại.
+
+---
+
+Bạn muốn mình vẽ sơ đồ trực quan **ai học thêm ngôn ngữ gì** trong ví dụ này để thấy kết nối bạn bè được giải quyết không?
+Câu hỏi rất hay 👍.
+
+Trong code có:
+
+```python
+for u, v in friendships:
+    if learned[u - 1].isdisjoint(learned[v - 1]):
+        add(u - 1)
+        add(v - 1)
+```
+
+---
+
+### 📌 Vì sao lại `u - 1` và `v - 1`?
+
+1. **Dữ liệu bài toán (friendships) cho người theo chỉ số 1-based**
+
+   * Trong đề gốc: mỗi người được đánh số từ **1 → m**.
+   * Ví dụ: cặp `[1,4]` nghĩa là người số 1 và người số 4 là bạn bè.
+
+2. **Trong code Python (mảng, list) lại 0-based**
+
+   * Khi ta lưu `languages`, tức là `languages[i]` ứng với người **i+1**.
+   * Ví dụ:
+
+     ```python
+     languages = [[2],[1,3],[1,2],[3]]
+     ```
+
+     * `languages[0]` = người 1 biết {2}
+     * `languages[1]` = người 2 biết {1,3}
+     * `languages[2]` = người 3 biết {1,2}
+     * `languages[3]` = người 4 biết {3}
+
+3. **Phải trừ 1 để khớp index**
+
+   * Nếu không `-1`:
+
+     * Với cặp `[1,4]`, code sẽ gọi `learned[1]` và `learned[4]`.
+     * Nhưng `learned[4]` sẽ lỗi vì mảng chỉ có chỉ số 0..3.
+   * Khi `-1`:
+
+     * `[1,4]` → `learned[0]` và `learned[3]` → đúng người 1 và người 4.
+
+---
+
+👉 Tóm lại:
+
+* **`friendships` dùng chỉ số 1-based (theo đề bài).**
+* **`languages` trong code dùng 0-based (theo Python).**
+* Vì vậy phải `u-1, v-1` để chuyển từ **1-based → 0-based** cho khớp.
+
+---
+
+Bạn có muốn mình viết lại code **toàn bộ bằng 1-based index** (không cần `-1`) để dễ hiểu hơn không?
+Ok 👌, mình tóm tắt thuật toán cả bài **ngắn gọn, dễ nhớ, dễ ôn lại** cho bạn:
+
+---
+
+## 🚀 Thuật toán Minimum Teachings (LeetCode 1733)
+
+### Bài toán:
+
+* Có `n` ngôn ngữ (1 → n).
+* Có `m` người, mỗi người biết vài ngôn ngữ.
+* Có danh sách `friendships`.
+* Nếu hai người là bạn mà không có ngôn ngữ chung → phải dạy thêm.
+* Ta chỉ được chọn **một ngôn ngữ duy nhất** để dạy.
+* Mục tiêu: dạy ít người nhất.
+
+---
+
+### Các bước giải:
+
+1. **Tìm nhóm người cần dạy**
+
+   * Duyệt từng cặp bạn bè `(u, v)`.
+   * Nếu `learned[u] ∩ learned[v] = ∅` (không giao nhau) → thêm `u, v` vào nhóm cần dạy.
+
+2. **Đếm số ngôn ngữ họ đã biết**
+
+   * Với mỗi người trong nhóm cần dạy:
+
+     * `total += 1`
+     * Với mỗi ngôn ngữ `x` họ biết → `cnt[x] += 1`.
+
+3. **Chọn ngôn ngữ tối ưu**
+
+   * Nếu chọn dạy ngôn ngữ `x`:
+
+     * Người đã biết `x` không cần học lại.
+     * Người chưa biết `x` phải học.
+     * Số người cần dạy = `total - cnt[x]`.
+
+4. **Kết quả**
+
+   * Đáp án = `total - max(cnt)`.
+
+---
+
+### Công thức nhớ nhanh
+
+👉 **Kết quả = (số người trong nhóm cần dạy) – (số người trong nhóm biết nhiều nhất cùng một ngôn ngữ)**
+
+---
+
+### Ví dụ:
+
+```
+n = 3
+languages = [[2],[1,3],[1,2],[3]]
+friendships = [[1,4],[1,2],[2,3],[3,4]]
+```
+
+* Nhóm cần dạy = {1,2,3,4}, `total = 4`.
+* cnt:
+
+  * ngôn ngữ 1 → 2 người biết
+  * ngôn ngữ 2 → 2 người biết
+  * ngôn ngữ 3 → 2 người biết
+* max(cnt) = 2 → kết quả = 4 - 2 = **2**.
+
+---
+
+✅ Nhớ:
+
+* **B1**: tìm ai cần học → `total`
+* **B2**: đếm số người biết từng ngôn ngữ → `cnt`
+* **B3**: dạy ngôn ngữ nhiều người biết nhất → `total - max(cnt)`
+
+---
+
+Bạn có muốn mình viết lại thuật toán này thành **3–4 dòng pseudo code ngắn gọn** (dễ ôn thi) không?

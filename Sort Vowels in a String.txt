@@ -1,0 +1,936 @@
+Sort Vowels in a String(11/09/2025)
+class Solution {
+    public String sortVowels(String s) {
+        char[] vowels = {'A','E','I','O','U','a','e','i','o','u'};
+        int[] stringCharCount = new int[128];
+        char[] sChars = s.toCharArray();
+        for(char ch : sChars){
+            stringCharCount[ch]++;
+        }
+        boolean found = false;
+        for(char ch : vowels){
+            found |= stringCharCount[ch]>0;
+        }
+	Ok 👍 mình sẽ phân tích kỹ từng phần bạn hỏi:
+
+---
+
+### 1. `boolean found = false;`
+
+* Lúc khởi tạo, ta **chưa biết trong chuỗi có nguyên âm nào hay không**.
+* Vì thế `found` được đặt mặc định là `false` (giả định ban đầu là "không có nguyên âm").
+* Sau đó ta sẽ duyệt qua danh sách nguyên âm (`vowels`), nếu thấy có ít nhất một nguyên âm trong chuỗi thì đổi `found` thành `true`.
+* Nếu hết vòng for mà `found vẫn false` → nghĩa là chuỗi không có nguyên âm → trả về ngay chuỗi gốc.
+
+---
+
+### 2. `found |= stringCharCount[ch] > 0;`
+
+* Đây là viết ngắn gọn của:
+
+  ```java
+  found = found | (stringCharCount[ch] > 0);
+  ```
+
+  hoặc
+
+  ```java
+  found = found || (stringCharCount[ch] > 0);
+  ```
+* Nghĩa là:
+
+  * Nếu ký tự nguyên âm `ch` xuất hiện trong chuỗi (`stringCharCount[ch] > 0`) → found sẽ trở thành `true`.
+  * Chỉ cần có **ít nhất một nguyên âm** thì found sẽ là `true`.
+
+---
+
+### 3. `int[] stringCharCount = new int[128];`
+
+* Ở đây dùng mảng `int` có **128 ô nhớ**, mỗi ô nhớ ứng với **một mã ASCII** (từ 0 đến 127).
+* Vì chuỗi đầu vào chỉ chứa ký tự ASCII (chữ cái, số, dấu câu cơ bản), nên 128 là đủ để biểu diễn tất cả các ký tự.
+* Ví dụ:
+
+  * `'A'` có mã ASCII 65 → sẽ đếm ở `stringCharCount[65]`.
+  * `'e'` có mã ASCII 101 → sẽ đếm ở `stringCharCount[101]`.
+
+---
+
+### 4. Vòng for đếm ký tự
+
+```java
+for(char ch : sChars){
+    stringCharCount[ch]++;
+}
+```
+
+* Với mỗi ký tự `ch` trong chuỗi, ta tăng bộ đếm tại vị trí `stringCharCount[ch]` thêm 1.
+* Đây chính là cách đếm tần suất ký tự.
+* Ví dụ: chuỗi `"leetcode"`
+
+  * `'l'` → mã ASCII 108 → `stringCharCount[108]++`
+  * `'e'` → mã ASCII 101 → tăng 3 lần vì có 3 chữ `e`.
+  * `'o'` → mã ASCII 111 → tăng 1 lần.
+* Sau vòng lặp, ta sẽ biết chính xác mỗi ký tự xuất hiện bao nhiêu lần.
+
+---
+
+✅ Tóm lại:
+
+* `boolean found = false`: mặc định giả sử chưa có nguyên âm.
+* `found |= stringCharCount[ch] > 0`: kiểm tra từng nguyên âm trong chuỗi, chỉ cần có một nguyên âm là found sẽ thành `true`.
+* `128`: kích thước mảng dựa trên bảng mã ASCII (0–127).
+* `stringCharCount[ch]++`: đếm tần suất ký tự `ch` xuất hiện trong chuỗi.
+
+---
+
+Ok, mình sẽ giải thích cực chi tiết đoạn này nhé 👇
+
+Trong code bạn có:
+
+```java
+boolean found = false;
+for(char ch : vowels){
+    found |= stringCharCount[ch] > 0;
+}
+```
+
+---
+
+### 1. Toán tử `|`
+
+* Trong Java, với kiểu **boolean**, `|` có nghĩa là **OR (hoặc)**.
+* `a | b` chỉ ra `true` nếu **một trong hai** (hoặc cả hai) là `true`.
+* Ở đây dùng `|=` nghĩa là:
+
+```java
+found = found | (stringCharCount[ch] > 0);
+```
+
+---
+
+### 2. `stringCharCount[ch] > 0`
+
+* `stringCharCount[ch]` là số lần ký tự `ch` xuất hiện trong chuỗi `s`.
+* Nếu số này **lớn hơn 0** → ký tự đó có trong chuỗi → `true`.
+* Nếu bằng 0 → ký tự không xuất hiện → `false`.
+
+Ví dụ:
+`s = "hello"`
+
+* `stringCharCount['a'] = 0` → `'a'` không xuất hiện → `false`
+* `stringCharCount['e'] = 1` → `'e'` có trong chuỗi → `true`
+
+---
+
+### 3. Cách vòng lặp hoạt động
+
+Giả sử `s = "hello"`.
+
+* Bắt đầu: `found = false`
+
+* Kiểm tra `'A'`: `stringCharCount['A'] = 0` → `false`
+  → `found = false | false = false`
+
+* Kiểm tra `'e'`: `stringCharCount['e'] = 1` → `true`
+  → `found = false | true = true`
+
+* Từ giờ trở đi `found` luôn giữ `true`, vì `true | cái gì đó` = `true`.
+
+---
+
+👉 **Tóm lại**:
+`found` sẽ là **true nếu trong chuỗi `s` có ít nhất 1 nguyên âm**.
+Nếu không có nguyên âm nào, `found` vẫn giữ nguyên là `false`.
+
+---
+
+Bạn có muốn mình vẽ **bảng giá trị `found` qua từng vòng lặp** với ví dụ cụ thể `"hello"` không?
+
+        if(!found) return s;
+        
+        boolean[] isVowels = new boolean[128];
+        for(char ch : vowels){
+            if(stringCharCount[ch]>0) isVowels[ch] = true;
+        }
+        int left = 0;
+        for(char v : vowels){
+            while(stringCharCount[v]>0){
+                char ch = sChars[left];
+                stringCharCount[v] -= isVowels[ch]?1:0; 
+                sChars[left] = isVowels[ch]?v:ch; 
+                left++;
+            }
+        }
+        return new String(sChars);
+    }
+}
+Tuyệt — mình sẽ giải thích **chi tiết, từng bước**, theo kiểu dễ nhớ + có ví dụ minh họa để bạn ôn nhanh.
+Rồi 👍 mình giải thích chậm và dễ nhớ luôn nhé:
+
+---
+
+### 1. Đoạn code bạn hỏi:
+
+```java
+for(char ch : vowels){
+    if(stringCharCount[ch]>0) isVowels[ch] = true;
+}
+```
+
+Ý nghĩa:
+
+* `isVowels` là một mảng `boolean[128]`, mỗi phần tử ứng với **một ký tự ASCII**.
+* Nếu `stringCharCount[ch] > 0` → tức là ký tự `ch` xuất hiện ít nhất một lần trong chuỗi → ta đánh dấu `isVowels[ch] = true`.
+
+💡 Như vậy sau vòng lặp này, `isVowels[c] == true` nghĩa là **ký tự `c` vừa là nguyên âm, vừa có mặt trong chuỗi**.
+
+---
+
+### 2. Vì sao phải làm vậy?
+
+Nếu không có mảng `isVowels`, mỗi lần ta kiểm tra có thể phải so sánh ký tự với danh sách nguyên âm `{'A','E','I','O','U','a','e','i','o','u'}` (rất chậm nếu nhiều lần).
+
+Nhưng khi dùng `isVowels`, việc kiểm tra trở thành:
+
+```java
+if (isVowels[ch]) { ... }
+```
+
+➡️ cực nhanh (O(1)), vì chỉ cần truy cập mảng theo chỉ số.
+
+---
+
+### 3. Liên hệ với "Sliding Window"
+
+Mình hiểu tại sao bạn liên tưởng đến **Sliding Window** 👍
+
+* Trong **Sliding Window**, ta cũng hay dùng **mảng đếm (`count[]`)** hoặc **mảng boolean (`isValid[]`)** để đánh dấu trạng thái của ký tự.
+* Ở đây, `isVowels[]` chính là cách **đánh dấu nhanh** để sau này duyệt qua chuỗi không phải kiểm tra từng ký tự có phải nguyên âm hay không.
+
+➡️ Tư duy giống hệt Sliding Window: **dùng mảng đệm để tiết kiệm so sánh nhiều lần.**
+
+---
+
+### 4. Tóm gọn để nhớ:
+
+* `stringCharCount[ch]` → đếm số lần ký tự xuất hiện.
+* `isVowels[ch] = true` → ký tự đó là nguyên âm và có trong chuỗi.
+* Mục đích: giúp khi thay thế nguyên âm, ta kiểm tra nhanh bằng 1 dòng `if(isVowels[ch])` thay vì so sánh 10 ký tự nguyên âm mỗi lần.
+
+---
+
+👉 Bạn có muốn mình **vẽ flow (luồng)** từ `s = "leetcode"` để thấy `stringCharCount` và `isVowels` thay đổi ra sao, rồi tới bước thay thế nguyên âm, để dễ hình dung không?
+Ok 👍 mình giải thích **chi tiết từng dòng** từ đoạn bạn hỏi nhé:
+
+---
+
+### Đoạn code
+
+```java
+int left = 0;
+for(char v : vowels){
+    while(stringCharCount[v]>0){
+        char ch = sChars[left];
+        stringCharCount[v] -= isVowels[ch]?1:0; 
+        sChars[left] = isVowels[ch]?v:ch; 
+        left++;
+    }
+}
+return new String(sChars);
+```
+
+---
+
+### 1. `int left = 0;`
+
+* Đây là **con trỏ vị trí** trên chuỗi gốc `sChars`.
+* Nó sẽ chạy từ trái sang phải để duyệt chuỗi và thay thế các nguyên âm.
+
+---
+
+### 2. `for(char v : vowels){ ... }`
+
+* Duyệt lần lượt từng nguyên âm `v` theo **thứ tự sắp xếp sẵn**: `'A','E','I','O','U','a','e','i','o','u'`.
+* Mục tiêu: lấp dần các nguyên âm trong chuỗi theo thứ tự tăng dần.
+
+---
+
+### 3. `while(stringCharCount[v] > 0)`
+
+* `stringCharCount[v]` cho biết **nguyên âm `v` xuất hiện bao nhiêu lần** trong chuỗi gốc.
+* Chừng nào số lần > 0 → ta phải điền `v` vào chuỗi ở vị trí nguyên âm.
+
+---
+
+### 4. Bên trong vòng `while`:
+
+```java
+char ch = sChars[left];
+```
+
+* Lấy ký tự ở vị trí `left` trong chuỗi gốc.
+
+---
+
+```java
+stringCharCount[v] -= isVowels[ch] ? 1 : 0;
+```
+
+* Nếu `ch` là nguyên âm (`isVowels[ch] == true`):
+  ➝ giảm số lượng cần điền của `v` đi 1.
+* Nếu `ch` không phải nguyên âm: không làm gì.
+
+---
+
+```java
+sChars[left] = isVowels[ch] ? v : ch;
+```
+
+* Nếu `ch` là nguyên âm: thay thế nó bằng nguyên âm `v` (theo thứ tự đã sắp xếp).
+* Nếu `ch` không phải nguyên âm: giữ nguyên `ch`.
+
+---
+
+```java
+left++;
+```
+
+* Dịch sang vị trí tiếp theo trong chuỗi.
+
+---
+
+### 5. `return new String(sChars);`
+
+* Sau khi toàn bộ nguyên âm đã được thay thế, chuyển `char[]` về `String` và trả kết quả.
+
+---
+
+### 🔎 Ví dụ minh họa:
+
+`s = "leetcode"`
+
+1. `sChars = ['l','e','e','t','c','o','d','e']`
+   `stringCharCount = { 'e':3, 'o':1 }`
+
+2. Duyệt nguyên âm `'A','E','I','O','U','a','e','i','o','u'`
+
+   * Khi tới `'e'`:
+
+     * Thay dần vào các vị trí nguyên âm (`e, e, e`) → `'e'` vẫn giữ nguyên vì đã đúng thứ tự.
+   * Khi tới `'o'`:
+
+     * Thay vào vị trí `o` → `'o'`.
+
+3. Chuỗi sau cùng: `"leetcode"` (trong ví dụ này không thay đổi, vì nguyên âm vốn đã có thứ tự).
+
+---
+
+### 🔑 Ý tưởng chính để nhớ:
+
+* **Bước 1:** Đếm số lần xuất hiện của từng nguyên âm.
+* **Bước 2:** Duyệt chuỗi từ trái sang phải (`left`), thay thế nguyên âm bằng nguyên âm nhỏ nhất chưa dùng hết.
+* **Bước 3:** Trả về chuỗi mới.
+
+---
+
+👉 Bạn có muốn mình **viết lại thành phiên bản ngắn gọn dễ đọc hơn** (ít trick hơn) để học cho dễ, sau đó mình so sánh với bản gốc để thấy lợi ích tối ưu không?
+Ok 👍 mình giải thích **chi tiết từng dòng** từ đoạn bạn hỏi nhé:
+
+---
+
+### Đoạn code
+
+```java
+int left = 0;
+for(char v : vowels){
+    while(stringCharCount[v]>0){
+        char ch = sChars[left];
+        stringCharCount[v] -= isVowels[ch]?1:0; 
+        sChars[left] = isVowels[ch]?v:ch; 
+        left++;
+    }
+}
+return new String(sChars);
+```
+
+---
+
+### 1. `int left = 0;`
+
+* Đây là **con trỏ vị trí** trên chuỗi gốc `sChars`.
+* Nó sẽ chạy từ trái sang phải để duyệt chuỗi và thay thế các nguyên âm.
+
+---
+
+### 2. `for(char v : vowels){ ... }`
+
+* Duyệt lần lượt từng nguyên âm `v` theo **thứ tự sắp xếp sẵn**: `'A','E','I','O','U','a','e','i','o','u'`.
+* Mục tiêu: lấp dần các nguyên âm trong chuỗi theo thứ tự tăng dần.
+
+---
+
+### 3. `while(stringCharCount[v] > 0)`
+
+* `stringCharCount[v]` cho biết **nguyên âm `v` xuất hiện bao nhiêu lần** trong chuỗi gốc.
+* Chừng nào số lần > 0 → ta phải điền `v` vào chuỗi ở vị trí nguyên âm.
+
+---
+
+### 4. Bên trong vòng `while`:
+
+```java
+char ch = sChars[left];
+```
+
+* Lấy ký tự ở vị trí `left` trong chuỗi gốc.
+
+---
+
+```java
+stringCharCount[v] -= isVowels[ch] ? 1 : 0;
+```
+
+* Nếu `ch` là nguyên âm (`isVowels[ch] == true`):
+  ➝ giảm số lượng cần điền của `v` đi 1.
+* Nếu `ch` không phải nguyên âm: không làm gì.
+
+---
+
+```java
+sChars[left] = isVowels[ch] ? v : ch;
+```
+
+* Nếu `ch` là nguyên âm: thay thế nó bằng nguyên âm `v` (theo thứ tự đã sắp xếp).
+* Nếu `ch` không phải nguyên âm: giữ nguyên `ch`.
+
+---
+
+```java
+left++;
+```
+
+* Dịch sang vị trí tiếp theo trong chuỗi.
+
+---
+
+### 5. `return new String(sChars);`
+
+* Sau khi toàn bộ nguyên âm đã được thay thế, chuyển `char[]` về `String` và trả kết quả.
+
+---
+
+### 🔎 Ví dụ minh họa:
+
+`s = "leetcode"`
+
+1. `sChars = ['l','e','e','t','c','o','d','e']`
+   `stringCharCount = { 'e':3, 'o':1 }`
+
+2. Duyệt nguyên âm `'A','E','I','O','U','a','e','i','o','u'`
+
+   * Khi tới `'e'`:
+
+     * Thay dần vào các vị trí nguyên âm (`e, e, e`) → `'e'` vẫn giữ nguyên vì đã đúng thứ tự.
+   * Khi tới `'o'`:
+
+     * Thay vào vị trí `o` → `'o'`.
+
+3. Chuỗi sau cùng: `"leetcode"` (trong ví dụ này không thay đổi, vì nguyên âm vốn đã có thứ tự).
+
+---
+
+### 🔑 Ý tưởng chính để nhớ:
+
+* **Bước 1:** Đếm số lần xuất hiện của từng nguyên âm.
+* **Bước 2:** Duyệt chuỗi từ trái sang phải (`left`), thay thế nguyên âm bằng nguyên âm nhỏ nhất chưa dùng hết.
+* **Bước 3:** Trả về chuỗi mới.
+
+---
+
+👉 Bạn có muốn mình **viết lại thành phiên bản ngắn gọn dễ đọc hơn** (ít trick hơn) để học cho dễ, sau đó mình so sánh với bản gốc để thấy lợi ích tối ưu không?
+Ok 👍 mình giải thích **chi tiết từng dòng** từ đoạn bạn hỏi nhé:
+
+---
+
+### Đoạn code
+
+```java
+int left = 0;
+for(char v : vowels){
+    while(stringCharCount[v]>0){
+        char ch = sChars[left];
+        stringCharCount[v] -= isVowels[ch]?1:0; 
+        sChars[left] = isVowels[ch]?v:ch; 
+        left++;
+    }
+}
+return new String(sChars);
+```
+
+---
+
+### 1. `int left = 0;`
+
+* Đây là **con trỏ vị trí** trên chuỗi gốc `sChars`.
+* Nó sẽ chạy từ trái sang phải để duyệt chuỗi và thay thế các nguyên âm.
+
+---
+
+### 2. `for(char v : vowels){ ... }`
+
+* Duyệt lần lượt từng nguyên âm `v` theo **thứ tự sắp xếp sẵn**: `'A','E','I','O','U','a','e','i','o','u'`.
+* Mục tiêu: lấp dần các nguyên âm trong chuỗi theo thứ tự tăng dần.
+
+---
+
+### 3. `while(stringCharCount[v] > 0)`
+
+* `stringCharCount[v]` cho biết **nguyên âm `v` xuất hiện bao nhiêu lần** trong chuỗi gốc.
+* Chừng nào số lần > 0 → ta phải điền `v` vào chuỗi ở vị trí nguyên âm.
+
+---
+
+### 4. Bên trong vòng `while`:
+
+```java
+char ch = sChars[left];
+```
+
+* Lấy ký tự ở vị trí `left` trong chuỗi gốc.
+
+---
+
+```java
+stringCharCount[v] -= isVowels[ch] ? 1 : 0;
+```
+
+* Nếu `ch` là nguyên âm (`isVowels[ch] == true`):
+  ➝ giảm số lượng cần điền của `v` đi 1.
+* Nếu `ch` không phải nguyên âm: không làm gì.
+
+---
+
+```java
+sChars[left] = isVowels[ch] ? v : ch;
+```
+
+* Nếu `ch` là nguyên âm: thay thế nó bằng nguyên âm `v` (theo thứ tự đã sắp xếp).
+* Nếu `ch` không phải nguyên âm: giữ nguyên `ch`.
+
+---
+
+```java
+left++;
+```
+
+* Dịch sang vị trí tiếp theo trong chuỗi.
+
+---
+
+### 5. `return new String(sChars);`
+
+* Sau khi toàn bộ nguyên âm đã được thay thế, chuyển `char[]` về `String` và trả kết quả.
+
+---
+
+### 🔎 Ví dụ minh họa:
+
+`s = "leetcode"`
+
+1. `sChars = ['l','e','e','t','c','o','d','e']`
+   `stringCharCount = { 'e':3, 'o':1 }`
+
+2. Duyệt nguyên âm `'A','E','I','O','U','a','e','i','o','u'`
+
+   * Khi tới `'e'`:
+
+     * Thay dần vào các vị trí nguyên âm (`e, e, e`) → `'e'` vẫn giữ nguyên vì đã đúng thứ tự.
+   * Khi tới `'o'`:
+
+     * Thay vào vị trí `o` → `'o'`.
+
+3. Chuỗi sau cùng: `"leetcode"` (trong ví dụ này không thay đổi, vì nguyên âm vốn đã có thứ tự).
+
+---
+
+### 🔑 Ý tưởng chính để nhớ:
+
+* **Bước 1:** Đếm số lần xuất hiện của từng nguyên âm.
+* **Bước 2:** Duyệt chuỗi từ trái sang phải (`left`), thay thế nguyên âm bằng nguyên âm nhỏ nhất chưa dùng hết.
+* **Bước 3:** Trả về chuỗi mới.
+
+---
+
+👉 Bạn có muốn mình **viết lại thành phiên bản ngắn gọn dễ đọc hơn** (ít trick hơn) để học cho dễ, sau đó mình so sánh với bản gốc để thấy lợi ích tối ưu không?
+
+---
+
+## Mục tiêu thuật toán (tóm tắt 1 câu)
+
+Sắp xếp **chỉ các nguyên âm** trong chuỗi theo thứ tự đã định (ở đây là thứ tự trong mảng `vowels`), **giữ nguyên vị trí của phụ âm**.
+
+---
+
+## Ý tưởng tổng quát (ngắn gọn)
+
+1. Đếm tần suất ký tự (dùng `stringCharCount`).
+2. Đánh dấu ký tự nào là nguyên âm có xuất hiện trong chuỗi (`isVowels`).
+3. Duyệt mảng `vowels` theo thứ tự mong muốn; với mỗi nguyên âm `v`, tìm và **thay thế lần lượt các vị trí nguyên âm trong chuỗi từ trái sang phải** bằng `v` cho đến khi đặt đủ số lần `v` ban đầu xuất hiện.
+4. Kết quả: nguyên âm trong chuỗi sau khi thay được sắp theo thứ tự `vowels`, còn phụ âm giữ nguyên.
+
+---
+
+## Giải thích chi tiết từng phần code
+
+```java
+char[] vowels = {'A','E','I','O','U','a','e','i','o','u'};
+int[] stringCharCount = new int[128];
+char[] sChars = s.toCharArray();
+for(char ch : sChars){
+    stringCharCount[ch]++;
+}
+```
+
+* Đếm tần suất xuất hiện mỗi ký tự trong `s` dựa trên mã ASCII (mảng 128 là đủ cho ký tự ASCII).
+* `sChars` là mảng ký tự để sửa đổi tại chỗ (in-place).
+
+```java
+boolean found = false;
+for(char ch : vowels){
+    found |= stringCharCount[ch]>0;
+}
+if(!found) return s;
+```
+
+* Kiểm tra nhanh: nếu **không có nguyên âm nào** trong chuỗi → trả về luôn (không cần xử lý).
+
+```java
+boolean[] isVowels = new boolean[128];
+for(char ch : vowels){
+    if(stringCharCount[ch]>0) isVowels[ch] = true;
+}
+```
+
+* `isVowels[c] == true` nghĩa là ký tự `c` là nguyên âm **và** có xuất hiện trong chuỗi.
+* Ta dùng mảng boolean để kiểm tra nhanh 1 ký tự có phải nguyên âm không khi đi qua `sChars`.
+
+```java
+int left = 0;
+for(char v : vowels){
+    while(stringCharCount[v]>0){
+        char ch = sChars[left];
+        stringCharCount[v] -= isVowels[ch]?1:0; 
+        sChars[left] = isVowels[ch]?v:ch; 
+        left++;
+    }
+}
+```
+
+Đây là phần lõi — giải thích từng bước:
+
+* `left`: con trỏ quét **vị trí trong chuỗi** từ trái sang phải.
+* Ta duyệt từng nguyên âm `v` theo thứ tự mong muốn (ở đây là `A,E,I,O,U,a,e,i,o,u`).
+* `while (stringCharCount[v] > 0)`: ta phải **đặt** chính xác `stringCharCount[v]` lần nguyên âm `v` (bởi vì đó là số lần `v` xuất hiện ban đầu trong chuỗi).
+* Trong vòng while:
+
+  * `ch = sChars[left]`: lấy ký tự hiện tại.
+  * `isVowels[ch] ? 1 : 0` kiểm tra liệu `ch` tại vị trí này có phải là nguyên âm hay không.
+  * Nếu `ch` là nguyên âm:
+
+    * ta **thay** `sChars[left]` bằng `v` (đặt nguyên âm nhỏ/ít hơn theo thứ tự vào vị trí nguyên âm kế tiếp).
+    * đồng thời giảm `stringCharCount[v]--` (ta đã dùng một vị trí để đặt `v`).
+  * Nếu `ch` là phụ âm: không thay, chỉ bỏ qua (nhưng vẫn tăng `left`).
+* Về mặt trực quan: ta quét chuỗi từ trái sang phải; khi gặp vị trí nguyên âm thứ k ta gán cho nó nguyên âm thứ k trong dãy nguyên âm đã sắp (duyệt theo `vowels`), nên sau khi kết thúc toàn bộ vòng, các nguyên âm sẽ nằm theo thứ tự đã định.
+
+Cuối cùng `return new String(sChars);` — chuỗi mới với nguyên âm đã sắp.
+
+---
+
+## Ví dụ minh họa (bước-bước) — dùng `s = "lEetcOde"`
+
+Ban đầu (chỉ nguyên âm quan trọng):
+
+* sChars: \[l, E, e, t, c, O, d, e]
+* Counts: E:1, e:2, O:1
+
+Duyệt `vowels` theo thứ tự:
+
+* `v = 'A'`: count 0 → skip
+* `v = 'E'`: count 1:
+
+  * left=0: 'l' không phải nguyên âm → left=1
+  * left=1: 'E' là nguyên âm → replace bằng 'E' (không đổi), count\['E']→0, left→2
+* `v = 'I'`: skip
+* `v = 'O'`: count 1:
+
+  * left=2: 'e' là nguyên âm → replace sChars\[2] = 'O', count\['O']→0, left→3
+* tiếp tục tới `v = 'e'`: count 2:
+
+  * left=3: 't' không phải → left=4
+  * left=4: 'c' không phải → left=5
+  * left=5: 'O' là nguyên âm (ban đầu) → replace sChars\[5] = 'e', count\['e']→1, left=6
+  * left=6: 'd' không phải → left=7
+  * left=7: 'e' là nguyên âm → replace sChars\[7] = 'e', count\['e']→0, left=8
+    Kết quả cuối cùng: `"lEOtcede"`
+
+> Ghi chú: thứ tự `vowels` quyết định thứ tự sắp; ở code này chữ hoa đứng trước chữ thường (theo mảng `vowels` đã định).
+
+---
+
+## Vì sao cách này ổn và dễ nhớ?
+
+* **Không cần lấy list vị trí nguyên âm** riêng biệt — ta quét chuỗi 1 lần để đếm, rồi quét lại “từ trái” theo con trỏ `left` khi đặt các nguyên âm theo thứ tự.
+* Cách nghĩ: *“đặt nguyên âm nhỏ nhất vào vị trí nguyên âm đầu tiên, đặt nguyên âm nhỏ thứ hai vào vị trí nguyên âm tiếp theo, …”* — và ta thực hiện điều này bằng 2 bước đếm + quét đặt trong thứ tự `vowels`.
+
+---
+
+## Độ phức tạp
+
+* Thời gian: O(n + K) ≈ O(n) (n = độ dài chuỗi, K = 128 hằng)
+* Bộ nhớ: O(n) cho `sChars` + O(128) cho mảng đếm/đánh dấu.
+
+---
+
+## Lưu ý / Hạn chế
+
+* Dùng bảng `128` = chỉ an toàn với ASCII. Nếu chuỗi có ký tự Unicode (UTF-8) ngoài ASCII, cần xử lý khác (dùng `Map<Character,Integer>` hoặc mở rộng mảng).
+* Thứ tự sắp là **theo mảng `vowels`** (ở đây uppercase trước lowercase). Nếu muốn sắp không phân biệt hoa thường, cần thay đổi `vowels` và logic tương ứng.
+
+---
+
+## Cách nhớ ngắn gọn (flashcard)
+
+* **Đếm → Đánh dấu → Đặt từ trái → theo thứ tự `vowels`.**
+* (Đếm = `stringCharCount`, Đánh dấu = `isVowels`, Đặt từ trái = con trỏ `left` + vòng for `vowels`).
+
+---
+
+Muốn mình thêm:
+
+* phiên bản code có **comment từng dòng** (nhỏ gọn) để dán vào project?
+* hay thêm **biến thể**: sắp nguyên âm theo chữ thường/không phân biệt hoa-thường?
+Ok 👍 mình giải thích **chi tiết từng dòng** từ đoạn bạn hỏi nhé:
+
+---
+
+### Đoạn code
+
+```java
+int left = 0;
+for(char v : vowels){
+    while(stringCharCount[v]>0){
+        char ch = sChars[left];
+        stringCharCount[v] -= isVowels[ch]?1:0; 
+        sChars[left] = isVowels[ch]?v:ch; 
+        left++;
+    }
+}
+return new String(sChars);
+```
+
+---
+
+### 1. `int left = 0;`
+
+* Đây là **con trỏ vị trí** trên chuỗi gốc `sChars`.
+* Nó sẽ chạy từ trái sang phải để duyệt chuỗi và thay thế các nguyên âm.
+
+---
+
+### 2. `for(char v : vowels){ ... }`
+
+* Duyệt lần lượt từng nguyên âm `v` theo **thứ tự sắp xếp sẵn**: `'A','E','I','O','U','a','e','i','o','u'`.
+* Mục tiêu: lấp dần các nguyên âm trong chuỗi theo thứ tự tăng dần.
+
+---
+
+### 3. `while(stringCharCount[v] > 0)`
+
+* `stringCharCount[v]` cho biết **nguyên âm `v` xuất hiện bao nhiêu lần** trong chuỗi gốc.
+* Chừng nào số lần > 0 → ta phải điền `v` vào chuỗi ở vị trí nguyên âm.
+
+---
+
+### 4. Bên trong vòng `while`:
+
+```java
+char ch = sChars[left];
+```
+
+* Lấy ký tự ở vị trí `left` trong chuỗi gốc.
+
+---
+
+```java
+stringCharCount[v] -= isVowels[ch] ? 1 : 0;
+```
+
+* Nếu `ch` là nguyên âm (`isVowels[ch] == true`):
+  ➝ giảm số lượng cần điền của `v` đi 1.
+* Nếu `ch` không phải nguyên âm: không làm gì.
+
+---
+
+```java
+sChars[left] = isVowels[ch] ? v : ch;
+```
+
+* Nếu `ch` là nguyên âm: thay thế nó bằng nguyên âm `v` (theo thứ tự đã sắp xếp).
+* Nếu `ch` không phải nguyên âm: giữ nguyên `ch`.
+
+---
+
+```java
+left++;
+```
+
+* Dịch sang vị trí tiếp theo trong chuỗi.
+
+---
+
+### 5. `return new String(sChars);`
+
+* Sau khi toàn bộ nguyên âm đã được thay thế, chuyển `char[]` về `String` và trả kết quả.
+
+---
+
+### 🔎 Ví dụ minh họa:
+
+`s = "leetcode"`
+
+1. `sChars = ['l','e','e','t','c','o','d','e']`
+   `stringCharCount = { 'e':3, 'o':1 }`
+
+2. Duyệt nguyên âm `'A','E','I','O','U','a','e','i','o','u'`
+
+   * Khi tới `'e'`:
+
+     * Thay dần vào các vị trí nguyên âm (`e, e, e`) → `'e'` vẫn giữ nguyên vì đã đúng thứ tự.
+   * Khi tới `'o'`:
+
+     * Thay vào vị trí `o` → `'o'`.
+
+3. Chuỗi sau cùng: `"leetcode"` (trong ví dụ này không thay đổi, vì nguyên âm vốn đã có thứ tự).
+
+---
+
+### 🔑 Ý tưởng chính để nhớ:
+
+* **Bước 1:** Đếm số lần xuất hiện của từng nguyên âm.
+* **Bước 2:** Duyệt chuỗi từ trái sang phải (`left`), thay thế nguyên âm bằng nguyên âm nhỏ nhất chưa dùng hết.
+* **Bước 3:** Trả về chuỗi mới.
+
+---
+
+👉 Bạn có muốn mình **viết lại thành phiên bản ngắn gọn dễ đọc hơn** (ít trick hơn) để học cho dễ, sau đó mình so sánh với bản gốc để thấy lợi ích tối ưu không?
+Ok 👍 mình tóm tắt lại **thuật toán Sort Vowels in a String** theo cách dễ học – dễ nhớ – dễ review cho bạn:
+
+---
+
+## 🚀 Tóm tắt thuật toán
+
+1. **Đếm số lần xuất hiện của nguyên âm**
+
+   * Dùng mảng `stringCharCount[128]` để lưu số lần xuất hiện của từng ký tự ASCII.
+   * Lấy chuỗi → chuyển thành `char[]` để xử lý.
+
+2. **Kiểm tra xem chuỗi có nguyên âm không**
+
+   * Nếu không có → trả về chuỗi gốc luôn.
+
+3. **Đánh dấu vị trí nguyên âm trong chuỗi**
+
+   * Dùng `boolean[] isVowels` để biết ký tự nào trong chuỗi là nguyên âm.
+
+4. **Thay thế nguyên âm theo thứ tự sắp xếp**
+
+   * Duyệt lần lượt từng nguyên âm `'A','E','I','O','U','a','e','i','o','u'`.
+   * Với mỗi nguyên âm, chừng nào nó còn xuất hiện (`count > 0`):
+
+     * Duyệt chuỗi từ trái qua (`left`).
+     * Nếu gặp nguyên âm ở vị trí đó → thay thế bằng nguyên âm đang xét.
+     * Giảm số lần cần thay của nguyên âm đi 1.
+
+5. **Trả về chuỗi mới**
+
+   * Sau khi thay xong toàn bộ nguyên âm theo thứ tự, ghép chuỗi lại → kết quả.
+
+---
+
+## 🎯 Ý tưởng dễ nhớ
+
+👉 “**Đếm nguyên âm → Xếp lại theo thứ tự → Điền lần lượt vào các chỗ nguyên âm trong chuỗi**”.
+
+---
+
+## 🔎 Ví dụ ngắn
+
+`s = "leetcode"`
+
+* Nguyên âm = `['e','e','o','e']`
+* Sắp xếp = `['e','e','e','o']`
+* Điền lại vào vị trí nguyên âm trong chuỗi → `"leetcede"`
+
+---
+
+Bạn có muốn mình viết lại thành **pseudo-code 5 dòng** (công thức rút gọn) để lúc review không cần đọc cả code Java mà vẫn nhớ cách làm không?
+Tuyệt 👌 đây là **pseudo-code rút gọn 5 dòng** cho bài **Sort Vowels in a String** – học thuộc nhanh, review cực dễ:
+
+---
+
+## 📝 Pseudo-code
+
+```
+1. Đếm số lần xuất hiện của nguyên âm trong chuỗi (count[])
+2. Nếu không có nguyên âm → return chuỗi gốc
+3. Đánh dấu vị trí nào trong chuỗi là nguyên âm (isVowel[])
+4. Duyệt nguyên âm theo thứ tự sắp xếp ↑
+   → điền lần lượt vào các vị trí nguyên âm trong chuỗi
+5. Trả về chuỗi mới sau khi thay thế
+```
+
+---
+
+👉 Công thức nhớ:
+**“Đếm → Kiểm tra → Đánh dấu → Điền lại → Trả kết quả”** 🎯
+
+---
+
+Đoạn code này thiên về **two pointers (2 con trỏ)** hơn là sliding window.
+Mình phân tích:
+
+```java
+int left = 0;
+for(char v : vowels){
+    while(stringCharCount[v] > 0){
+        char ch = sChars[left];
+        stringCharCount[v] -= isVowels[ch] ? 1 : 0; 
+        sChars[left] = isVowels[ch] ? v : ch; 
+        left++;
+    }
+}
+```
+
+### Vì sao là **two pointers**?
+
+* Có 1 biến **`left`** chạy từ đầu chuỗi tới cuối.
+* Vòng ngoài lặp qua từng nguyên âm `v`.
+* Vòng trong **dịch chuyển `left` từng bước** để thay thế các nguyên âm dần vào vị trí thích hợp.
+
+👉 Ở đây không có cửa sổ cố định độ dài như sliding window.
+Nó chỉ là **một con trỏ dịch chuyển dần (left)** để duyệt hết mảng → đặc trưng của **two pointers** (1 con trỏ chạy tuyến tính, 1 “con trỏ ảo” chính là ký tự nguyên âm hiện tại `v`).
+
+---
+
+### Nếu là **sliding window**
+
+* Phải có 2 biến chỉ định **khoảng \[left, right]**.
+* Dùng để duy trì một đoạn con cố định/dàn trải.
+* Nhưng ở đây không có `right`, chỉ có `left`.
+
+---
+
+✅ Kết luận: Đây là **two pointers** (cụ thể: 1 con trỏ duyệt mảng + 1 con trỏ ảo ở tập nguyên âm).
+
+Bạn có muốn mình vẽ sơ đồ dòng chảy từng bước với ví dụ chuỗi `"leetcode"` để thấy `left` di chuyển thế nào không?
+

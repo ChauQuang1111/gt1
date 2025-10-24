@@ -1,0 +1,1018 @@
+ 3508. Implement Router(20/09/2025)
+class Router {
+    Deque<int[]>que;
+    HashMap<Integer,List<int[]>>map;
+    int size;
+    public Router(int memoryLimit) {
+        que=new LinkedList<>();
+        map=new HashMap<>();
+        this.size=memoryLimit;
+    }
+    
+    public boolean addPacket(int source, int destination, int timestamp) {
+        
+        if(!map.containsKey(destination)){
+            map.put(destination,new ArrayList<>());
+        }
+        List<int[]>list=map.get(destination);
+        int left=small(list,timestamp);
+        
+        if(list.size()!=0){
+           
+            for(int i=left;i<list.size() && list.get(i)[1]==timestamp;i++){
+                if(list.get(i)[0]==source)return false;
+            }
+        }
+        map.get(destination).add(new int[]{source,timestamp});
+        que.addLast(new int[]{source,destination,timestamp});
+        if(que.size()>size){
+            forwardPacket();
+        }
+        
+        return true;
+        
+    }
+    
+    public int[] forwardPacket() {
+        if(que.size()==0)return new int[0];
+        int[]arr=que.pollFirst();
+        // System.out.println(Arrays.toString(arr));
+        map.get(arr[1]).remove(0);
+        return arr;
+    }
+    
+    public int getCount(int destination, int startTime, int endTime) {
+        if(!map.containsKey(destination)){
+            return 0;
+        }
+        List<int[]>list=map.get(destination);
+        int left=small(list,startTime);
+        int right=big(list,endTime);
+        if(left>right)return 0;
+        return right-left+1;
+    }
+    public int small(List<int[]>list,int start){
+        int left=0;
+        int right=list.size()-1;
+        while(left<=right){
+            int mid=left+(right-left)/2;
+            if(list.get(mid)[1]>=start){
+                right=mid-1;
+            }
+            else{
+                left=mid+1;
+            }
+        }
+        return left;
+    }
+    public int big(List<int[]>list,int end){
+        int left=0;
+        int right=list.size()-1;
+        while(left<=right){
+            int mid=left+(right-left)/2;
+            if(list.get(mid)[1]>end){
+                right=mid-1;
+            }
+            else{
+                left=mid+1;
+            }
+        }
+        return right;
+    }
+}
+
+/**
+ * Your Router object will be instantiated and called as such:
+ * Router obj = new Router(memoryLimit);
+ * boolean param_1 = obj.addPacket(source,destination,timestamp);
+ * int[] param_2 = obj.forwardPacket();
+ * int param_3 = obj.getCount(destination,startTime,endTime);
+ */
+ À đoạn này chính là **chống trùng lặp gói tin** ✅
+
+Mình giải thích chi tiết:
+
+```java
+if(list.size()!=0){
+    // duyệt từ vị trí left (đầu tiên có timestamp >= start)
+    for(int i=left; i<list.size() && list.get(i)[1]==timestamp; i++){
+        // nếu có gói tin cùng source và cùng timestamp thì return false
+        if(list.get(i)[0]==source) return false;
+    }
+}
+```
+
+🔎 Ý nghĩa:
+
+* `list` chứa các gói tin theo **destination**, dạng `{source, timestamp}`.
+* Khi thêm gói tin mới `(source, destination, timestamp)`, ta dùng `small(list, timestamp)` để tìm **vị trí đầu tiên có timestamp >= timestamp**.
+* Sau đó duyệt các phần tử tiếp theo có cùng `timestamp`.
+* Nếu thấy `source` đã tồn tại trong cùng `timestamp` → gói tin trùng → **không thêm** (trả về `false`).
+* Nếu không trùng thì thoải mái thêm vào `list` và `que`.
+
+👉 Nói ngắn gọn: đoạn này đảm bảo **một destination tại một timestamp chỉ có duy nhất 1 gói tin từ cùng source**.
+
+Bạn có muốn mình viết lại đoạn này theo kiểu **ngắn gọn và dễ đọc hơn** (ví dụ dùng `anyMatch` trong Java Stream) không?
+Câu hỏi hay 👌
+
+👉 Lý do **bắt đầu từ bên trái (left)** là vì `left = small(list, timestamp)` đã được viết như một **binary search** để tìm **chỉ số đầu tiên trong list có `timestamp >=` giá trị mình cần**.
+
+Nghĩa là:
+
+* Các gói tin trong `list` **theo destination** luôn được thêm theo **thứ tự thời gian tăng dần** (vì khi addPacket, ta luôn append cuối list).
+* Hàm `small(list, timestamp)` trả về vị trí **đầu tiên có timestamp >= timestamp cần tìm**.
+
+Ví dụ:
+
+```
+list = [ (A,1), (B,3), (C,3), (D,5) ]
+timestamp = 3
+```
+
+→ `small(list,3)` sẽ trả về index = 1 (ứng với `(B,3)`).
+
+Vậy nên:
+
+```java
+for(int i=left; i<list.size() && list.get(i)[1]==timestamp; i++)
+```
+
+sẽ duyệt **tất cả gói tin có timestamp == 3**.
+Nếu có source trùng thì return false ngay.
+
+⚡ Nếu bạn duyệt từ đầu list (`i=0`) thì sẽ phải check tất cả → **thừa thãi**.
+⚡ Nếu bạn duyệt từ giữa mà không dựa trên binary search, bạn có thể bỏ sót các gói tin cùng timestamp.
+
+👉 Do đó, bắt đầu từ `left` là **tối ưu nhất**: chỉ duyệt đúng đoạn có timestamp cần kiểm tra.
+
+---
+
+Bạn có muốn mình vẽ sơ đồ **minh họa hoạt động của small()** để thấy rõ vì sao nó chọn "bên trái" không?
+Ok mình giải thích chi tiết đoạn `forwardPacket()` này nhé 👇
+
+```java
+public int[] forwardPacket() {
+    // Nếu hàng đợi trống thì trả về mảng rỗng
+    if (que.size() == 0) return new int[0];
+
+    // Lấy gói tin đầu tiên trong queue (FIFO)
+    int[] arr = que.pollFirst();  
+
+    // Xóa gói tin tương ứng trong map (theo destination arr[1])
+    map.get(arr[1]).remove(0);
+
+    // Trả về gói tin vừa forward
+    return arr;
+}
+```
+
+---
+
+🔎 Từng bước:
+
+1. **Kiểm tra queue trống**
+
+   ```java
+   if (que.size() == 0) return new int[0];
+   ```
+
+   * Nếu không còn gói tin nào → return mảng rỗng `{}`.
+
+2. **Lấy gói tin theo FIFO**
+
+   ```java
+   int[] arr = que.pollFirst();
+   ```
+
+   * `que` là `Deque<int[]>`, hoạt động như một queue FIFO.
+   * `pollFirst()` lấy phần tử đầu tiên và đồng thời xóa nó khỏi queue.
+   * Gói tin `arr` có dạng `{source, destination, timestamp}`.
+
+3. **Xóa gói tin trong map**
+
+   ```java
+   map.get(arr[1]).remove(0);
+   ```
+
+   * `arr[1]` là **destination**.
+   * Trong `map`, key = destination, value = danh sách gói tin `{source, timestamp}` theo destination.
+   * Vì gói tin trong queue luôn khớp với phần tử **đầu tiên** trong list của `map.get(destination)` (do FIFO đồng bộ với insert vào list), nên ta chỉ cần `remove(0)`.
+
+4. **Trả về gói tin vừa forward**
+
+   ```java
+   return arr;
+   ```
+
+   * Giúp bên ngoài biết gói tin nào vừa được forward.
+
+---
+
+📌 Ví dụ nhỏ:
+
+Giả sử:
+
+```
+que = [ {1,10,5}, {2,20,6} ]
+map = {
+  10 -> [ {1,5} ],
+  20 -> [ {2,6} ]
+}
+```
+
+Gọi `forwardPacket()` →
+
+* Lấy `{1,10,5}` khỏi `que`.
+* Trong `map.get(10)` xóa `{1,5}`.
+* Trả về `{1,10,5}`.
+
+Kết quả:
+
+```
+que = [ {2,20,6} ]
+map = {
+  10 -> [],
+  20 -> [ {2,6} ]
+}
+```
+
+---
+
+👉 Nói ngắn gọn: `forwardPacket()` làm nhiệm vụ **lấy gói tin ra khỏi router (theo FIFO) và đồng bộ lại map để không bị lệch dữ liệu**.
+
+Bạn có muốn mình viết lại `forwardPacket()` theo cách an toàn hơn (ví dụ check null, tránh lỗi `remove(0)` khi list rỗng) không?
+Ok 👍 mình giải thích kỹ hàm `getCount(...)` nhé:
+
+```java
+public int getCount(int destination, int startTime, int endTime) {
+    if (!map.containsKey(destination)) {
+        return 0;
+    }
+    List<int[]> list = map.get(destination);
+    int left = small(list, startTime);
+    int right = big(list, endTime);
+    if (left > right) return 0;
+    return right - left + 1;
+}
+```
+
+---
+
+### 📌 Mục đích của hàm
+
+👉 `getCount(destination, startTime, endTime)` dùng để **đếm số gói tin gửi tới một `destination` cụ thể trong khoảng thời gian `[startTime, endTime]`**.
+
+---
+
+### 📌 Từng bước hoạt động
+
+1. **Kiểm tra destination có tồn tại trong map không**
+
+   ```java
+   if (!map.containsKey(destination)) {
+       return 0;
+   }
+   ```
+
+   * Nếu chưa có gói tin nào đến `destination` này → trả về 0 ngay.
+
+2. **Lấy danh sách các gói tin cho destination**
+
+   ```java
+   List<int[]> list = map.get(destination);
+   ```
+
+   * `list` chứa các gói tin `{source, timestamp}` được sắp xếp tăng dần theo `timestamp`.
+
+3. **Tìm vị trí biên trái và biên phải trong list**
+
+   ```java
+   int left = small(list, startTime);
+   int right = big(list, endTime);
+   ```
+
+   * `small(list, startTime)` → trả về chỉ số **đầu tiên có timestamp ≥ startTime**.
+   * `big(list, endTime)` → trả về chỉ số **cuối cùng có timestamp ≤ endTime**.
+
+4. **Nếu không tìm thấy gói tin hợp lệ**
+
+   ```java
+   if (left > right) return 0;
+   ```
+
+   * Tức là không có gói tin nào trong khoảng `[startTime, endTime]`.
+
+5. **Đếm số lượng gói tin hợp lệ**
+
+   ```java
+   return right - left + 1;
+   ```
+
+   * Số gói tin = chỉ số phải - chỉ số trái + 1.
+
+---
+
+### 📌 Ví dụ minh họa
+
+Giả sử:
+
+```
+map.get(100) = [ {1,5}, {2,10}, {3,15}, {4,20} ]   // (source, timestamp)
+```
+
+Gọi:
+
+```java
+getCount(100, 10, 20)
+```
+
+* `small(list, 10)` → index = 1 (timestamp 10).
+* `big(list, 20)` → index = 3 (timestamp 20).
+* Kết quả = `3 - 1 + 1 = 3`.
+
+👉 Có **3 gói tin** đến `destination=100` trong khoảng `[10,20]`.
+
+---
+
+✅ Tóm lại:
+Hàm này **đếm nhanh** (dùng binary search) số gói tin đến một `destination` trong một **khoảng thời gian nhất định** mà không cần duyệt toàn bộ list.
+
+---
+
+Bạn có muốn mình viết thêm đoạn **input/output mẫu** để test nhanh hàm này trong `main` không?
+Chuẩn rồi 👌 bạn tinh ý lắm.
+
+Trong đoạn code mà bạn đưa mình từ đầu, **hàm `getCount(...)` đúng là không được gọi ở đâu cả**.
+
+👉 Lý do:
+
+* Đây là code kiểu **design class** (giống mấy bài trên LeetCode hay Hackerrank).
+* Người ta viết class `Router` với 3 API chính:
+
+  1. `addPacket(...)` → thêm gói tin
+  2. `forwardPacket()` → lấy gói tin ra
+  3. `getCount(...)` → đếm số gói tin trong khoảng thời gian
+* Sau đó **bên ngoài (hàm main / test case)** mới gọi để kiểm tra.
+
+Ví dụ:
+
+```java
+public static void main(String[] args) {
+    b42 router = new b42(3);
+
+    router.addPacket(1, 100, 5);
+    router.addPacket(2, 100, 10);
+    router.addPacket(3, 100, 15);
+    router.addPacket(4, 200, 20);
+
+    System.out.println(router.getCount(100, 5, 15)); // 👉 in ra 3
+    System.out.println(router.getCount(200, 10, 25)); // 👉 in ra 1
+    System.out.println(router.getCount(300, 0, 100)); // 👉 in ra 0 (vì không có dest=300)
+}
+```
+
+📌 Như vậy:
+
+* Bên trong class, `getCount` **không cần gọi nội bộ**.
+* Nó là **API public** → để người dùng class gọi khi cần thống kê số lượng gói tin theo thời gian.
+
+---
+
+Bạn có muốn mình viết lại `main` đầy đủ để có **menu lựa chọn test cả 3 API** (`addPacket`, `forwardPacket`, `getCount`) cho dễ thấy không?
+😅 Câu hỏi rất đúng!
+
+👉 Thực ra trong lập trình, có 2 tình huống khiến ta gặp chuyện này:
+
+---
+
+### 1. Bài **thiết kế lớp (Design class)**
+
+* Giống mấy bài LeetCode dạng *“Design a Router”* hay *“Design Twitter”*.
+* Người ta yêu cầu: *“Hãy viết class với các hàm A, B, C”*.
+* Hệ thống test tự động sẽ gọi các hàm đó.
+* Lập trình viên chỉ cần viết đúng API, còn chuyện **dùng ở đâu** là do *tester / hệ thống chấm*.
+
+👉 Vì vậy bạn thấy `getCount` không được gọi trong code, nhưng khi nộp bài thì hệ thống test sẽ gọi.
+
+---
+
+### 2. Khi viết ứng dụng thật
+
+* Người viết class có thể chưa cần `getCount` ngay, nhưng vẫn viết trước để sau này có thể dùng.
+* Đây gọi là **API mở rộng**.
+* Ví dụ:
+
+  * `addPacket` và `forwardPacket` lo việc thêm/xóa gói tin.
+  * `getCount` lại thiên về **thống kê**.
+* Có thể bây giờ app chưa cần thống kê, nhưng khi làm tính năng “hiển thị số packet theo thời gian” thì gọi được ngay.
+
+---
+
+📌 Nói ngắn gọn:
+
+* Nếu đây là bài LeetCode → viết đủ API theo đề, không cần gọi trong code của mình.
+* Nếu đây là ứng dụng thật → viết trước để dùng sau.
+
+---
+
+Bạn muốn mình **chế một ví dụ thực tế** trong `main` để thấy `getCount` hoạt động, hay muốn mình giải thích kiểu *LeetCode design class* cho đúng ngữ cảnh ban đầu?
+Ok, mình giải thích kỹ thuật toán `small(...)` này 👇
+
+---
+
+### 📌 Code bạn đưa
+
+```java
+public int small(List<int[]> list, int start) {
+    int left = 0;
+    int right = list.size() - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (list.get(mid)[1] >= start) {
+            right = mid - 1;
+        } else {
+            left = mid + 1;
+        }
+    }
+    return left;
+}
+```
+
+---
+
+### 📌 Mục đích
+
+`small(list, start)` tìm **chỉ số đầu tiên (index nhỏ nhất) trong list có `timestamp >= start`**.
+
+---
+
+### 📌 Giải thích từng bước
+
+1. **Khởi tạo**
+
+   ```java
+   int left = 0;
+   int right = list.size() - 1;
+   ```
+
+   * `left` trỏ về đầu list.
+   * `right` trỏ về cuối list.
+   * Vì list đã **sắp xếp tăng dần theo timestamp**, ta có thể dùng binary search.
+
+2. **Vòng lặp binary search**
+
+   ```java
+   while (left <= right) {
+       int mid = left + (right - left) / 2;
+       ...
+   }
+   ```
+
+   * Chia đôi list để kiểm tra.
+
+3. **Nếu timestamp tại mid >= start**
+
+   ```java
+   if (list.get(mid)[1] >= start) {
+       right = mid - 1;
+   }
+   ```
+
+   * Nghĩa là `mid` có thể là một ứng viên (thoả điều kiện `>= start`).
+   * Nhưng ta chưa chắc nó có phải là **chỉ số đầu tiên**.
+   * Do đó ta **thu hẹp sang bên trái** để tìm chỉ số nhỏ hơn vẫn thoả điều kiện.
+
+4. **Nếu timestamp tại mid < start**
+
+   ```java
+   else {
+       left = mid + 1;
+   }
+   ```
+
+   * Nghĩa là `mid` chưa đủ lớn (nhỏ hơn start).
+   * Ta phải dịch sang **bên phải** để tìm timestamp lớn hơn.
+
+5. **Kết quả**
+
+   ```java
+   return left;
+   ```
+
+   * Sau khi vòng lặp kết thúc, `left` chính là vị trí đầu tiên thoả `timestamp >= start`.
+   * Nếu không có phần tử nào thoả → `left == list.size()`.
+
+---
+
+### 📌 Ví dụ minh hoạ
+
+Giả sử list:
+
+```
+index: 0   1   2   3
+value: 2   5   8   12   (timestamp)
+```
+
+Gọi `small(list, 6)`:
+
+* B1: left=0, right=3 → mid=1 → value=5 < 6 → left=2
+* B2: left=2, right=3 → mid=2 → value=8 >= 6 → right=1
+* Vòng lặp dừng (left=2, right=1).
+
+👉 Trả về `2` (tức là vị trí đầu tiên có timestamp ≥ 6).
+
+---
+
+✅ Thuật toán này chính là **binary search biến thể kiểu "lower\_bound"** (giống trong C++ STL).
+
+---
+
+Bạn có muốn mình giải thích thêm hàm `big(...)` (ngược lại với `small(...)`, tức là **upper\_bound - 1**) để bạn thấy cặp đôi này hoạt động song song thế nào không?
+Ok 👍 mình giải thích thật chậm dòng này:
+
+```java
+if (list.get(mid)[1] >= start)
+```
+
+---
+
+### 1. `list.get(mid)[1]` nghĩa là gì?
+
+* `list` lưu các gói tin dạng `{source, timestamp}`.
+* `list.get(mid)` → lấy gói tin ở vị trí `mid`.
+* `list.get(mid)[1]` → lấy **timestamp** của gói tin đó.
+
+Ví dụ:
+
+```
+list = [ {1, 5}, {2, 10}, {3, 15} ]
+mid = 1
+list.get(1)[1] = 10   // timestamp của gói tin số 2
+```
+
+---
+
+### 2. So sánh với `start`
+
+* `start` là thời gian bắt đầu cần tìm.
+* `if (list.get(mid)[1] >= start)` kiểm tra xem timestamp ở giữa có **lớn hơn hoặc bằng thời điểm start** hay không.
+
+---
+
+### 3. Ý nghĩa trong thuật toán
+
+* Nếu `list[mid].timestamp >= start`
+  👉 Tức là phần tử ở giữa **đủ điều kiện** (>= start).
+  Nhưng chưa chắc nó đã là **phần tử đầu tiên** thoả điều kiện.
+  → Ta thu hẹp tìm kiếm sang **bên trái** để xem có phần tử nào nhỏ hơn nhưng vẫn >= start.
+
+* Ngược lại, nếu `list[mid].timestamp < start`
+  👉 Phần tử này quá nhỏ, chắc chắn không dùng được.
+  → Ta phải dịch sang **bên phải** để tìm phần tử lớn hơn.
+
+---
+
+### 4. Ví dụ minh họa
+
+```
+list (timestamp) = [2, 5, 8, 12]
+start = 6
+```
+
+* mid = 1 → timestamp = 5 → 5 >= 6 ? ❌ → dịch sang phải.
+* mid = 2 → timestamp = 8 → 8 >= 6 ? ✅ → dịch sang trái để tìm nhỏ hơn nhưng vẫn ≥ 6.
+
+Kết quả: chỉ số = 2 (timestamp = 8).
+
+---
+
+👉 Nói ngắn gọn:
+Dòng `if (list.get(mid)[1] >= start)` dùng để **kiểm tra xem timestamp ở giữa có đủ lớn để nằm trong khoảng cần tìm không**, từ đó quyết định dịch con trỏ tìm kiếm sang trái hay phải.
+
+---
+
+Bạn có muốn mình vẽ **sơ đồ mũi tên binary search** để thấy rõ cách left/right di chuyển khi gặp điều kiện này không?
+À mình hiểu chỗ bạn thắc mắc rồi 👍
+
+Trong hàm `small(List<int[]> list, int start)` thì mục tiêu là **tìm vị trí gói tin đầu tiên có `timestamp >= start`**.
+
+👉 Giả sử `list` lưu các gói tin theo `timestamp` tăng dần:
+
+| index | packet(timestamp) |
+| ----- | ----------------- |
+| 0     | 1                 |
+| 1     | 2                 |
+| 2     | 5                 |
+| 3     | 7                 |
+| 4     | 9                 |
+
+Bây giờ gọi `small(list, start=2)`
+
+### Cách hoạt động:
+
+* Ta muốn **tìm index nhỏ nhất mà timestamp >= 2**
+* `list[0][1] = 1 < 2` → không hợp, phải tìm bên phải
+* `list[1][1] = 2 >= 2` → hợp lệ, nhưng **có thể còn phần tử nhỏ hơn vẫn hợp lệ** → tiếp tục dịch `right` về trái
+* Kết quả cuối cùng = index 1
+
+✅ Vậy khi bạn "tìm start=2" thì kết quả lấy **gói tin số 2** (timestamp=2), chứ không lấy số 1.
+
+---
+
+Nếu bạn thử `small(list, start=3)`
+
+* Index trả về sẽ là `2` (packet có timestamp=5), vì `1` và `2` đều nhỏ hơn 3.
+
+---
+
+👉 Tóm lại:
+
+* Nếu `list[mid][1] >= start` thì có khả năng đây là **ứng viên đúng**, nhưng phải kiểm tra tiếp xem còn gói tin nào bên trái (index nhỏ hơn) mà vẫn thoả mãn không.
+* Do đó mới có dòng `right = mid - 1`.
+
+---
+
+Bạn có muốn mình vẽ **hình minh hoạ chạy từng bước với ví dụ cụ thể** để dễ thấy hơn không?
+Ok mình sẽ vẽ từng bước chạy hàm `small(list, start)` với ví dụ nhé 👍
+
+Giả sử ta có danh sách `list` chứa timestamp tăng dần:
+
+```
+index:   0   1   2   3   4
+value:   1   2   5   7   9
+```
+
+Ta gọi:
+
+```java
+small(list, start=3)
+```
+
+---
+
+### Bước chạy:
+
+**Khởi tạo**
+
+```
+left = 0
+right = 4   // list.size() - 1
+```
+
+---
+
+**Vòng lặp 1:**
+
+```
+mid = (0+4)/2 = 2
+list[mid][1] = 5
+```
+
+* So sánh: `5 >= 3` → đúng
+* Vậy index 2 có thể là đáp án, nhưng ta muốn **tìm cái nhỏ hơn nữa bên trái** →
+
+```
+right = mid - 1 = 1
+```
+
+---
+
+**Vòng lặp 2:**
+
+```
+left = 0, right = 1
+mid = (0+1)/2 = 0
+list[mid][1] = 1
+```
+
+* So sánh: `1 >= 3` → sai
+* Nghĩa là phải đi bên phải →
+
+```
+left = mid + 1 = 1
+```
+
+---
+
+**Vòng lặp 3:**
+
+```
+left = 1, right = 1
+mid = 1
+list[mid][1] = 2
+```
+
+* So sánh: `2 >= 3` → sai
+* → `left = mid + 1 = 2`
+
+```
+left = 2, right = 1 → dừng vòng lặp
+```
+
+---
+
+### Kết quả cuối cùng:
+
+```
+return left = 2
+```
+
+→ Tức là gói tin có **timestamp = 5** chính là **phần tử đầu tiên >= 3**. ✅
+
+---
+
+👉 Như vậy, khi bạn đưa vào `start=3` thì nó bỏ qua gói tin số 1 và số 2, trả về gói tin số 5.
+
+---
+
+Bạn có muốn mình làm thêm **ví dụ với start=2** (để thấy nó lấy gói tin số 2) không?
+Rồi 👍 mình sẽ giải thích thật chi tiết cho bạn về hàm
+
+```java
+public int big(List<int[]> list, int end) {
+    int left = 0;
+    int right = list.size() - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (list.get(mid)[1] > end) {
+            right = mid - 1;
+        } else {
+            left = mid + 1;
+        }
+    }
+    return right;
+}
+```
+
+---
+
+## 🎯 Mục đích của hàm
+
+Hàm `big` dùng để tìm **chỉ số (index) của gói tin cuối cùng có `timestamp <= end`**.
+Nói cách khác:
+
+* `small` → tìm phần tử đầu tiên `>= start`.
+* `big` → tìm phần tử cuối cùng `<= end`.
+
+---
+
+## 🔎 Cách hoạt động
+
+Giả sử ta có danh sách timestamp đã **tăng dần**:
+
+```
+index:   0   1   2   3   4
+value:   1   2   5   7   9
+```
+
+Ta gọi:
+
+```java
+big(list, end=6)
+```
+
+---
+
+### Bước chạy:
+
+**Khởi tạo**
+
+```
+left = 0
+right = 4
+```
+
+---
+
+**Vòng lặp 1:**
+
+```
+mid = (0+4)/2 = 2
+list[2] = 5
+```
+
+So sánh:
+
+* `5 > 6`? ❌ Sai
+* → tức là 5 <= end → có thể hợp lệ
+* Vậy ta dịch sang phải tìm phần tử lớn hơn nữa:
+
+```
+left = mid + 1 = 3
+```
+
+---
+
+**Vòng lặp 2:**
+
+```
+left = 3, right = 4
+mid = (3+4)/2 = 3
+list[3] = 7
+```
+
+So sánh:
+
+* `7 > 6`? ✅ Đúng
+* Nghĩa là 7 không hợp lệ, phải dịch về trái:
+
+```
+right = mid - 1 = 2
+```
+
+---
+
+**Kết thúc vòng lặp:**
+
+```
+left = 3, right = 2 → dừng
+```
+
+---
+
+### Trả về kết quả
+
+```
+return right = 2
+```
+
+→ Index = 2 → timestamp = 5. ✅
+
+Đúng, vì `5` là phần tử **cuối cùng ≤ 6**.
+
+---
+
+## 📌 Tóm tắt logic
+
+* Nếu `list[mid] > end` → phải đi về bên trái (loại bỏ phần tử này và các phần tử bên phải).
+* Nếu `list[mid] <= end` → phần tử này hợp lệ, nhưng có thể còn phần tử lớn hơn vẫn hợp lệ, nên phải đi sang phải (`left = mid+1`).
+* Sau khi kết thúc, `right` sẽ nằm ở **index cuối cùng ≤ end**.
+
+---
+
+👉 Đây là cặp đôi “binary search” thường dùng:
+
+* `small` → tìm “lower bound” (first index ≥ start).
+* `big` → tìm “upper bound” (last index ≤ end).
+
+---
+
+Bạn có muốn mình **viết thêm ví dụ test nhỏ (có code Java main)** để chạy thử 2 hàm `small` và `big` cho cùng một list, để thấy rõ kết quả không?
+Ok 👍 mình sẽ viết ví dụ nhỏ trong **Java** để test 2 hàm `small` và `big`.
+Mình giả sử danh sách timestamp (đã sắp xếp tăng dần) như sau:
+
+```
+[1, 2, 5, 7, 9]
+```
+
+---
+
+### Code test:
+
+```java
+import java.util.*;
+
+public class TestBinarySearch {
+    public static int small(List<int[]> list, int start) {
+        int left = 0;
+        int right = list.size() - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            if (list.get(mid)[1] >= start) {
+                right = mid - 1;
+            } else {
+                left = mid + 1;
+            }
+        }
+        return left;
+    }
+
+    public static int big(List<int[]> list, int end) {
+        int left = 0;
+        int right = list.size() - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            if (list.get(mid)[1] > end) {
+                right = mid - 1;
+            } else {
+                left = mid + 1;
+            }
+        }
+        return right;
+    }
+
+    public static void main(String[] args) {
+        // List timestamp [1, 2, 5, 7, 9]
+        List<int[]> list = new ArrayList<>();
+        list.add(new int[]{0, 1});
+        list.add(new int[]{0, 2});
+        list.add(new int[]{0, 5});
+        list.add(new int[]{0, 7});
+        list.add(new int[]{0, 9});
+
+        // Test small
+        System.out.println("small(list, 6) = " + small(list, 6)); // index 3 → timestamp=7
+        System.out.println("small(list, 5) = " + small(list, 5)); // index 2 → timestamp=5
+        System.out.println("small(list, 10) = " + small(list, 10)); // index 5 (ngoài list)
+
+        // Test big
+        System.out.println("big(list, 6) = " + big(list, 6)); // index 2 → timestamp=5
+        System.out.println("big(list, 5) = " + big(list, 5)); // index 2 → timestamp=5
+        System.out.println("big(list, 0) = " + big(list, 0)); // index -1 (không có ≤ 0)
+    }
+}
+```
+
+---
+
+### 📌 Giải thích kết quả khi chạy:
+
+* `small(list, 6)` → 3 (vì phần tử đầu tiên ≥ 6 là `7` ở index 3).
+
+* `small(list, 5)` → 2 (phần tử đầu tiên ≥ 5 là `5`).
+
+* `small(list, 10)` → 5 (ngoài list, tức không có phần tử ≥ 10).
+
+* `big(list, 6)` → 2 (phần tử cuối cùng ≤ 6 là `5`).
+
+* `big(list, 5)` → 2 (phần tử cuối cùng ≤ 5 là `5`).
+
+* `big(list, 0)` → -1 (không có phần tử nào ≤ 0).
+
+---
+
+👉 Nhờ 2 hàm này, `getCount(destination, start, end)` sẽ nhanh chóng tính được số gói tin trong khoảng thời gian `[start, end]`.
+
+Bạn có muốn mình viết thêm một ví dụ gọi thẳng `getCount` để thấy cách `small` và `big` kết hợp không?
+Đúng rồi 👍, mình sẽ nối tiếp luôn:
+
+Hai hàm `small` và `big` **không phải để test riêng lẻ**, mà mục đích là phục vụ cho hàm:
+
+```java
+public int getCount(int destination, int startTime, int endTime)
+```
+
+---
+
+## 🎯 Ý nghĩa
+
+`getCount` cần đếm số gói tin của một `destination` trong **khoảng thời gian `[startTime, endTime]`**.
+Để làm nhanh, ta dùng **binary search** (hàm `small` và `big`), thay vì duyệt cả list.
+
+---
+
+## 🔗 Cách dùng `small` + `big` trong `getCount`
+
+```java
+int left = small(list, startTime);   // chỉ số gói tin đầu tiên có timestamp >= startTime
+int right = big(list, endTime);      // chỉ số gói tin cuối cùng có timestamp <= endTime
+if (left > right) return 0;          // nếu không có gói tin hợp lệ
+return right - left + 1;             // số gói tin trong đoạn
+```
+
+---
+
+## 📌 Ví dụ minh hoạ
+
+Giả sử gói tin của `destination=1` có timestamp:
+
+```
+timestamps = [1, 2, 5, 7, 9]
+```
+
+### Case 1: `getCount(1, 2, 7)`
+
+* `small(list, 2)` → index 1 (timestamp=2).
+* `big(list, 7)` → index 3 (timestamp=7).
+* `count = 3 - 1 + 1 = 3`.
+  👉 Có 3 gói tin trong khoảng `[2,7]` → {2, 5, 7}.
+
+---
+
+### Case 2: `getCount(1, 6, 8)`
+
+* `small(list, 6)` → index 3 (timestamp=7).
+* `big(list, 8)` → index 3 (timestamp=7).
+* `count = 3 - 3 + 1 = 1`.
+  👉 Có 1 gói tin trong khoảng `[6,8]` → {7}.
+
+---
+
+### Case 3: `getCount(1, 10, 20)`
+
+* `small(list, 10)` → index 5 (ngoài list).
+* `big(list, 20)` → index 4 (timestamp=9).
+* Vì `left=5 > right=4` → return 0.
+  👉 Không có gói tin nào trong khoảng `[10,20]`.
+
+---
+
+✅ Như vậy:
+
+* `small` để **tìm đầu khoảng**.
+* `big` để **tìm cuối khoảng**.
+* `getCount` chỉ cần lấy hiệu → tính được số lượng.
+
+---
+
+Bạn có muốn mình viết thêm một đoạn `main` dùng `Router` để test trực tiếp `addPacket` + `getCount` cho dễ hình dung luôn không?

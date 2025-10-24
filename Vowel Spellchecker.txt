@@ -1,0 +1,721 @@
+966. Vowel Spellchecker(14/09/2025)
+class Solution:
+    def spellchecker(self, wordlist: List[str], queries: List[str]) -> List[str]:
+        
+        # Hàm băm chữ thường (case-insensitive)
+        def case_hash(s):
+            return s.lower()
+        
+        # Hàm băm bỏ qua lỗi nguyên âm:
+        # Tất cả nguyên âm (e,i,o,u) đều đổi thành 'a' 
+        # → ví dụ: "leet" -> "laat", "kite" -> "kat a"
+        def vowel_hash(s):
+            return (s.lower()
+                      .replace('e', 'a')
+                      .replace('i', 'a')
+                      .replace('o', 'a')
+                      .replace('u', 'a'))
+        
+        # 1. Tập hợp exact (dùng để check khớp chính xác)
+        exact = set(wordlist)
+        
+        # 2. Map cho case-insensitive
+        case = defaultdict()
+        # 3. Map cho vowel-error
+        vowl = defaultdict()
+        
+        # Xây dựng 2 map dựa trên wordlist
+        for w in wordlist:
+            c = case_hash(w)
+            if c not in case:  # chỉ lấy từ đầu tiên
+                case[c] = w
+            v = vowel_hash(w)
+            if v not in vowl: # chỉ lấy từ đầu tiên
+                vowl[v] = w
+        
+        # Hàm trả về kết quả đúng cho 1 query
+        def correct(w):
+            # (1) Exact match
+            if w in exact: 
+                return w
+            
+            # (2) Case-insensitive match
+            c = case_hash(w)
+            if c in case: 
+                return case[c]
+            
+            # (3) Vowel-error match
+            v = vowel_hash(w)
+            if v in vowl: 
+                return vowl[v]
+            
+            # (4) Không khớp
+            return ''
+        
+        # Áp dụng correct() cho tất cả queries
+        return [correct(q) for q in queries]
+		
+		
+Ok 👍 mình giải thích chi tiết 2 hàm này nhé:
+
+---
+
+### 🔹 1. Hàm `case_hash(s)`
+
+```python
+def case_hash(s):
+    return s.lower()
+```
+
+👉 Ý nghĩa:
+
+* Hàm này chuyển toàn bộ chuỗi `s` thành **chữ thường** (`lowercase`).
+* Mục đích: để **không phân biệt chữ hoa chữ thường** khi so khớp từ.
+
+📌 Ví dụ:
+
+```python
+case_hash("Hello")   # "hello"
+case_hash("WORLD")   # "world"
+case_hash("Python")  # "python"
+```
+
+\=> Như vậy từ `"Hello"` và `"HELLO"` được coi như giống nhau.
+
+---
+
+### 🔹 2. Hàm `vowel_hash(s)`
+
+```python
+def vowel_hash(s):
+    return s.lower().replace('e', 'a').replace('i', 'a').replace('o', 'a').replace('u', 'a')
+```
+
+👉 Ý nghĩa:
+
+* Đầu tiên, cũng chuyển toàn bộ về chữ thường (`s.lower()`).
+* Sau đó thay **tất cả nguyên âm `e, i, o, u` thành `a`**. (nguyên âm `a` giữ nguyên).
+* Mục đích: để **bỏ qua sự khác biệt giữa các nguyên âm**, coi chúng như nhau.
+
+📌 Ví dụ:
+
+```python
+vowel_hash("hello")   # "halla"
+vowel_hash("WORLD")   # "warld"
+vowel_hash("Input")   # "anpat"
+vowel_hash("apple")   # "appla"
+```
+
+👉 Ví dụ `"hello"` → `"halla"` vì:
+
+* `"hello".lower()` → `"hello"`
+* `"hello".replace('e','a')` → `"hallo"`
+* `"hallo".replace('o','a')` → `"halla"`
+
+---
+
+### ✅ Kết hợp:
+
+* `case_hash` giúp **xử lý chữ hoa/thường**.
+* `vowel_hash` giúp **xử lý sai khác nguyên âm**.
+
+Vậy thuật toán có 3 mức so khớp:
+
+1. **So khớp chính xác** (nguyên gốc).
+2. **So khớp không phân biệt hoa thường**.
+3. **So khớp không phân biệt nguyên âm (a,e,i,o,u coi như a)**.
+
+---
+
+👉 Bạn có muốn mình vẽ sơ đồ **3 lớp kiểm tra từ** cho dễ hình dung không?
+Ok 👍 mình giải thích đoạn này chi tiết và thêm ví dụ dễ hiểu nhé:
+
+---
+
+### 📌 Code:
+
+```python
+exact = set(wordlist)         # 1
+case = defaultdict()          # 2
+vowl = defaultdict()          # 3
+for w in wordlist:            # 4
+    c = case_hash(w)          # 5
+    if c not in case:         # 6
+        case[c] = w
+    v = vowel_hash(w)         # 7
+    if v not in vowl:         # 8
+        vowl[v] = w
+```
+
+---
+
+### 🔎 Giải thích từng dòng:
+
+**1. `exact = set(wordlist)`**
+
+* Tạo một `set` chứa toàn bộ từ trong `wordlist`.
+* Mục đích: để **tìm kiếm nhanh** (O(1)) xem một từ có tồn tại chính xác trong danh sách gốc hay không.
+
+Ví dụ:
+
+```python
+wordlist = ["Hello", "Leet", "code"]
+exact = {"Hello", "Leet", "code"}
+```
+
+---
+
+**2. `case = defaultdict()`**
+
+* Dùng để lưu ánh xạ giữa **chuỗi viết thường (case\_hash)** → **từ gốc đầu tiên** trong `wordlist`.
+* Đảm bảo không phân biệt chữ hoa/thường.
+
+---
+
+**3. `vowl = defaultdict()`**
+
+* Dùng để lưu ánh xạ giữa **chuỗi chuẩn hóa nguyên âm (vowel\_hash)** → **từ gốc đầu tiên**.
+* Đảm bảo bỏ qua khác biệt giữa các nguyên âm.
+
+---
+
+**4. `for w in wordlist:`**
+
+* Duyệt qua từng từ `w` trong `wordlist`.
+
+---
+
+**5. `c = case_hash(w)`**
+
+* Chuyển `w` về dạng chữ thường để tạo “khóa” cho `case`.
+
+Ví dụ: `"Hello"` → `"hello"`.
+
+---
+
+**6. `if c not in case: case[c] = w`**
+
+* Nếu khóa `c` chưa có trong `case`, gán nó trỏ đến từ `w`.
+* Như vậy chỉ lưu **từ gốc đầu tiên** gặp được.
+
+Ví dụ:
+
+```python
+wordlist = ["Hello", "hello"]
+case = {"hello": "Hello"}   # giữ bản gốc "Hello" đầu tiên
+```
+
+---
+
+**7. `v = vowel_hash(w)`**
+
+* Tạo khóa bỏ qua nguyên âm của `w`.
+
+Ví dụ: `"Leet"` → `"laat"`.
+
+---
+
+**8. `if v not in vowl: vowl[v] = w`**
+
+* Nếu khóa nguyên âm `v` chưa tồn tại trong `vowl`, gán nó với từ `w`.
+* Cũng chỉ lưu từ gốc đầu tiên.
+
+---
+
+### 📌 Ví dụ tổng thể
+
+```python
+wordlist = ["Hello", "Leet", "code"]
+
+exact = {"Hello", "Leet", "code"}
+
+case = {
+   "hello": "Hello",
+   "leet": "Leet",
+   "code": "code"
+}
+
+vowl = {
+   "halla": "Hello",   # từ "Hello"
+   "laat": "Leet",     # từ "Leet"
+   "cada": "code"      # từ "code"
+}
+```
+
+---
+
+👉 Tóm lại:
+
+* `exact`: để kiểm tra **khớp chính xác**.
+* `case`: để kiểm tra **không phân biệt hoa/thường**.
+* `vowl`: để kiểm tra **không phân biệt nguyên âm**.
+
+---
+
+Bạn có muốn mình viết thêm **sơ đồ kiểm tra query từng bước** (ví dụ query `"hELLo"` và `"liit"`) cho dễ review không?
+Ok 👍 mình giải thích đoạn `correct()` này nhé:
+
+---
+
+### 📌 Code:
+
+```python
+def correct(w):
+    if w in exact: return w              # 1. kiểm tra khớp chính xác
+    c = case_hash(w)                     
+    if c in case: return case[c]         # 2. kiểm tra không phân biệt hoa/thường
+    v = vowel_hash(w)
+    if v in vowl: return vowl[v]         # 3. kiểm tra không phân biệt nguyên âm
+    return ''                            # 4. nếu không khớp, trả về chuỗi rỗng
+
+return [correct(q) for q in queries]     # xử lý tất cả queries
+```
+
+---
+
+### 🔎 Giải thích từng bước:
+
+**1. `if w in exact: return w`**
+
+* Nếu `w` xuất hiện chính xác trong `wordlist` ban đầu → trả về chính `w`.
+* Đây là mức **ưu tiên cao nhất** (khớp 100%).
+
+📌 Ví dụ:
+`queries = ["Hello"]`, `wordlist = ["Hello", "Leet"]`
+→ `"Hello"` nằm trong `exact` → trả về `"Hello"`.
+
+---
+
+**2. `c = case_hash(w)` → `if c in case: return case[c]`**
+
+* Nếu không khớp chính xác, thì chuyển `w` về chữ thường.
+* Kiểm tra xem có tồn tại trong `case` không.
+* Nếu có, trả về từ gốc đầu tiên trong `wordlist`.
+
+📌 Ví dụ:
+`queries = ["hELLo"]`, `wordlist = ["Hello"]`
+
+* `"hELLo".lower()` = `"hello"`
+* `"hello"` có trong `case` → trả về `"Hello"`.
+
+---
+
+**3. `v = vowel_hash(w)` → `if v in vowl: return vowl[v]`**
+
+* Nếu vẫn chưa khớp, thì kiểm tra ở mức bỏ qua nguyên âm.
+* Tạo “khóa nguyên âm” bằng cách thay tất cả `e,i,o,u` thành `a`.
+* Nếu tồn tại trong `vowl`, trả về từ gốc đầu tiên trong `wordlist`.
+
+📌 Ví dụ:
+`queries = ["leet"]`, `wordlist = ["Lit"]`
+
+* `"leet".lower()` = `"leet"`
+* `vowel_hash("leet")` = `"laat"`
+* Nếu `"laat"` có trong `vowl` → trả về `"Lit"`.
+
+---
+
+**4. `return ''`**
+
+* Nếu không khớp với bất kỳ mức nào, trả về chuỗi rỗng `''`.
+
+📌 Ví dụ:
+`queries = ["xyz"]`, `wordlist = ["Hello", "Leet"]`
+→ không khớp → trả về `""`.
+
+---
+
+**5. `return [correct(q) for q in queries]`**
+
+* Duyệt qua toàn bộ `queries`, áp dụng hàm `correct()` cho từng từ.
+* Kết quả là một danh sách chứa các từ được sửa chính tả theo luật.
+
+---
+
+### 📌 Ví dụ tổng thể
+
+```python
+wordlist = ["Hello", "Leet", "code"]
+queries = ["hello", "hELLo", "leet", "liit", "xyz"]
+
+Output:
+["Hello", "Hello", "Leet", "Leet", ""]
+```
+
+✅ Vì:
+
+* `"hello"` → khớp không phân biệt hoa/thường → `"Hello"`
+* `"hELLo"` → khớp không phân biệt hoa/thường → `"Hello"`
+* `"leet"` → khớp chính xác → `"Leet"`
+* `"liit"` → khớp bỏ qua nguyên âm (`laat` giống `"leet"`) → `"Leet"`
+* `"xyz"` → không khớp → `""`.
+
+---
+
+👉 Bạn có muốn mình vẽ một **flowchart kiểm tra từ query theo 3 tầng (exact → case → vowel)** để dễ nhớ không?
+👌 Rồi, mình sẽ vẽ sơ đồ **flowchart 3 tầng** của hàm `correct()` để bạn dễ nhớ nhé:
+
+---
+
+## 🔹 Flowchart: Kiểm tra từ `query`
+
+```
+        ┌───────────────┐
+        │   Query w     │
+        └───────┬───────┘
+                │
+                ▼
+     ┌────────────────────┐
+     │ w có trong exact ? │
+     └───────┬────────────┘
+             │YES
+             ▼
+        Trả về w
+             │
+             └──────► Kết thúc
+
+             │NO
+             ▼
+     ┌───────────────────────┐
+     │  c = case_hash(w)     │
+     │  c có trong case ?    │
+     └─────────┬─────────────┘
+               │YES
+               ▼
+         Trả về case[c]
+               │
+               └──────► Kết thúc
+
+               │NO
+               ▼
+     ┌───────────────────────┐
+     │  v = vowel_hash(w)    │
+     │  v có trong vowl ?    │
+     └─────────┬─────────────┘
+               │YES
+               ▼
+         Trả về vowl[v]
+               │
+               └──────► Kết thúc
+
+               │NO
+               ▼
+        Trả về ""
+```
+
+---
+
+### 📌 Tóm tắt dễ nhớ:
+
+1. **Exact check** → Có trong `wordlist` gốc? ✅ Trả về chính nó.
+2. **Case check** → Chuyển về thường, có match? ✅ Trả về từ gốc đầu tiên.
+3. **Vowel check** → Chuẩn hóa nguyên âm, có match? ✅ Trả về từ gốc đầu tiên.
+4. Nếu không match → trả về `""`.
+
+---
+
+👉 Bạn có muốn mình viết lại toàn bộ **giải thích + flowchart này** thành bản **ghi chú ôn tập ngắn gọn** (kiểu “cheat sheet”) để bạn dễ review nhanh không?
+Rồi 👍 mình giải thích dòng này nhé:
+
+---
+
+### 📌 Code:
+
+```python
+return [correct(q) for q in queries]
+```
+
+---
+
+### 🔎 Đây là **list comprehension** trong Python
+
+* Nó tạo ra một **list mới** bằng cách áp dụng hàm `correct(q)` cho từng phần tử `q` trong `queries`.
+* Tương đương với viết vòng lặp `for` dài hơn.
+
+---
+
+### 📌 Cách hoạt động:
+
+Ví dụ:
+
+```python
+queries = ["hello", "hELLo", "leet", "liit", "xyz"]
+```
+
+* Với mỗi `q` trong `queries`, gọi `correct(q)`:
+
+  * `correct("hello")` → `"Hello"`
+  * `correct("hELLo")` → `"Hello"`
+  * `correct("leet")` → `"Leet"`
+  * `correct("liit")` → `"Leet"`
+  * `correct("xyz")` → `""`
+
+* Kết quả ghép lại thành list:
+
+```python
+["Hello", "Hello", "Leet", "Leet", ""]
+```
+
+---
+
+### 🔄 Tương đương viết dài hơn:
+
+```python
+result = []
+for q in queries:
+    result.append(correct(q))
+return result
+```
+
+---
+
+👉 Tóm gọn dễ nhớ:
+`[correct(q) for q in queries]` = **chạy hàm `correct` cho từng query, gom kết quả thành list**.
+
+---
+
+Bạn có muốn mình viết một ví dụ **so sánh list comprehension với vòng for** cho dễ hình dung không?
+Ok 👍 mình tóm tắt ngắn gọn, dễ học – dễ nhớ – dễ review cho bạn về dòng:
+
+```python
+return [correct(q) for q in queries]
+```
+
+---
+
+## 🎯 Tóm tắt
+
+* Đây là **list comprehension** trong Python.
+* Ý nghĩa: **chạy hàm `correct(q)` cho từng từ `q` trong `queries` → trả về list kết quả**.
+* Nhanh gọn hơn so với viết `for` và `append`.
+
+---
+
+## 📌 Dễ nhớ qua ví dụ
+
+```python
+# List comprehension
+[x*2 for x in [1,2,3]]  
+# 👉 [2,4,6]
+
+# Trong bài toán
+[correct(q) for q in queries]  
+# 👉 chạy correct cho từng query
+```
+
+---
+
+## ✅ Mẹo nhớ
+
+* `[expr for item in list]` = “lấy **expr** của mỗi **item** trong list”
+* Ở đây: `expr = correct(q)`, `item = q`, `list = queries`.
+
+---
+
+Bạn có muốn mình làm thêm **cheat sheet mini** cho toàn bộ thuật toán `Vowel Spellchecker` (Exact → Case → Vowel → "") để bạn review trong 1 phút là nhớ ngay không?
+👌 Ok, mình gói gọn lại thành bản **tóm tắt toàn bộ thuật toán Vowel Spellchecker** để bạn học nhanh, nhớ lâu và dễ review:
+
+---
+
+# 🎯 Vowel Spellchecker – Tóm tắt thuật toán
+
+## 🚀 Ý tưởng chính
+
+* Khi so khớp từ trong `queries`, ta kiểm tra theo **3 tầng ưu tiên**:
+
+  1. **Exact**: có khớp chính xác trong `wordlist` không?
+  2. **Case-insensitive**: nếu không, có khớp khi bỏ qua hoa/thường không?
+  3. **Vowel-error**: nếu vẫn không, có khớp khi bỏ qua khác biệt nguyên âm (a,e,i,o,u → a) không?
+  4. Nếu tất cả đều không → trả về `""`.
+
+---
+
+## ⚙️ Các cấu trúc dữ liệu
+
+* `exact = set(wordlist)` → tìm **chính xác**.
+* `case = {lower(word): word}` → tìm **không phân biệt hoa/thường**.
+* `vowl = {vowel_hash(word): word}` → tìm **bỏ qua nguyên âm**.
+
+---
+
+## 🔑 Hàm băm phụ trợ
+
+```python
+def case_hash(s): return s.lower()
+
+def vowel_hash(s):
+    return s.lower().replace('e','a').replace('i','a').replace('o','a').replace('u','a')
+```
+
+---
+
+## 📌 Thuật toán kiểm tra từ
+
+```python
+def correct(w):
+    if w in exact: return w               # Exact
+    if case_hash(w) in case: return case[case_hash(w)]   # Case
+    if vowel_hash(w) in vowl: return vowl[vowel_hash(w)] # Vowel
+    return ""                             # Không khớp
+```
+
+---
+
+## 🔄 Xử lý toàn bộ queries
+
+```python
+return [correct(q) for q in queries]
+```
+
+---
+
+## 🧩 Ví dụ dễ nhớ
+
+```
+wordlist = ["Hello","Leet","code"]
+queries  = ["hello","hELLo","leet","liit","xyz"]
+
+→ Output = ["Hello","Hello","Leet","Leet",""]
+```
+
+---
+
+## ✅ Mẹo học thuộc
+
+* **3 tầng kiểm tra**: 🎯 “**Exact → Case → Vowel → Empty**”
+* Nhớ bằng câu: **“Chính xác trước, hoa thường sau, nguyên âm cuối, còn lại bỏ.”**
+
+---
+
+👉 Bạn có muốn mình viết lại thành **pseudo code ngắn gọn** (giống công thức) để bạn chỉ cần đọc 3 dòng là ôn lại được không?
+Rồi 👍 đây là bản **pseudo code ngắn gọn** (kiểu công thức) cho Vowel Spellchecker, giúp bạn đọc 1 phút là nhớ lại ngay:
+
+---
+
+# 📝 Vowel Spellchecker – Pseudo Code
+
+```
+Build:
+    exact = set(wordlist)
+    case  = map[lower(word)] = first word
+    vowl  = map[vowel_hash(word)] = first word
+
+Function correct(w):
+    if w in exact: return w
+    if lower(w) in case: return case[lower(w)]
+    if vowel_hash(w) in vowl: return vowl[vowel_hash(w)]
+    return ""
+
+Answer = [correct(q) for q in queries]
+```
+
+---
+
+## ✅ Nhớ nhanh
+
+* **Exact → Case → Vowel → Empty**
+* Công thức kiểm tra:
+
+```
+if exact → return gốc
+else if case → return gốc
+else if vowel → return gốc
+else ""
+```
+
+---
+
+Bạn có muốn mình làm thêm **bảng ví dụ input → từng bước kiểm tra → output** (kiểu bảng ôn tập nhanh) không?
+Tuyệt 👌 mình làm **bảng ví dụ input → từng bước kiểm tra → output** cho bạn nhé:
+
+---
+
+# 🧩 Bảng ôn tập nhanh – Vowel Spellchecker
+
+```
+wordlist = ["Hello","Leet","code"]
+queries  = ["hello","hELLo","leet","liit","xyz"]
+```
+
+| Query | Exact check              | Case check          | Vowel check                | Output |
+| ----- | ------------------------ | ------------------- | -------------------------- | ------ |
+| hello | ❌ (không có "hello" gốc) | ✅ "hello" → "Hello" | -                          | Hello  |
+| hELLo | ❌                        | ✅ "hello" → "Hello" | -                          | Hello  |
+| leet  | ✅ có "Leet"              | -                   | -                          | Leet   |
+| liit  | ❌                        | ❌                   | ✅ "liit" → "laat" = "Leet" | Leet   |
+| xyz   | ❌                        | ❌                   | ❌                          | ""     |
+
+---
+
+## ✅ Cách nhớ bảng
+
+* **Exact** trước (giữ nguyên từ).
+* Nếu fail → **Case** (chữ thường).
+* Nếu fail → **Vowel** (a,e,i,o,u → a).
+* Nếu fail hết → `""`.
+
+---
+
+👉 Bạn có muốn mình gom hết phần **cheat sheet + pseudo code + bảng ôn tập** thành một bản **review cuối cùng dạng flashcard** (kiểu đọc 30 giây nhớ toàn bộ) không?
+👌 Ok, mình gom lại thành **Flashcard ôn nhanh** cho bài *Vowel Spellchecker* nhé:
+
+---
+
+# 🃏 Flashcard – Vowel Spellchecker
+
+## 🎯 Mục tiêu
+
+Với mỗi `query`, tìm từ phù hợp nhất trong `wordlist` theo thứ tự ưu tiên:
+
+1. **Exact match** (giữ nguyên).
+2. **Case-insensitive match**.
+3. **Vowel-error match** (mọi nguyên âm → `a`).
+4. Nếu không có → `""`.
+
+---
+
+## 📝 Pseudo Code ngắn gọn
+
+```
+build:
+  exact_set = set(wordlist)
+  case_map  = {lower(word): first_occurrence}
+  vowel_map = {devowel(lower(word)): first_occurrence}
+
+for q in queries:
+  if q in exact_set: return q
+  elif lower(q) in case_map: return case_map[lower(q)]
+  elif devowel(lower(q)) in vowel_map: return vowel_map[devowel(lower(q))]
+  else: return ""
+```
+
+`devowel(word)` = đổi mọi `a,e,i,o,u` thành `a`.
+
+---
+
+## 📊 Ví dụ minh hoạ
+
+```
+wordlist = ["Hello","Leet","code"]
+queries  = ["hello","hELLo","leet","liit","xyz"]
+```
+
+| Query | Exact | Case | Vowel | Output |
+| ----- | ----- | ---- | ----- | ------ |
+| hello | ❌     | ✅    | -     | Hello  |
+| hELLo | ❌     | ✅    | -     | Hello  |
+| leet  | ✅     | -    | -     | Leet   |
+| liit  | ❌     | ❌    | ✅     | Leet   |
+| xyz   | ❌     | ❌    | ❌     | ""     |
+
+---
+
+## ⚡ Quick Tips
+
+* Luôn ưu tiên **từ xuất hiện đầu tiên** trong wordlist khi match.
+* `Case` và `Vowel` cần **map theo lowercase** để tra nhanh.
+* Thời gian: `O(N + Q)` với `N` wordlist, `Q` queries.
+
+---
+
+👉 Bạn có muốn mình viết thêm **code Python tối giản (10 dòng)** để bạn chạy test nhanh không?

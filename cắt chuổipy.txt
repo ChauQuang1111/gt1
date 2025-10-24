@@ -1,0 +1,25 @@
+cắt chuổi 
+email = "user@example.com"
+# Sử dụng split('@') để tách chuỗi thành list
+# ["user", "example.com"]
+parts = email.split('@')
+
+# Tên miền (domain) là phần tử thứ hai trong list (chỉ mục 1)
+domain = parts[1]
+
+print(domain)
+# Output: example.com
+sử dụng slicing
+email = "user@example.com"
+
+# 1. Tìm vị trí (index) của ký tự '@'
+# Phương thức .index() trả về chỉ mục của lần xuất hiện đầu tiên của ký tự.
+at_index = email.index('@')
+
+# 2. Sử dụng Slicing để lấy chuỗi từ vị trí sau '@' đến cuối
+# Cú pháp: [start_index : end_index]
+# Ta dùng (at_index + 1) làm điểm bắt đầu và để trống điểm kết thúc
+domain_slice = email[at_index + 1 :]
+
+print(domain_slice)
+# Output: example.com

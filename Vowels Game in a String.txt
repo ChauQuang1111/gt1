@@ -1,0 +1,31 @@
+# 3227. Vowels Game in a String(12/09/2025)
+Ok, mình viết phiên bản Python ngắn gọn hơn dùng **`any()`** để kiểm tra xem chuỗi có **ít nhất một nguyên âm** hay không:
+
+```python
+class Solution:
+    def doesAliceWin(self, s: str) -> bool:
+        # any() sẽ trả về True nếu ít nhất một ký tự trong chuỗi là nguyên âm
+        return any(c in "aeiou" for c in s)
+
+# Ví dụ test
+sol = Solution()
+print(sol.doesAliceWin("leetcode"))  # True
+print(sol.doesAliceWin("rhythm"))    # False
+```
+
+---
+
+### 🔎 Giải thích
+
+1. `for c in s` → duyệt từng ký tự `c` trong chuỗi `s`.
+2. `c in "aeiou"` → kiểm tra ký tự `c` có phải nguyên âm không.
+3. `any(...)` → trả về `True` **ngay khi gặp ký tự nguyên âm đầu tiên**, không cần đếm tất cả.
+
+   * Nếu không có nguyên âm nào → trả về `False`.
+
+⚡ Ưu điểm so với `.count()`:
+
+* Nhanh hơn, **không phải đếm tất cả**, chỉ cần tìm **một nguyên âm là đủ**.
+* Code ngắn gọn, dễ đọc.
+
+Nếu bạn muốn, mình có thể viết thêm **phiên bản case-insensitive** để kiểm tra cả **chữ hoa và chữ thường** nữa. Bạn có muốn mình làm không?

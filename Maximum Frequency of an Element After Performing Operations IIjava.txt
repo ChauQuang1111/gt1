@@ -1,0 +1,439 @@
+LeetCode 3347 – Maximum Frequency of an Element After Performing Operations II
+class Solution {
+    public int maxFrequency(int[] nums, int k, int ops) {
+        int res = 0;
+        Arrays.sort(nums);
+        int left = 0;
+        int right = 0;
+        int n = nums.length;
+        int i = 0;
+        while (i < n) {
+            int val = nums[i];
+            int same = 0;
+            while (i < n && nums[i] == val) {
+                same++;
+                i++;
+            }
+            while (right < n && nums[right] <= val + k) {
+                right++;
+            }
+            while (left < n && nums[left] < val - k) {
+                left++;
+            }
+            res = Math.max(res, Math.min(same + ops, right - left));
+        }
+        // case 2, num is not in the arr
+        left = 0;
+        right = 0;
+        while (right < n) {
+            while (right < n && (long) nums[left] + k + k >= nums[right]) {
+                right++;
+            }
+            res = Math.max(res, Math.min(right - left, ops));
+            left++;
+        }
+        return res;
+    }
+}
+
+Rất hay 👍
+Mình sẽ **giải thích chi tiết từng dòng đoạn code này** (thuộc *Case 1* của bài toán) để bạn hiểu rõ ý nghĩa và logic hoạt động nhé 👇
+
+---
+
+### 📍 Mục tiêu đoạn code này:
+
+Xét từng **giá trị xuất hiện trong mảng (`val`)**, tìm xem có bao nhiêu phần tử **nằm trong khoảng `[val - k, val + k]`**,
+và trong phạm vi tối đa `ops` phép biến đổi, có thể đạt được **tần suất lớn nhất bao nhiêu**.
+
+---
+
+### 🔍 Giải thích từng dòng
+
+```java
+int val = nums[i];
+```
+
+👉 Lấy giá trị hiện tại trong mảng (đã được sắp xếp).
+Ví dụ: `val = nums[i] = 5`.
+
+---
+
+```java
+int same = 0;
+```
+
+👉 Biến `same` dùng để **đếm số lượng phần tử bằng chính giá trị `val`**.
+(VD: nếu có 3 số 5 liền nhau thì `same = 3`)
+
+---
+
+```java
+while (i < n && nums[i] == val) {
+    same++;
+    i++;
+}
+```
+
+👉 Vòng lặp này:
+
+* Duyệt qua toàn bộ các phần tử bằng `val`.
+* Tăng `same` mỗi khi gặp phần tử `val`.
+* Dừng lại khi gặp số khác `val`.
+
+💡 Vì mảng đã được **sắp xếp**, nên các giá trị giống nhau nằm liền kề nhau → dễ đếm bằng `while`.
+
+---
+
+```java
+while (right < n && nums[right] <= val + k) {
+    right++;
+}
+```
+
+👉 Dịch con trỏ `right` sang phải **tới khi gặp phần tử > val + k**.
+Nói cách khác:
+
+* Mọi phần tử **≤ val + k** đều có thể **tăng hoặc giảm** để trở thành `val`.
+* Đây là **biên phải** của đoạn `[val - k, val + k]`.
+
+💡 Ví dụ:
+
+```
+val = 5, k = 2  →  khoảng hợp lệ [3, 7]
+nums[right] <= 7 → dịch phải
+```
+
+---
+
+```java
+while (left < n && nums[left] < val - k) {
+    left++;
+}
+```
+
+👉 Dịch con trỏ `left` sang phải để **bỏ qua những phần tử nhỏ hơn val - k**,
+vì những phần tử này **không thể tăng lên đến val** (vượt quá giới hạn k).
+
+💡 Ví dụ:
+
+```
+val = 5, k = 2  →  khoảng hợp lệ [3, 7]
+nums[left] < 3  → dịch trái
+```
+
+---
+
+```java
+res = Math.max(res, Math.min(same + ops, right - left));
+```
+
+👉 Đây là **bước tính kết quả quan trọng nhất**:
+
+| Thành phần                           | Ý nghĩa                                                                            |
+| ------------------------------------ | ---------------------------------------------------------------------------------- |
+| `right - left`                       | Tổng số phần tử nằm trong đoạn `[val - k, val + k]` (có thể biến đổi thành `val`). |
+| `same`                               | Số phần tử vốn đã bằng `val`.                                                      |
+| `ops`                                | Số phép biến đổi tối đa cho phép.                                                  |
+| `Math.min(same + ops, right - left)` | Không thể vượt quá số phần tử trong đoạn `[val - k, val + k]`.                     |
+| `Math.max(res, ...)`                 | Cập nhật kết quả lớn nhất.                                                         |
+
+💡 Ví dụ minh họa:
+
+```
+nums = [1, 3, 3, 4, 6], k = 2, ops = 1
+val = 3, same = 2
+Các phần tử trong [1,5] là 1,3,3,4 → (right-left)=4
+=> Có thể đạt được min(2 + 1, 4) = 3
+res = max(res, 3)
+```
+
+→ Nghĩa là sau tối đa 1 phép biến đổi, có thể tạo ra **3 phần tử bằng nhau (giá trị 3)**.
+
+---
+
+### 🧠 Tóm tắt ngắn:
+
+| Dòng code                        | Mục đích                              |
+| -------------------------------- | ------------------------------------- |
+| `int val = nums[i];`             | Lấy giá trị hiện tại cần xét          |
+| `while (nums[i] == val)`         | Đếm bao nhiêu phần tử bằng `val`      |
+| `while (nums[right] <= val + k)` | Tìm ranh phải – số ≤ `val + k`        |
+| `while (nums[left] < val - k)`   | Tìm ranh trái – bỏ số < `val - k`     |
+| `res = Math.max(...)`            | Cập nhật tần suất lớn nhất có thể đạt |
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ biểu đồ hai con trỏ `left` – `right` di chuyển trên trục số** (rất dễ hiểu cho phần này).
+Bạn có muốn mình vẽ minh họa trực quan không?
+Rất tốt 👏 — đây là phần **CASE 2** trong thuật toán, xử lý khi **giá trị mục tiêu không tồn tại trong mảng**,
+nhưng ta vẫn muốn xem liệu có thể “hội tụ” một nhóm phần tử thành cùng giá trị ở **một điểm trung gian** hay không.
+Mình sẽ giải thích **từng dòng một cách chi tiết**, kèm ví dụ minh họa nhé 👇
+
+---
+
+## 🧩 Mục tiêu đoạn này
+
+Giả sử bạn có thể biến đổi mỗi phần tử ±k,
+bạn muốn tìm **nhóm lớn nhất các phần tử có thể biến thành cùng một số nằm giữa chúng**,
+nhưng **không cần** rằng số đó phải có sẵn trong mảng.
+
+---
+
+## 🔍 Phân tích từng dòng
+
+---
+
+```java
+left = 0;
+right = 0;
+```
+
+👉 Đặt lại hai con trỏ `left` và `right` để bắt đầu tìm các đoạn liên tiếp trong mảng (vì mảng đã sắp xếp).
+
+* `left`: đầu đoạn đang xét
+* `right`: cuối đoạn đang xét
+
+---
+
+```java
+while (right < n) {
+```
+
+👉 Duyệt đến hết mảng bằng con trỏ `right`.
+
+---
+
+```java
+while (right < n && (long) nums[left] + k + k >= nums[right]) {
+    right++;
+}
+```
+
+🔹 Đây là **điều kiện hội tụ quan trọng**:
+
+* Với hai phần tử `nums[left]` và `nums[right]`,
+  nếu khoảng cách của chúng **≤ 2k**, tức là:
+
+  ```
+  nums[right] - nums[left] ≤ 2k
+  ```
+
+  → Nghĩa là **chúng có thể cùng biến đổi về một giá trị trung gian**.
+
+Ví dụ:
+
+```
+nums[left] = 3, nums[right] = 7, k = 2
+=> nums[left] + 2k = 7 → vẫn OK
+→ tất cả số trong [3,7] có thể cùng hội tụ về 5
+```
+
+💡 Dùng `(long)` để tránh **tràn số** khi `nums[left]` và `k` rất lớn (vì có thể > 10^9).
+
+✅ Vòng `while` này **mở rộng đoạn [left, right)**
+đến khi phần tử `nums[right]` **vượt khỏi phạm vi hội tụ được** (tức là > `nums[left] + 2k`).
+
+---
+
+```java
+res = Math.max(res, Math.min(right - left, ops));
+```
+
+🔹 Sau khi xác định đoạn `[left, right)` hợp lệ:
+
+* `(right - left)` là số phần tử có thể **biến thành cùng giá trị**.
+* Nhưng ta chỉ được phép thực hiện **tối đa `ops` phép biến đổi**.
+
+→ Kết quả đoạn này là:
+
+```
+Math.min(right - left, ops)
+```
+
+rồi cập nhật vào `res`.
+
+💡 Nếu `ops` < `(right - left)`, ta không đủ phép biến đổi để hội tụ toàn bộ đoạn,
+nên chỉ tính tối đa `ops` phần tử mà thôi.
+
+---
+
+```java
+left++;
+```
+
+👉 Dịch con trỏ `left` sang phải để xét đoạn tiếp theo.
+`right` **không reset lại**, vì mảng đã sắp xếp — điều này giúp thuật toán chạy hiệu quả hơn (**O(n)**).
+
+---
+
+```java
+return res;
+```
+
+👉 Sau khi duyệt hết mảng, `res` chính là **tần suất lớn nhất có thể đạt được** trong hai trường hợp:
+
+1. Khi số mục tiêu **có sẵn trong mảng**
+2. Khi số mục tiêu **không có trong mảng**
+
+---
+
+## 🧠 Tóm tắt trực quan
+
+| Biến                                       | Ý nghĩa                                     |
+| ------------------------------------------ | ------------------------------------------- |
+| `left`, `right`                            | Hai con trỏ trượt trên mảng đã sắp xếp      |
+| `(long) nums[left] + k + k >= nums[right]` | Kiểm tra xem khoảng có thể hội tụ hay không |
+| `right - left`                             | Số phần tử trong khoảng hội tụ được         |
+| `ops`                                      | Số phép biến đổi tối đa                     |
+| `res`                                      | Kết quả lớn nhất tìm được                   |
+
+---
+
+## 📘 Ví dụ minh họa
+
+```
+nums = [1, 5, 9], k = 2, ops = 3
+```
+
+| Đoạn  | Khoảng cách | Có thể hội tụ? | Giải thích       |
+| ----- | ----------- | -------------- | ---------------- |
+| [1,5] | 4 ≤ 2k=4    | ✅              | Cùng hội tụ về 3 |
+| [5,9] | 4 ≤ 4       | ✅              | Cùng hội tụ về 7 |
+| [1,9] | 8 > 4       | ❌              | Không thể        |
+
+Khi xét `[1,5]`, có 2 phần tử → `res = max(0, min(2, 3)) = 2`
+
+---
+
+## 🎯 Tổng kết logic phần này
+
+* Dùng hai con trỏ để tìm **khoảng dài nhất** mà mọi phần tử trong đó có thể hội tụ (khoảng ≤ 2k).
+* Mỗi lần cập nhật `res` bằng `Math.min(độ dài khoảng, ops)`.
+* Đảm bảo xét **tất cả đoạn liên tiếp** bằng cách tăng `left` dần dần.
+
+---
+
+Bạn có muốn mình **vẽ hình minh họa trên trục số (nums, k, 2k)** để thấy trực quan cách đoạn `[left, right]` dịch chuyển không?
+Nó sẽ giúp bạn hiểu rõ hơn tại sao dùng `nums[left] + 2k >= nums[right]`.
+Rất hay — ta đi **từng dòng đoạn “case 2” này** để hiểu thật kỹ nhé 👇
+
+---
+
+### 🧠 Mục đích tổng quát của đoạn này
+
+Phần này xử lý **trường hợp giá trị “target” (giá trị sau khi tăng/giảm các phần tử) không có sẵn trong mảng**.
+Tức là: ta không cố biến các số *thành một giá trị đã tồn tại*, mà xem thử có thể **ghép một nhóm số** lại gần nhau trong khoảng `[x - k, x + k]` **nhờ tối đa `ops` phép thay đổi**.
+
+---
+
+### 🔍 Giải thích từng dòng:
+
+```java
+left = 0;
+right = 0;
+while (right < n) {
+```
+
+➡️ Dùng **hai con trỏ `left` và `right`** để xác định một **cửa sổ (window)** các phần tử có thể trở nên giống nhau nếu mỗi phần tử được điều chỉnh trong phạm vi `±k`.
+
+---
+
+```java
+while (right < n && (long) nums[left] + k + k >= nums[right]) {
+    right++;
+}
+```
+
+* Điều kiện `(long) nums[left] + k + k >= nums[right]` nghĩa là:
+
+  > Giá trị nhỏ nhất `nums[left]` nếu tăng tối đa `k`,
+  > và giá trị lớn nhất `nums[right]` nếu giảm tối đa `k`,
+  > thì **vẫn có thể chạm nhau** (tức là có thể làm chúng bằng nhau sau các phép chỉnh).
+
+* Nói cách khác:
+  Hai đầu mảng con `[left, right]` **vẫn nằm trong phạm vi 2k**,
+  nên toàn bộ đoạn đó có thể "gom lại" thành cùng một giá trị **bằng tối đa 1 lần điều chỉnh cho mỗi phần tử**.
+
+* Vì thế ta **mở rộng `right` tối đa** miễn là điều kiện này còn đúng.
+
+---
+
+```java
+res = Math.max(res, Math.min(right - left, ops));
+```
+
+* `right - left` là độ dài của cửa sổ hiện tại — số phần tử có thể làm cho “gần giống nhau”.
+* `Math.min(right - left, ops)` đảm bảo rằng ta **không dùng quá số lần thay đổi cho phép (`ops`)**.
+* Sau đó cập nhật `res` nếu tìm được nhóm lớn hơn.
+
+---
+
+```java
+left++;
+```
+
+* Dịch cửa sổ sang phải để tiếp tục kiểm tra nhóm mới.
+
+---
+
+### ✅ Tổng kết ý tưởng:
+
+Phần này tìm **độ dài lớn nhất của một dãy liên tiếp mà tất cả các phần tử nằm trong phạm vi 2k**,
+vì nếu ta có thể tăng/giảm mỗi số trong ±k, thì mọi số trong đoạn đó **đều có thể biến thành cùng một giá trị**.
+→ Từ đó, `res` sẽ là **tần suất lớn nhất có thể đạt được sau các phép chỉnh**.
+
+---
+
+Nếu bạn muốn, mình có thể vẽ thêm **sơ đồ minh hoạ** cho đoạn `nums[left] + k + k >= nums[right]` để bạn dễ hình dung hơn — bạn có muốn không?
+À 😄 — bạn đang hỏi “**hội tụ về**” trong đoạn giải thích ở trên nghĩa là gì đúng không?
+
+Mình giải thích rõ nè 👇
+
+---
+
+### 🌟 “Hội tụ về” nghĩa là:
+
+Các giá trị **khác nhau ban đầu** có thể **biến đổi (tăng hoặc giảm trong phạm vi cho phép)** sao cho **cuối cùng chúng trở thành cùng một giá trị**.
+
+---
+
+### 💡 Ví dụ cụ thể:
+
+Giả sử:
+
+```
+nums = [1, 3, 5]
+k = 2
+```
+
+* `1` có thể tăng tối đa `+2` → thành `3`
+* `5` có thể giảm tối đa `-2` → cũng thành `3`
+* `3` thì giữ nguyên
+
+👉 Khi đó, tất cả các số `[1, 3, 5]` **đều “hội tụ về 3”**,
+tức là **có thể cùng biến thành một giá trị chung (3)** sau khi điều chỉnh trong phạm vi cho phép.
+
+---
+
+### 🧩 Trong code:
+
+Câu điều kiện
+
+```java
+(nums[left] + k + k >= nums[right])
+```
+
+nghĩa là:
+
+> Hai đầu của đoạn `[left, right]` **vẫn có thể hội tụ về cùng một giá trị**
+> (vì khoảng cách giữa chúng ≤ 2k).
+
+---
+
+👉 Tóm lại:
+**“Hội tụ về” = tất cả các phần tử trong đoạn có thể biến đổi trong phạm vi ±k để trở thành cùng một giá trị.**
+
+---
+
+Bạn có muốn mình vẽ sơ đồ trực quan cho ví dụ “hội tụ về 3” để dễ nhìn hơn không?

@@ -1,0 +1,133 @@
+Implement Router
+import bisect
+from collections import deque, defaultdict
+from typing import List, DefaultDict
+
+class Router:
+
+    def __init__(self, memoryLimit: int):
+        self.memoryLimit = memoryLimit          # Giới hạn bộ nhớ (số packet tối đa)
+        self.deque = deque()                    # Hàng đợi FIFO lưu packet (theo thứ tự thời gian)
+        self.packet_set = set()                 # Set để tránh packet trùng lặp
+        # Map: destination → danh sách timestamp đã SẮP XẾP
+        self.dest_packets: DefaultDict[int, List[int]] = defaultdict(list)
+
+    def addPacket(self, source: int, destination: int, timestamp: int) -> bool:
+        packet = (source, destination, timestamp)
+
+        # Nếu packet đã tồn tại → không thêm
+        if packet in self.packet_set:
+            return False
+        
+        # Nếu bộ nhớ đầy → loại bỏ packet cũ nhất
+        if len(self.deque) == self.memoryLimit:
+            oldest = self.deque.popleft()       # Lấy packet đầu tiên (cũ nhất)
+            self.packet_set.remove(oldest)      # Xóa khỏi set
+            s_old, d_old, t_old = oldest        # Giải nén gói cũ
+            arr_old = self.dest_packets[d_old]  # Lấy danh sách timestamp của destination cũ
+            # Tìm vị trí timestamp trong danh sách và xóa đi
+            idx_old = bisect.bisect_left(arr_old, t_old)
+            del arr_old[idx_old]
+        
+        # Thêm packet mới
+        self.deque.append(packet)                          # Đưa vào hàng đợi
+        self.packet_set.add(packet)                        # Đưa vào set
+        arr_new = self.dest_packets[destination]           # Lấy danh sách timestamp theo đích
+        bisect.insort(arr_new, timestamp)                  # Chèn timestamp đúng vị trí (giữ sắp xếp)
+        return True
+
+    def forwardPacket(self) -> List[int]:
+        # Nếu router rỗng → không có gì để forward
+        if not self.deque:
+            return []
+
+        # Lấy packet cũ nhất ra
+        packet = self.deque.popleft()
+        self.packet_set.remove(packet)
+        s, d, t = packet
+
+        # Xóa timestamp trong danh sách dest_packets
+        arr = self.dest_packets[d]
+        idx = bisect.bisect_left(arr, t)
+        del arr[idx]
+
+        # Trả về packet vừa forward
+        return [s, d, t]
+
+    def getCount(self, destination: int, startTime: int, endTime: int) -> int:
+        # Nếu chưa có packet nào cho destination này
+        if destination not in self.dest_packets:
+            return 0
+
+        arr = self.dest_packets[destination]  # Lấy danh sách timestamp đã sắp xếp
+
+        # Tìm vị trí đầu tiên >= startTime
+        left_index = bisect.bisect_left(arr, startTime)
+        # Tìm vị trí đầu tiên > endTime
+        right_index = bisect.bisect_right(arr, endTime)
+
+        # Số phần tử nằm trong đoạn [startTime, endTime]
+		return right_index - left_index
+		
+
+Câu hỏi hay đó 👍. Mình giải thích rõ nhé:
+
+Trong Python, `bisect` hoạt động giống hệt như 2 hàm `small` và `big` trong Java code của bạn.
+
+---
+
+## 1. `bisect_left(arr, startTime)`
+
+* Trả về **vị trí đầu tiên có giá trị >= startTime**.
+* Đây chính là **đầu khoảng** (left boundary).
+* Vì ta cần **lấy hết các phần tử từ startTime trở đi**, nên phải bắt đầu từ phần tử đầu tiên thoả mãn `>= startTime`.
+
+---
+
+## 2. `bisect_right(arr, endTime)`
+
+* Trả về **vị trí đầu tiên có giá trị > endTime**.
+* Nghĩa là phần tử ngay sau **cuối khoảng** (right boundary + 1).
+* Do đó, tất cả các phần tử hợp lệ nằm trong `[left_index, right_index)` (nửa kín nửa hở).
+
+---
+
+## 📌 Ví dụ minh hoạ
+
+Giả sử mảng:
+
+```
+arr = [1, 2, 5, 7, 9]
+```
+
+Ta gọi:
+
+```python
+import bisect
+
+startTime = 2
+endTime = 7
+left_index = bisect.bisect_left(arr, startTime)   # 1
+right_index = bisect.bisect_right(arr, endTime)   # 4
+```
+
+👉 Kết quả:
+
+* `left_index = 1` → arr\[1] = 2 (phần tử đầu tiên >= 2).
+* `right_index = 4` → arr\[4] = 9 (phần tử đầu tiên > 7).
+
+Khoảng cần lấy là `[1,4)` → tức là {2,5,7}.
+Số phần tử = `right_index - left_index = 4 - 1 = 3`.
+
+---
+
+✅ Tóm lại:
+
+* Phải tìm **vị trí đầu tiên >= startTime** để biết điểm bắt đầu.
+* Phải tìm **vị trí đầu tiên > endTime** để biết điểm kết thúc (cộng 1).
+
+Cách này giống với việc trong Java ta dùng `small` (lower bound) và `big` (upper bound).
+
+---
+
+Bạn có muốn mình so sánh trực tiếp `bisect_left/bisect_right` trong Python với `small/big` trong Java, để thấy nó giống hệt nhau không?

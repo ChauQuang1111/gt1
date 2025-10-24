@@ -1,0 +1,112 @@
+"Slug generate" thường dùng trong **web development**, đặc biệt khi xây dựng URL thân thiện với người dùng (SEO friendly).
+
+---
+
+### 🔹 **Slug là gì?**
+
+* **Slug** là phần chuỗi ký tự ở cuối URL, đại diện cho một bài viết, sản phẩm, danh mục...
+* Nó thường **ngắn gọn, dễ đọc, không dấu, không ký tự đặc biệt**, và mô tả nội dung.
+
+👉 Ví dụ:
+
+```
+https://example.com/blog/slug-generate-la-gi
+```
+
+* `slug-generate-la-gi` chính là **slug**.
+
+---
+
+### 🔹 **Slug generate là gì?**
+
+Là **quá trình tạo slug** từ một chuỗi văn bản (thường là tiêu đề bài viết hoặc tên sản phẩm).
+
+* Chuyển chữ có dấu → không dấu.
+* Chuyển chữ hoa → chữ thường.
+* Thay dấu cách bằng dấu gạch ngang `-`.
+* Loại bỏ ký tự đặc biệt.
+
+---
+
+### 🔹 Ví dụ code Python (generate slug)
+
+```python
+import re
+import unicodedata
+
+def generate_slug(text: str) -> str:
+    # Bỏ dấu tiếng Việt
+    text = unicodedata.normalize('NFD', text).encode('ascii', 'ignore').decode('utf-8')
+    # Chuyển chữ thường
+    text = text.lower()
+    # Thay ký tự không phải chữ/số bằng dấu gạch ngang
+    text = re.sub(r'[^a-z0-9]+', '-', text)
+    # Xóa dấu gạch ngang thừa ở đầu/cuối
+    text = text.strip('-')
+    return text
+
+print(generate_slug("Slug generate là gì?"))  # 👉 "slug-generate-la-gi"
+```
+
+---
+
+### 🔹 Ứng dụng của slug
+
+* Làm URL dễ đọc và thân thiện SEO.
+* Giúp người dùng và Google hiểu nội dung link.
+* Thường dùng trong CMS (WordPress, Laravel, Django, Next.js...).
+
+---
+
+👉 Bạn có muốn mình viết luôn **Java version slug generate** không?
+
+
+
+Ok 👍 mình viết cho bạn code **generate slug trong Java**.
+
+---
+
+### 🔹 Code Java generate slug
+
+```java
+import java.text.Normalizer;
+
+public class SlugGenerator {
+    public static String generateSlug(String input) {
+        // Bỏ dấu (normalize -> NFD tách dấu, rồi remove)
+        String noAccent = Normalizer.normalize(input, Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+
+        // Chuyển sang chữ thường
+        String lower = noAccent.toLowerCase();
+
+        // Thay ký tự không phải chữ/số bằng dấu gạch ngang
+        String slug = lower.replaceAll("[^a-z0-9]+", "-");
+
+        // Xóa dấu gạch ngang ở đầu/cuối nếu có
+        slug = slug.replaceAll("^-+|-+$", "");
+
+        return slug;
+    }
+
+    public static void main(String[] args) {
+        String text = "Slug generate là gì? Java Example!!!";
+        String slug = generateSlug(text);
+        System.out.println(slug); // 👉 slug-generate-la-gi-java-example
+    }
+}
+```
+
+---
+
+### 🔹 Giải thích
+
+1. **Normalizer**: chuẩn hóa chuỗi → tách dấu (`à` → `a` + dấu huyền).
+2. `\\p{InCombiningDiacriticalMarks}+` → regex xóa toàn bộ dấu sau khi normalize.
+3. `.toLowerCase()` → chuyển sang chữ thường.
+4. `[^a-z0-9]+` → thay mọi ký tự không phải chữ/số thành `-`.
+5. `^-+|-+$` → loại bỏ dấu `-` ở đầu/cuối.
+
+---
+
+👉 Bạn có muốn mình viết thêm **phiên bản tối ưu để dùng trong Spring Boot (REST API SEO-friendly URL)** không?

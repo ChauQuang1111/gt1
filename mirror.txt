@@ -1,0 +1,200 @@
+mirror
+Ok 👍 mình sẽ viết code Python giải bài toán này.
+
+```python
+import re
+
+def is_mirror(s1: str, s2: str) -> bool:
+    # Bước 1: chỉ giữ lại chữ cái (A-Z, a-z)
+    s1_clean = re.sub(r'[^A-Za-z]', '', s1)
+    s2_clean = re.sub(r'[^A-Za-z]', '', s2)
+
+    # Bước 2: đảo ngược s1_clean
+    s1_reversed = s1_clean[::-1]
+
+    # Bước 3: so sánh với s2_clean
+    return s1_reversed == s2_clean
+
+
+# --- Test thử ---
+print(is_mirror("He!lLo", "oLleH"))   # True
+print(is_mirror("Abc123", "Cba"))     # False (phân biệt hoa/thường)
+print(is_mirror("wow!!!", "wow"))     # True (vì "wow" đảo ngược vẫn "wow")
+print(is_mirror("Hello", "olleh"))    # False (khác hoa/thường)
+```
+`import re` trong Python nghĩa là **nạp (import) module `re`**.
+
+📌 `re` = **regular expression** (biểu thức chính quy) – là một thư viện có sẵn trong Python để làm việc với chuỗi, đặc biệt là để:
+
+* **Tìm kiếm** theo mẫu.
+* **Thay thế** ký tự.
+* **Tách chuỗi** theo điều kiện.
+
+---
+
+Ví dụ:
+
+```python
+import re
+
+s = "He!lLo 123"
+# Giữ lại chỉ chữ cái (A-Z, a-z)
+clean = re.sub(r'[^A-Za-z]', '', s)  
+print(clean)  # "HeLlo"
+```
+
+🔎 Ở đây:
+
+* `r'[^A-Za-z]'` là **regex pattern**:
+
+  * `[]` = nhóm ký tự.
+  * `A-Z` = các chữ in hoa.
+  * `a-z` = các chữ thường.
+  * `^` trong `[^...]` nghĩa là "không thuộc tập này".
+  * → tức là mọi ký tự **không phải chữ cái**.
+
+* `re.sub(pattern, replacement, string)`
+
+  * Thay mọi ký tự khớp với `pattern` bằng `replacement`.
+  * Ở đây thay bằng `''` (chuỗi rỗng).
+
+---
+
+👉 Tóm lại: `import re` để dùng regex, và trong bài của bạn mình dùng `re.sub` để loại bỏ các ký tự **không phải chữ cái** khỏi chuỗi.
+
+Bạn có muốn mình giải thích **chi tiết từng bước regex** `[^A-Za-z]` không?
+
+---
+
+### Giải thích code:
+
+1. **`re.sub(r'[^A-Za-z]', '', s)`**
+
+   * Loại bỏ hết ký tự không phải chữ cái.
+   * Ví dụ `"He!lLo"` → `"HelLo"`.
+
+2. **Đảo ngược chuỗi**:
+
+   * `"HelLo"[::-1]` → `"oLleH"`.
+
+3. **So sánh**:
+
+   * Nếu `s2_clean` giống với `s1_reversed` → return `True`.
+   * Ngược lại → `False`.
+
+---
+
+Bạn có muốn mình viết thêm **phiên bản có hàm `main` với input từ người dùng** không (dùng `input()`) để chạy trực tiếp?
+Ok, mình giải thích đề bài rõ ràng nhé 👇
+
+---
+
+### Đề:
+
+**Given two strings, determine if the second string is a mirror of the first.**
+
+📌 Nghĩa là:
+
+* Cho 2 chuỗi `s1` và `s2`.
+* Kiểm tra xem `s2` có phải là **chuỗi đối xứng (mirror)** của `s1` hay không.
+
+---
+
+### Điều kiện của "mirror":
+
+1. **Chỉ xét chữ cái** (A–Z, a–z).
+
+   * Bỏ qua số, dấu cách, ký tự đặc biệt (`!`, `?`, `1`, `#`, …).
+2. **Phân biệt hoa và thường**.
+
+   * `A` khác `a`.
+3. **Đối xứng (mirror)** nghĩa là:
+
+   * Sau khi bỏ hết ký tự không phải chữ cái,
+   * `s2` phải bằng **chuỗi đảo ngược** của `s1`.
+
+---
+
+### Ví dụ minh họa
+
+1.
+
+* `s1 = "He!lLo"`
+* `s2 = "oLleH"`
+* Sau khi bỏ ký tự đặc biệt:
+
+  * `s1` → `"HelLo"`
+  * Đảo ngược `"HelLo"` → `"oLleH"`
+  * `s2` sau khi làm sạch → `"oLleH"`
+    ✅ `s2` là mirror của `s1`.
+
+---
+
+2.
+
+* `s1 = "Abc123"`
+* `s2 = "Cba"`
+* Làm sạch:
+
+  * `s1` → `"Abc"` → đảo ngược `"cbA"`
+  * `s2` → `"Cba"`
+    ❌ `"cbA"` ≠ `"Cba"` → **Không phải mirror** (vì phân biệt hoa/thường).
+
+---
+
+👉 Tóm lại: đề yêu cầu **so sánh `s2` với phiên bản đảo ngược của `s1`**, sau khi loại bỏ ký tự không phải chữ cái.
+
+---
+
+Bạn có muốn mình viết **từng bước dry run** (giải thích chạy chương trình với input cụ thể) để dễ hình dung hơn không?
+Got it 👍. Let’s carefully solve this step by step.
+
+We need to determine if `s2` is a **mirror** of `s1`.
+Rules:
+
+1. Only consider **alphabetical characters** (`A–Z`, `a–z`).
+2. **Case-sensitive** (`A` ≠ `a`).
+3. Mirror means after cleaning, `s2` must equal `reverse(s1)`.
+
+---
+
+### Example
+
+* `s1 = "He!lLo"`, `s2 = "oLl eH"`.
+
+  * Clean `s1`: `"He!lLo"` → `"HelLo"`.
+  * Reverse → `"oLleH"`.
+  * Clean `s2`: `"oLl eH"` → `"oLleH"`.
+    ✅ `s2` is a mirror of `s1`.
+
+---
+
+### Java Implementation
+
+```java
+class Solution {
+    public boolean isMirror(String s1, String s2) {
+        // Keep only letters
+        String clean1 = s1.replaceAll("[^A-Za-z]", "");
+        String clean2 = s2.replaceAll("[^A-Za-z]", "");
+
+        // Reverse clean1
+        String reversed = new StringBuilder(clean1).reverse().toString();
+
+        // Compare with clean2
+        return reversed.equals(clean2);
+    }
+}
+```
+
+---
+
+### Explanation of Code
+
+1. `replaceAll("[^A-Za-z]", "")` → removes all non-alphabetical chars.
+2. `StringBuilder(...).reverse()` → creates the mirror form of `s1`.
+3. `equals` → strict comparison (case-sensitive).
+
+---
+
+👉 Do you want me to also give a **step-by-step dry run** with an input (like `"A!bC"`, `"CbA"`)?

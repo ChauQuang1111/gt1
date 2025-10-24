@@ -1,0 +1,611 @@
+Trapping Rain Water II
+class Solution {
+    public int trapRainWater(int[][] heightMap) {
+        int m = heightMap.length;
+        int n = heightMap[0].length;
+        int[][] vols = new int[m][n];
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                vols[i][j] = heightMap[i][j];
+
+            }
+
+        }
+         boolean upt = true;
+         boolean init = true;
+
+          
+         while (upt) {
+             upt = false;
+               for (int i = 1; i < m - 1; i++) { 
+                for (int j = 1; j < n - 1; j++) {
+                    int val = Math.max(heightMap[i][j],
+                             Math.min(vols[i - 1][j], vols[i][j - 1]));
+                    if (init || vols[i][j] > val) {
+                        vols[i][j] = val;
+                        upt = true;
+
+                    }         
+
+                }
+
+
+               }
+                init = false;
+                 for (int i = m - 2; i >= 1; i--) { 
+                     for (int j = n - 2; j >= 1; j--) { 
+                        int val = Math.max(heightMap[i][j],
+                                  Math.min(vols[i + 1][j], vols[i][j + 1]));
+                         if (vols[i][j] > val) {
+                              vols[i][j] = val;
+                              upt = true;
+
+                         }
+
+                     }
+
+                 }
+
+         } 
+          int res = 0;
+          for (int i = 1; i < m - 1; i++) { 
+             for (int j = 1; j < n - 1; j++) { 
+                if (vols[i][j] > heightMap[i][j])
+                 res += vols[i][j] - heightMap[i][j];
+
+             }
+
+          }
+         return res;
+    }
+}
+À đoạn này là trong **cách giải “quét đi quét lại”** của bạn lúc trước đúng không 👍.
+Mình giải thích tại sao phải set `upt = true` và `init = true` ban đầu:
+
+---
+
+### 1. `boolean upt = true;`
+
+* Ý nghĩa: **có cập nhật (update) hay không**.
+* Ban đầu set `true` để chắc chắn vòng lặp `while (upt)` chạy **ít nhất một lần**.
+* Trong mỗi vòng lặp:
+
+  * Nếu có ô nào được cập nhật giá trị (`vols[i][j]` thay đổi), thì `upt = true` → tiếp tục chạy vòng sau.
+  * Nếu không còn thay đổi nào nữa, `upt = false` → dừng vòng lặp.
+
+📌 Đây là một **cách kiểm soát lặp đến khi ổn định** (giống iterative relaxation trong DP).
+
+---
+
+### 2. `boolean init = true;`
+
+* Ý nghĩa: đánh dấu **vòng lặp đầu tiên**.
+* Trong đoạn code của bạn có chỗ:
+
+  ```java
+  if (init || vols[i][j] > val) {
+      vols[i][j] = val;
+      upt = true;
+  }
+  ```
+
+  * Ở lần đầu tiên (`init = true`) → luôn cho phép cập nhật để khởi tạo `vols`.
+  * Sau vòng đầu tiên, gán `init = false`. Lúc này chỉ cập nhật khi **có sự cải thiện thật sự** (`vols[i][j] > val`).
+
+📌 Cái này giúp đảm bảo bước đầu tiên điền giá trị cho tất cả ô, rồi những vòng sau chỉ tinh chỉnh.
+
+---
+
+👉 Tóm lại:
+
+* `upt = true`: để chắc chắn vòng lặp chạy ít nhất một lần, và còn lặp cho đến khi không còn thay đổi.
+* `init = true`: để vòng lặp đầu tiên cập nhật mọi ô, sau đó chỉ cập nhật khi có cải thiện.
+
+---
+
+Bạn có muốn mình viết lại đoạn code này bằng Python với `while True` + break để dễ hình dung hơn không?
+Ok, mình giải thích chi tiết đoạn này nhé 👇
+
+---
+
+### Vòng lặp:
+
+```java
+while (upt) {
+    upt = false;
+    for (int i = 1; i < m - 1; i++) { 
+        for (int j = 1; j < n - 1; j++) {
+            int val = Math.max(heightMap[i][j],
+                     Math.min(vols[i - 1][j], vols[i][j - 1]));
+            if (init || vols[i][j] > val) {
+                vols[i][j] = val;
+                upt = true;
+            }         
+        }
+    }
+}
+```
+
+---
+
+### Giải thích từng phần:
+
+1. **`while (upt)`**
+
+   * Lặp cho đến khi **không còn thay đổi nào** (`upt = false`).
+   * Ý tưởng: ta “quét” ma trận nhiều lần, tinh chỉnh dần thể tích nước có thể chứa.
+
+---
+
+2. **`upt = false;`**
+
+   * Trước mỗi vòng, giả sử không có thay đổi.
+   * Nếu trong quá trình quét có cập nhật, ta set lại `upt = true`.
+
+---
+
+3. **`for (int i = 1; i < m - 1; i++)`**
+
+   * Duyệt **hàng** từ 1 → `m-2` (bỏ viền ngoài, vì viền không giữ nước được).
+
+4. **`for (int j = 1; j < n - 1; j++)`**
+
+   * Duyệt **cột** từ 1 → `n-2`, cũng bỏ viền ngoài.
+
+---
+
+5. **`int val = Math.max(heightMap[i][j], Math.min(vols[i - 1][j], vols[i][j - 1]));`**
+
+   👉 Ý nghĩa: cập nhật mức nước tối thiểu mà ô `(i,j)` có thể giữ.
+
+   * `vols[i - 1][j]` : mực nước ở ô phía **trên**.
+   * `vols[i][j - 1]` : mực nước ở ô **bên trái**.
+   * `Math.min(vols[i - 1][j], vols[i][j - 1])` : mức nước tối đa mà `(i,j)` có thể đạt, dựa trên hai ô này.
+   * `Math.max(heightMap[i][j], … )` : ô `(i,j)` ít nhất phải cao bằng chính độ cao của nó (`heightMap[i][j]`), vì nước không thể thấp hơn nền.
+
+   ➝ `val` = mức nước ổn định mới cho `(i,j)`.
+
+---
+
+6. **`if (init || vols[i][j] > val)`**
+
+   * Nếu là vòng đầu tiên (`init == true`) → luôn cập nhật.
+   * Nếu không phải vòng đầu → chỉ cập nhật khi mực nước cũ `vols[i][j]` cao hơn `val` (nghĩa là có thể giảm xuống, hợp lý hơn).
+
+---
+
+7. **`vols[i][j] = val;`**
+
+   * Cập nhật mực nước mới cho ô `(i,j)`.
+
+8. **`upt = true;`**
+
+   * Vì có cập nhật, nên vòng ngoài phải chạy lại lần nữa để kiểm tra các ô liên quan.
+
+---
+
+👉 Tóm gọn:
+Đoạn này giống như **lan truyền giá trị nước từ trên trái xuống dưới phải**. Mỗi ô được chỉnh lại sao cho mực nước của nó không cao hơn mức tối thiểu từ hàng xóm (nhưng ít nhất vẫn phải bằng chiều cao gốc của nó).
+
+Sau vòng này, còn một vòng quét ngược từ **dưới phải lên trên trái** để đảm bảo cân bằng hai chiều.
+
+---
+
+Bạn có muốn mình vẽ 1 ví dụ ma trận nhỏ (3x3 hoặc 4x4) rồi minh họa **cách `val` thay đổi từng bước** không?
+À chỗ này dễ gây rối 😅. Mình giải thích rõ hơn nhé:
+
+---
+
+### Ban đầu:
+
+```java
+boolean upt = true;
+boolean init = true;
+```
+
+* `upt = true` → mục đích là **bắt đầu vào vòng while ít nhất 1 lần**.
+* `init = true` → báo rằng **đây là lần quét đầu tiên**, mọi ô sẽ được cập nhật.
+
+---
+
+### Trong vòng lặp:
+
+```java
+while (upt) {
+    upt = false;   // reset trước khi quét
+    ...
+    if (init || vols[i][j] > val) {
+        vols[i][j] = val;
+        upt = true;  // có thay đổi thì bật lại
+    }
+}
+```
+
+1. **Lần đầu vào while**:
+
+   * `upt` đang là `true` → vòng while chạy.
+   * Ngay khi vào, `upt = false` → giả sử ban đầu chưa có thay đổi gì.
+
+2. **Trong quá trình quét**:
+
+   * Nếu có ô nào thay đổi (`vols[i][j]` được cập nhật), thì `upt = true` lại.
+   * Điều này đảm bảo vòng while **sẽ chạy thêm lần nữa**.
+
+3. **Nếu hết một vòng quét mà không có cập nhật**:
+
+   * `upt` vẫn là `false`.
+   * Lúc đó **while dừng lại**, vì hệ thống đã ổn định (không còn thay đổi).
+
+---
+
+👉 Nói cách khác:
+
+* **`upt = true` ban đầu** chỉ để chắc chắn **vào vòng while ít nhất một lần**.
+* Sau đó, **chính các cập nhật trong vòng for** mới quyết định vòng while có chạy tiếp nữa hay không.
+
+---
+
+Bạn có muốn mình viết ra 1 ví dụ cụ thể (ví dụ ma trận 3×3) và minh họa trạng thái `upt` sau mỗi vòng while để thấy rõ hơn không?
+Ok, mình giải thích chi tiết đoạn này nhé 👇
+
+---
+
+### Đoạn code:
+
+```java
+init = false; // từ giờ không còn là lần quét đầu tiên nữa
+
+for (int i = m - 2; i >= 1; i--) { 
+    for (int j = n - 2; j >= 1; j--) { 
+        int val = Math.max(
+            heightMap[i][j], 
+            Math.min(vols[i + 1][j], vols[i][j + 1])
+        );
+
+        if (vols[i][j] > val) {
+            vols[i][j] = val;
+            upt = true;
+        }
+    }
+}
+```
+
+---
+
+### Ý nghĩa từng phần:
+
+1. **`init = false;`**
+
+   * Sau lần quét đầu tiên từ trên trái xuống, biến `init` được tắt đi.
+   * Lý do: chỉ cần cập nhật cưỡng bức (ép cập nhật) ở vòng quét đầu tiên, các vòng tiếp theo thì so sánh bình thường.
+
+---
+
+2. **Vòng lặp từ dưới phải → lên trên trái**
+
+   ```java
+   for (int i = m - 2; i >= 1; i--) {
+       for (int j = n - 2; j >= 1; j--) {
+   ```
+
+   * `i = m - 2 … 1`: duyệt từ **hàng gần cuối** đến **hàng 1**.
+   * `j = n - 2 … 1`: duyệt từ **cột gần cuối** về **cột 1**.
+   * Không duyệt biên ngoài vì biên không giữ được nước.
+
+---
+
+3. **Công thức cập nhật giá trị có thể chứa nước**
+
+   ```java
+   int val = Math.max(heightMap[i][j],
+             Math.min(vols[i + 1][j], vols[i][j + 1]));
+   ```
+
+   * `vols[i + 1][j]`: ô bên dưới.
+   * `vols[i][j + 1]`: ô bên phải.
+   * `Math.min(...)`: ô này có thể giữ nước tối đa bằng mực thấp hơn của 2 ô bên cạnh.
+   * `Math.max(heightMap[i][j], ...)`: nhưng nó không thể thấp hơn chính chiều cao gốc `heightMap[i][j]`.
+
+---
+
+4. **Điều kiện cập nhật**
+
+   ```java
+   if (vols[i][j] > val) {
+       vols[i][j] = val;
+       upt = true;
+   }
+   ```
+
+   * Nếu hiện tại `vols[i][j]` (mực nước dự đoán) cao hơn giá trị hợp lý mới `val` → hạ xuống `val`.
+   * Gán `upt = true` → báo rằng còn thay đổi, vòng while phải chạy thêm lần nữa để ổn định.
+
+---
+
+### 👉 Tóm lại:
+
+* **Quét lần 1**: từ **trên trái xuống dưới phải** → điều chỉnh theo **trên và trái**.
+* **Quét lần 2**: từ **dưới phải lên trên trái** → điều chỉnh theo **dưới và phải**.
+* Cứ lặp đi lặp lại hai chiều quét cho đến khi không còn thay đổi (`upt = false`).
+* Như vậy mới đảm bảo mỗi ô đều được cập nhật mực nước hợp lý dựa trên cả 4 hướng.
+
+---
+
+Bạn có muốn mình vẽ thử một **ma trận 4×4 nhỏ** rồi mô phỏng 2 bước quét này để thấy nước được cập nhật như thế nào không?
+Ok 👍 mình sẽ lấy ví dụ 1 ma trận 4×4 nhỏ để mô phỏng nhé.
+
+---
+
+### Giả sử bản đồ chiều cao (`heightMap`) là:
+
+```
+4 4 4 4
+4 1 2 4
+4 2 1 4
+4 4 4 4
+```
+
+👉 Ý tưởng:
+
+* Biên ngoài đều cao = 4 (nước không thoát ra được).
+* Bên trong có chỗ trũng (1, 2) → có thể chứa nước.
+
+---
+
+### Bước 1: Khởi tạo
+
+* Ban đầu `vols = heightMap`
+
+```
+4 4 4 4
+4 1 2 4
+4 2 1 4
+4 4 4 4
+```
+
+---
+
+### Bước 2: Quét **từ trên trái xuống dưới phải**
+
+Công thức:
+
+```java
+val = max(heightMap[i][j], min(vols[i-1][j], vols[i][j-1]))
+```
+
+👉 Xét ô `(1,1)` (giá trị gốc = 1):
+
+* `vols[0][1] = 4`, `vols[1][0] = 4`
+* `min(4,4) = 4`
+* `val = max(1,4) = 4`
+  → Cập nhật `vols[1][1] = 4`
+
+👉 Xét ô `(1,2)` (giá trị gốc = 2):
+
+* `vols[0][2] = 4`, `vols[1][1] = 4 (vừa cập nhật)`
+* `min(4,4) = 4`
+* `val = max(2,4) = 4`
+  → `vols[1][2] = 4`
+
+👉 Xét ô `(2,1)` (giá trị gốc = 2):
+
+* `vols[1][1] = 4`, `vols[2][0] = 4`
+* `min(4,4) = 4`
+* `val = max(2,4) = 4`
+  → `vols[2][1] = 4`
+
+👉 Xét ô `(2,2)` (giá trị gốc = 1):
+
+* `vols[1][2] = 4`, `vols[2][1] = 4`
+* `min(4,4) = 4`
+* `val = max(1,4) = 4`
+  → `vols[2][2] = 4`
+
+Sau quét xuôi:
+
+```
+4 4 4 4
+4 4 4 4
+4 4 4 4
+4 4 4 4
+```
+
+---
+
+### Bước 3: Quét **từ dưới phải lên trên trái**
+
+Công thức:
+
+```java
+val = max(heightMap[i][j], min(vols[i+1][j], vols[i][j+1]))
+```
+
+👉 Nhưng vì ở bước trước mọi ô trong `vols` đều đã = 4, nên quét ngược không làm thay đổi gì.
+
+---
+
+### Bước 4: Tính lượng nước giữ lại
+
+`vols[i][j] - heightMap[i][j]` cho ô bên trong:
+
+* `(1,1)`: 4 - 1 = 3
+* `(1,2)`: 4 - 2 = 2
+* `(2,1)`: 4 - 2 = 2
+* `(2,2)`: 4 - 1 = 3
+
+👉 Tổng nước = 3 + 2 + 2 + 3 = **10**
+
+---
+
+✅ Như vậy, qua **2 lần quét xuôi – ngược**, thuật toán đảm bảo rằng các ô bên trong được “đẩy” lên tới mực nước tối thiểu mà 4 hướng xung quanh có thể giữ.
+
+---
+
+Bạn có muốn mình thử **một ví dụ phức tạp hơn (có nhiều tầng, không phải tất cả đều thành 4)** để thấy rõ vì sao cần phải quét 2 chiều (nếu chỉ quét một chiều thì sai)?
+Đoạn này chính là bước **tính tổng lượng nước giữ lại** sau khi bạn đã cập nhật ma trận `vols`. Mình giải thích từng dòng nhé 👇
+
+```java
+int res = 0; 
+```
+
+* Khởi tạo biến `res` để lưu tổng lượng nước.
+
+```java
+for (int i = 1; i < m - 1; i++) { 
+    for (int j = 1; j < n - 1; j++) { 
+```
+
+* Chỉ xét các ô **bên trong** (bỏ qua viền ngoài vì nước không thể giữ ở viền).
+* Vòng lặp chạy từ `1` đến `m-2` (tương tự cho `j`).
+
+```java
+if (vols[i][j] > heightMap[i][j])
+    res += vols[i][j] - heightMap[i][j];
+```
+
+* `heightMap[i][j]`: chiều cao gốc của ô đất ban đầu.
+* `vols[i][j]`: chiều cao mực nước/đất sau khi cập nhật (mực nước ổn định).
+* Nếu `vols[i][j] > heightMap[i][j]` nghĩa là ở ô này có nước được giữ lại.
+* Lượng nước tại ô đó = **(mực nước − chiều cao đất)**.
+* Cộng dồn vào `res`.
+
+```java
+return res;
+```
+
+* Sau khi duyệt toàn bộ ma trận, trả về tổng lượng nước giữ được.
+
+---
+
+🔑 **Ví dụ nhỏ:**
+
+```
+heightMap:
+4 4 4
+4 1 4
+4 4 4
+```
+
+Sau khi quét cập nhật, `vols` sẽ là:
+
+```
+4 4 4
+4 4 4
+4 4 4
+```
+
+* Ở ô `(1,1)`: `vols[1][1] = 4`, `heightMap[1][1] = 1`
+  → Giữ được `4-1 = 3` đơn vị nước.
+
+Tổng `res = 3`.
+
+---
+
+👉 Nghĩa là vòng for này đơn giản là: **đếm tổng nước giữ lại = mực nước cuối cùng − mực đất ban đầu** ở mỗi ô bên trong.
+
+Bạn có muốn mình vẽ **minh hoạ trực quan từng bước mực nước dâng lên** để dễ thấy hơn không?
+À mình hiểu rồi 👍 bạn muốn **minh hoạ trực quan cách mực nước dâng lên trong bài toán “Trapping Rain Water II”** (phiên bản 2D).
+Mình sẽ giải thích theo từng bước, giống như bạn đang nhìn vào bản đồ độ cao (`heightMap`) và mực nước lưu trong `vols`.
+
+---
+
+### 1️⃣ Khởi tạo
+
+* `vols[i][j]` ban đầu được set bằng chiều cao của biên (`boundary`).
+* Tất cả ô bên trong (`1 ≤ i < m-1`, `1 ≤ j < n-1`) được gán bằng một giá trị rất lớn (`Integer.MAX_VALUE`) → nghĩa là ta giả định ban đầu nước có thể dâng **cực cao** bên trong.
+
+👉 Trực quan: tưởng tượng ta dựng một cái hồ, ban đầu nước bên trong có thể đầy tràn, nhưng thực tế sẽ được “gọt xuống” nhờ các vòng lặp.
+
+---
+
+### 2️⃣ Quá trình cập nhật (while loop)
+
+Trong vòng `while (upt) { ... }`:
+
+* Mỗi lần duyệt qua, ta so sánh:
+
+  ```java
+  val = max(heightMap[i][j], min(vols[i+1][j], vols[i][j+1]))
+  ```
+
+  Có nghĩa:
+
+  * `min(vols[i+1][j], vols[i][j+1])`: mực nước có thể giữ được phụ thuộc vào hàng xóm thấp hơn.
+  * `max(heightMap[i][j], ...)`: nhưng nước không thể thấp hơn chính cái cột (tường) của ô đó.
+
+* Nếu `vols[i][j] > val`, ta hạ nó xuống bằng `val`.
+  Đồng thời set `upt = true` để cho biết **có sự thay đổi → cần duyệt lại**.
+
+👉 Trực quan:
+Nước ban đầu rất cao, nhưng dần dần “chảy” ra ngoài qua các ô biên thấp, từ từ hạ xuống mức cân bằng.
+
+---
+
+### 3️⃣ Khi không còn update (`upt = false`)
+
+* Điều này nghĩa là toàn bộ lưới đã đạt trạng thái cân bằng:
+  Mỗi `vols[i][j]` chính là mực nước cuối cùng có thể giữ tại ô đó.
+
+👉 Trực quan:
+Bạn tưởng tượng nước đã “dâng lên”, rồi từ từ chảy ra, cuối cùng dừng lại ở một mặt phẳng ổn định.
+
+---
+
+### 4️⃣ Tính kết quả
+
+```java
+res += vols[i][j] - heightMap[i][j];
+```
+
+* Nếu `vols[i][j] > heightMap[i][j]` → phần chênh lệch chính là **lượng nước giữ được tại ô đó**.
+* Cộng dồn lại ra kết quả cuối cùng.
+
+---
+
+✅ **Hình dung bằng ví dụ nhỏ (2D mặt cắt):**
+
+Giả sử heightMap:
+
+```
+[3, 3, 3, 3]
+[3, 1, 1, 3]
+[3, 3, 3, 3]
+```
+
+* Ban đầu: nước bên trong được set rất cao.
+* Sau vài vòng cập nhật, nó hạ xuống:
+
+  ```
+  vols:
+  [3, 3, 3, 3]
+  [3, 3, 3, 3]
+  [3, 3, 3, 3]
+  ```
+* Kết quả:
+  Nước giữ = (3-1) + (3-1) = 4.
+
+---
+
+👉 Như vậy cái vòng `while(upt)` + `for` hai chiều chính là mô phỏng quá trình **nước chảy dần ra và ổn định mực nước**.
+
+Bạn có muốn mình vẽ sơ đồ trực quan bằng **ASCII step-by-step** để thấy rõ hơn nước dâng và hạ từng vòng không?
+À 😅 ý bạn hỏi cái **`-1`** trong phép tính `3 - 1` mình viết ở ví dụ đó hả?
+
+👉 Ở đây nó không phải là **chỉ số -1** hay gì đặc biệt, mà đơn giản là:
+
+* `vols[i][j] = 3` (mực nước cuối cùng ở ô đó)
+* `heightMap[i][j] = 1` (chiều cao đất ở ô đó)
+
+Khi ta tính `vols[i][j] - heightMap[i][j] = 3 - 1 = 2` → tức là ô đó giữ được 2 đơn vị nước.
+
+Trong ví dụ có **2 ô trũng** đều là `1`, nên ta có:
+
+```
+(3 - 1) + (3 - 1) = 2 + 2 = 4
+```
+
+✅ Tóm lại: **`-1` ở đây chỉ là phép trừ để lấy chênh lệch giữa mực nước và chiều cao đất**, chứ không phải chỉ số mảng đâu.
+
+---
+
+Bạn có muốn mình làm thêm một ví dụ khác (có nhiều mức đất khác nhau) để thấy rõ hơn khi nào thì phần chênh lệch `vols[i][j] - heightMap[i][j]` bằng 0, khi nào thì >0 không?

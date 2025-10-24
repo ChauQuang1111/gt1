@@ -1,0 +1,509 @@
+Next Greater Numerically Balanced Number
+class Solution:
+    def generate(self, n: int, current: int, remaining: int, count: list[int]) -> int:
+        if remaining == 0:
+            if current > n and all(c == 0 or c == i for i, c in enumerate(count)):
+                return current
+            return 0
+
+        result = 0
+        for d in range(1, 10):
+            if result == 0 and count[d] < d and d - count[d] <= remaining:
+                count[d] += 1
+                result = self.generate(n, current * 10 + d, remaining - 1, count)
+                count[d] -= 1
+        return result
+
+    def nextBeautifulNumber(self, n: int) -> int:
+        length = len(str(n))
+        count = [0] * 10
+
+        result = self.generate(n, 0, length, count)
+        count = [0] * 10
+        next_len_result = self.generate(0, 0, length + 1, count)
+        if result == 0:
+            result = next_len_result
+        return result
+Rất hay — đoạn code này giải bài **“2048. Next Greater Numerically Balanced Number”** nhưng **theo cách sinh ra (generate)** tất cả các số *numerically balanced* đúng nghĩa, thay vì dùng mảng có sẵn.
+Mình sẽ giải thích thật dễ hiểu từng phần cho bạn 👇
+
+---
+
+## 🧠 Trước tiên: hiểu đề bài
+
+> Một **numerically balanced number** là số mà **chữ số i xuất hiện đúng i lần**.
+> Ví dụ:
+>
+> * 1 → ❌ (vì số 1 xuất hiện 1 lần ✅, nhưng không có chữ số khác nào, ok)
+> * 22 → ✅ (chữ số 2 xuất hiện đúng 2 lần)
+> * 122333 → ✅ (1 một lần, 2 hai lần, 3 ba lần)
+> * 1333 ❌ (1 một lần đúng, nhưng 3 xuất hiện 3 lần → đúng, ok)
+>   → Actually ✅ vì 1 một lần, 3 ba lần.
+
+Nhiệm vụ:
+Cho `n`, tìm **số nhỏ nhất lớn hơn n** mà là numerically balanced.
+
+---
+
+## 🧩 Phần 1: `generate()`
+
+```python
+def generate(self, n: int, current: int, remaining: int, count: list[int]) -> int:
+    if remaining == 0:
+        if current > n and all(c == 0 or c == i for i, c in enumerate(count)):
+            return current
+        return 0
+```
+
+### Giải thích:
+
+* `n`: số gốc bạn đang muốn vượt qua (ví dụ n = 31)
+* `current`: số đang được tạo dần (bằng cách thêm từng chữ số)
+* `remaining`: số chữ số còn lại cần thêm
+* `count`: mảng lưu số lần xuất hiện của mỗi chữ số từ 0 đến 9
+
+---
+
+Khi `remaining == 0`, tức là bạn đã tạo xong một số có độ dài cố định.
+
+Lúc này kiểm tra:
+
+```python
+if current > n and all(c == 0 or c == i for i, c in enumerate(count)):
+```
+
+📘 Nghĩa là:
+
+* Số vừa tạo phải **lớn hơn n**
+* Và mỗi chữ số i phải **xuất hiện đúng i lần** (`c == i`)
+* Nếu chữ số không xuất hiện thì `c == 0` (được phép)
+
+✅ Nếu thỏa → return `current`,
+❌ Nếu không → return 0.
+
+---
+
+## 🧩 Phần 2: vòng lặp sinh chữ số
+
+```python
+result = 0
+for d in range(1, 10):
+    if result == 0 and count[d] < d and d - count[d] <= remaining:
+        count[d] += 1
+        result = self.generate(n, current * 10 + d, remaining - 1, count)
+        count[d] -= 1
+return result
+```
+
+### Giải thích chi tiết:
+
+* Duyệt từng chữ số `d` từ 1 → 9
+  (0 bị bỏ qua vì không được làm chữ số đầu)
+
+---
+
+### Điều kiện sinh nhánh mới:
+
+```python
+count[d] < d
+```
+
+👉 Chữ số d chưa xuất hiện đủ số lần d cho phép.
+Ví dụ: với `d = 2`, ta chỉ có thể thêm tối đa 2 lần chữ số 2.
+
+---
+
+### `d - count[d] <= remaining`
+
+👉 Nghĩa là ta **vẫn có đủ chỗ để hoàn thành d** lần xuất hiện chữ số đó.
+Nếu không đủ chỗ, ta bỏ qua vì không thể tạo số balanced được.
+
+---
+
+### Gọi đệ quy:
+
+```python
+count[d] += 1
+result = self.generate(n, current * 10 + d, remaining - 1, count)
+count[d] -= 1
+```
+
+Ta thử thêm chữ số `d` vào cuối `current`,
+giảm `remaining` đi 1, rồi tiếp tục sinh.
+
+---
+
+### `if result == 0` là gì?
+
+→ Khi tìm được **kết quả hợp lệ đầu tiên**, dừng luôn (vì ta muốn *số nhỏ nhất lớn hơn n*).
+Không cần sinh thêm nữa.
+
+---
+
+## 🧩 Phần 3: Hàm chính
+
+```python
+def nextBeautifulNumber(self, n: int) -> int:
+    length = len(str(n))
+    count = [0] * 10
+
+    result = self.generate(n, 0, length, count)
+    count = [0] * 10
+    next_len_result = self.generate(0, 0, length + 1, count)
+    if result == 0:
+        result = next_len_result
+    return result
+```
+
+### Từng bước:
+
+1️⃣ `length = len(str(n))`:
+→ số chữ số của `n`.
+
+2️⃣ Gọi `generate(n, 0, length, count)`
+→ thử tìm số balanced có cùng độ dài.
+
+3️⃣ Nếu **không có**, thì thử với **số có độ dài lớn hơn 1 chữ số** (`length + 1`).
+
+---
+
+## ✅ Ví dụ minh họa:
+
+`n = 31`
+
+### Lần 1: `length = 2`
+
+→ Tạo tất cả các số balanced 2 chữ số:
+
+```
+11 (❌: 1 không thể xuất hiện 2 lần)
+22 (✅ balanced)
+33 ❌ (3 cần 3 lần)
+```
+
+22 < 31, không hợp.
+→ Không tìm được số nào lớn hơn 31 với 2 chữ số.
+
+### Lần 2: `length = 3`
+
+→ Sinh các số 3 chữ số balanced:
+
+```
+122 ✅ (1 một lần, 2 hai lần)
+212 ✅
+221 ✅
+333 ✅
+```
+
+→ Số nhỏ nhất lớn hơn 31 là **122**.
+
+✅ Kết quả: **122**
+
+---
+
+## 💡 Tóm tắt thuật toán
+
+| Bước | Ý nghĩa                                                               |
+| ---- | --------------------------------------------------------------------- |
+| 1    | Dùng đệ quy để sinh tất cả số có độ dài bằng `len(n)` hoặc `len(n)+1` |
+| 2    | Mỗi khi tạo xong số, kiểm tra có phải numerically balanced và > n     |
+| 3    | Nếu có, trả về số nhỏ nhất tìm được                                   |
+
+---
+
+Bạn có muốn mình viết lại phiên bản **có in ra từng bước đệ quy (trace)** để bạn thấy nó sinh số kiểu gì không?
+Rất tốt — đây là **hàm chính** của bài toán **Next Greater Numerically Balanced Number**.
+Mình sẽ giải thích **rõ ràng từng dòng** để bạn hiểu hết cách hoạt động nhé 👇
+
+---
+
+## 🧩 Toàn bộ hàm
+
+```python
+def nextBeautifulNumber(self, n: int) -> int:
+    length = len(str(n))
+    count = [0] * 10
+
+    result = self.generate(n, 0, length, count)
+    count = [0] * 10
+    next_len_result = self.generate(0, 0, length + 1, count)
+    if result == 0:
+        result = next_len_result
+    return result
+```
+
+---
+
+## 🧠 Mục tiêu
+
+→ Tìm **số nhỏ nhất lớn hơn n** mà **các chữ số i xuất hiện đúng i lần**
+(ví dụ: `122333`, `22`, `333`, ...)
+
+---
+
+## 🔍 Giải thích từng dòng
+
+### ✅ 1. `length = len(str(n))`
+
+* Đếm **số chữ số của n**
+  Ví dụ:
+
+  ```
+  n = 31 → length = 2
+  n = 122 → length = 3
+  ```
+
+* Mục đích: để biết cần sinh các số có **cùng độ dài** với n trước.
+  (vì số lớn hơn gần nhất **thường có cùng độ dài**)
+
+---
+
+### ✅ 2. `count = [0] * 10`
+
+* Tạo mảng `count` gồm 10 phần tử (từ 0–9), ban đầu toàn 0.
+
+* Dùng để **đếm số lần xuất hiện** của mỗi chữ số trong quá trình sinh số.
+
+  Ví dụ: nếu đang tạo số `122`, thì
+
+  ```
+  count = [0,1,2,0,0,0,0,0,0,0]
+  ```
+
+  nghĩa là:
+
+  * Chữ số `1` xuất hiện 1 lần ✅
+  * Chữ số `2` xuất hiện 2 lần ✅
+
+---
+
+### ✅ 3. `result = self.generate(n, 0, length, count)`
+
+* Gọi hàm `generate()` để **sinh ra các số có độ dài = length**
+* Bắt đầu từ `current = 0` (chưa có chữ số nào)
+* `remaining = length` là số chữ số cần thêm
+* `count` là mảng theo dõi số lần xuất hiện
+
+Hàm `generate()` sẽ **tạo tất cả các số balanced có đúng `length` chữ số**
+và **tìm số nhỏ nhất lớn hơn n**.
+
+---
+
+### ✅ 4. `count = [0] * 10`
+
+* Reset lại `count` để bắt đầu đếm mới cho trường hợp tiếp theo.
+
+---
+
+### ✅ 5. `next_len_result = self.generate(0, 0, length + 1, count)`
+
+* Gọi `generate()` một lần nữa, **nhưng với số có độ dài lớn hơn 1**.
+  → vì có thể **không tồn tại số balanced nào lớn hơn n mà vẫn cùng độ dài**.
+
+Ví dụ:
+
+* n = 99
+  → Không có số balanced 2 chữ số > 99
+  → Thử sang 3 chữ số → 122 ✅
+
+---
+
+### ✅ 6. `if result == 0: result = next_len_result`
+
+* Nếu không tìm được số balanced nào ở độ dài cũ (`result == 0`)
+  → Lấy kết quả từ độ dài dài hơn (`next_len_result`).
+
+---
+
+### ✅ 7. `return result`
+
+* Trả về kết quả cuối cùng:
+  **số nhỏ nhất lớn hơn n mà là numerically balanced**.
+
+---
+
+## 📘 Ví dụ minh họa
+
+### Input:
+
+```python
+n = 31
+```
+
+### Bước 1:
+
+`length = 2`
+→ thử tìm số balanced có **2 chữ số** lớn hơn 31
+
+Các số balanced có 2 chữ số là:
+
+```
+22
+```
+
+Không có số nào > 31 → `result = 0`
+
+---
+
+### Bước 2:
+
+Tăng lên `length + 1 = 3`
+→ thử tìm số balanced có 3 chữ số
+
+Các số balanced 3 chữ số:
+
+```
+122, 212, 221, 333
+```
+
+→ Số nhỏ nhất > 31 là `122`
+
+---
+
+### Output:
+
+✅ `result = 122`
+
+---
+
+## 💡 Tóm lại
+
+| Dòng                                | Ý nghĩa                               |
+| ----------------------------------- | ------------------------------------- |
+| `length = len(str(n))`              | Xác định số chữ số của n              |
+| `generate(n, 0, length, count)`     | Tìm số balanced có cùng độ dài        |
+| `generate(0, 0, length + 1, count)` | Nếu không có, thử sang độ dài lớn hơn |
+| `if result == 0:`                   | Nếu không tìm được, lấy kết quả mới   |
+| `return result`                     | Trả về số balanced nhỏ nhất lớn hơn n |
+
+---
+
+Bạn có muốn mình **vẽ sơ đồ đệ quy minh họa cách hàm `generate()` sinh số 122** (khi n=31) không?
+Nó sẽ giúp bạn thấy rõ tại sao chương trình lại chọn 122 đầu tiên.
+Rất hay! 👏
+Hai dòng này chính là **trái tim** của thuật toán — chúng giúp chương trình tìm ra **số balanced nhỏ nhất lớn hơn n**.
+Mình sẽ giải thích bằng **ví dụ trực quan từng bước** để bạn hiểu rõ sự khác nhau giữa 2 lời gọi này.
+
+---
+
+## 🎯 Mục tiêu
+
+Tìm **Next Greater Numerically Balanced Number**
+→ số nhỏ nhất **> n** và thỏa điều kiện:
+mỗi chữ số `i` xuất hiện **đúng i lần**.
+
+---
+
+## 🧩 Ví dụ: `n = 31`
+
+### 1️⃣ Dòng đầu tiên:
+
+```python
+result = self.generate(n, 0, length, count)
+```
+
+Ở đây:
+
+* `n = 31`
+* `length = len(str(n)) = 2`
+* `current = 0` (bắt đầu từ rỗng)
+* `remaining = 2` (sẽ tạo số 2 chữ số)
+* `count = [0,0,0,0,0,0,0,0,0,0]`
+
+---
+
+### ⚙️ Hàm `generate` sẽ thử sinh các số **2 chữ số balanced**
+
+Điều kiện balanced:
+
+* chữ số `1` xuất hiện 1 lần
+* chữ số `2` xuất hiện 2 lần
+  → chỉ có thể tạo được số `22` (vì 2 xuất hiện 2 lần).
+
+Nó kiểm tra:
+
+```
+22 > 31 ? ❌ Không
+```
+
+Không còn số balanced nào 2 chữ số khác.
+→ `result = 0` (không tìm được).
+
+---
+
+### 2️⃣ Dòng thứ hai:
+
+```python
+next_len_result = self.generate(0, 0, length + 1, count)
+```
+
+Ở đây:
+
+* `n = 0` (chúng ta bỏ điều kiện “phải > n” lần này)
+* `length + 1 = 3`
+* Tức là **sinh tất cả các số balanced có 3 chữ số**.
+
+---
+
+### ⚙️ Lúc này, hàm `generate` thử sinh số 3 chữ số balanced:
+
+Các số 3 chữ số balanced là:
+
+```
+122 (1×1, 2×2)
+212
+221
+333
+```
+
+Tất cả đều balanced ✅
+
+---
+
+### Kiểm tra điều kiện:
+
+Ta cần số balanced **nhỏ nhất > 31**
+
+→ Số nhỏ nhất trong các số balanced 3 chữ số là `122`.
+
+✅ `next_len_result = 122`
+
+---
+
+### 3️⃣ Gộp lại:
+
+```python
+if result == 0:
+    result = next_len_result
+```
+
+→ vì `result = 0`, nên ta dùng `next_len_result = 122`.
+
+---
+
+### ✅ Kết quả cuối cùng:
+
+```python
+return result  # 122
+```
+
+---
+
+## 💡 Tổng kết bằng bảng so sánh:
+
+| Gọi hàm                             | Sinh số có độ dài | Mục tiêu               | Ví dụ khi n=31               | Kết quả |
+| ----------------------------------- | ----------------- | ---------------------- | ---------------------------- | ------- |
+| `generate(n, 0, length, count)`     | 2 chữ số          | Tìm số balanced > 31   | chỉ có `22` (≤31) ❌          | 0       |
+| `generate(0, 0, length + 1, count)` | 3 chữ số          | Tìm số balanced bất kỳ | `122`, `212`, `221`, `333` ✅ | 122     |
+
+---
+
+## 🔍 Kết luận
+
+* `generate(n, 0, length, count)` → tìm **số balanced lớn hơn n** có **cùng số chữ số**
+* `generate(0, 0, length + 1, count)` → nếu không tìm được, tìm **số balanced ở độ dài lớn hơn**
+
+---
+
+Nếu bạn muốn, mình có thể **in từng bước gọi đệ quy của `generate()` khi n=31** để bạn thấy nó thử `1`, `2`, `3`, … thế nào, rồi dừng tại `122`.
+Bạn có muốn mình viết bản đó không?

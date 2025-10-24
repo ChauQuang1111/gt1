@@ -1,0 +1,396 @@
+triangle 
+class Solution:
+    def minimumTotal(self, triangle: List[List[int]]) -> int:
+        dp = [0] * (len(triangle) + 1)
+        for row in triangle[::-1]:
+            for i, n in enumerate(row):
+                dp[i] = min(dp[i], dp[i + 1]) + n
+        return dp[0]
+		
+Ok mình giải thích chi tiết từng dòng:
+
+### Code:
+
+```python
+dp = [0] * (len(triangle) + 1)  
+for row in triangle[::-1]:  
+    for i, n in enumerate(row):  
+        dp[i] = min(dp[i], dp[i + 1]) + n  
+return dp[0]  
+```
+
+---
+
+### Giải thích từng bước:
+
+1. **`dp = [0] * (len(triangle) + 1)`**
+
+   * Tạo mảng `dp` có độ dài bằng số hàng của tam giác + 1, ban đầu toàn `0`.
+   * `dp[i]` sẽ lưu giá trị **đường đi tối thiểu** từ vị trí `(row, i)` xuống đáy.
+   * Cộng thêm `+1` để tránh lỗi truy cập `dp[i+1]`.
+
+   Ví dụ tam giác có 4 hàng → `dp = [0, 0, 0, 0, 0]`.
+
+---
+
+2. **`for row in triangle[::-1]:`**
+
+   * Duyệt **ngược** từ dưới lên (từ hàng cuối về hàng đầu).
+   * Vì khi xét một ô `(row, i)` cần biết 2 ô ở **hàng dưới**: `(row+1, i)` và `(row+1, i+1)`.
+
+---
+
+3. **`for i, n in enumerate(row):`**
+
+   * Với mỗi phần tử `n` trong hàng hiện tại, `i` là chỉ số cột.
+
+---
+
+4. **`dp[i] = min(dp[i], dp[i + 1]) + n`**
+
+   * `dp[i]` và `dp[i+1]` lúc này chính là **giá trị đường đi tối thiểu từ hàng dưới**.
+   * Lấy **min** giữa 2 đường đi có thể đi xuống từ `n`.
+   * Cộng thêm `n` (giá trị hiện tại) để ra chi phí đường đi từ `(row, i)` xuống đáy.
+   * Kết quả lưu đè vào `dp[i]`.
+
+   Ví dụ: nếu đang ở `n = 7` và ở hàng dưới có 2 đường đi tối thiểu `5` và `6` → `dp[i] = 7 + min(5,6) = 12`.
+
+---
+
+5. **`return dp[0]`**
+
+   * Sau khi xử lý hết, `dp[0]` chính là giá trị đường đi tối thiểu từ **đỉnh tam giác xuống đáy**.
+
+---
+
+👉 Thuật toán này gọi là **Dynamic Programming bottom-up (từ dưới lên)**, tối ưu bộ nhớ vì chỉ cần mảng 1 chiều `dp`, độ phức tạp:
+
+* **Thời gian**: `O(n^2)` (n là số hàng).
+* **Bộ nhớ**: `O(n)`.
+
+---
+
+Bạn có muốn mình minh họa thêm **ví dụ chạy từng bước với input cụ thể** không (vd: `[[2],[3,4],[6,5,7],[4,1,8,3]]`)?
+À, chỗ **`dp = [0] * (len(triangle) + 1)`** có 2 ý quan trọng 👇
+
+---
+
+### 1. Vì sao cần `len(triangle) + 1` thay vì chỉ `len(triangle)`?
+
+* `dp` lưu **giá trị đường đi tối thiểu của một hàng dưới**.
+* Khi xử lý 1 phần tử `row[i]`, ta cần dùng **2 phần tử liền kề ở hàng dưới**: `dp[i]` và `dp[i+1]`.
+
+👉 Nếu chỉ khai báo `dp = [0] * len(triangle)`, khi `i` chạy đến phần tử cuối cùng trong hàng, ta sẽ truy cập `dp[i+1]` → **lỗi IndexError**.
+
+➡️ Thêm **1 phần tử dự phòng** giúp tránh lỗi, vì `dp[i+1]` luôn tồn tại.
+
+---
+
+### 2. Vì sao khởi tạo toàn `0`?
+
+* Bắt đầu từ hàng dưới cùng (base case).
+* Ở hàng cuối, công thức:
+
+  ```python
+  dp[i] = min(dp[i], dp[i+1]) + n
+  ```
+
+  nhưng `dp[i]` và `dp[i+1]` ban đầu đều `0`.
+  → Vậy `dp[i] = n + min(0,0) = n`.
+* Điều này đúng vì đường đi tối thiểu từ **chính nó xuống đáy** = giá trị của chính nó.
+
+---
+
+### Tóm lại:
+
+* **`+1`** để tránh lỗi khi truy cập `dp[i+1]`.
+* **Khởi tạo `0`** để khi xử lý hàng cuối cùng, giá trị trong `dp` = chính giá trị của phần tử đó.
+
+---
+
+Bạn có muốn mình chạy thử với ví dụ `[[2],[3,4],[6,5,7],[4,1,8,3]]` và show rõ `dp` thay đổi thế nào từng bước không?
+Hay, mình giải thích kỹ hơn về **`dp[i+1]`** nhé 👇
+
+---
+
+### Ý tưởng thuật toán (Bottom-Up DP):
+
+* Ta duyệt tam giác **từ dưới lên trên**.
+* Với mỗi ô `triangle[row][i]`, ta muốn biết **đi xuống dưới theo đường nào thì tổng nhỏ nhất**.
+* Từ một ô, ta chỉ có **2 đường đi hợp lệ**:
+
+  * Đi xuống **trực tiếp**: `triangle[row+1][i]`
+  * Đi xuống **chéo phải**: `triangle[row+1][i+1]`
+
+👉 Vì vậy, công thức tại `triangle[row][i]` là:
+
+```python
+min_path = triangle[row][i] + min(dp[i], dp[i+1])
+```
+
+---
+
+### Tại sao cần `dp[i+1]`?
+
+* `dp[i]` lưu **giá trị nhỏ nhất đi xuống từ ô \[row+1]\[i]**.
+* `dp[i+1]` lưu **giá trị nhỏ nhất đi xuống từ ô \[row+1]\[i+1]**.
+
+Vậy khi tính cho `triangle[row][i]`, ta **bắt buộc** phải so sánh cả 2 con đường (`dp[i]` và `dp[i+1]`) để chọn đường đi có tổng nhỏ nhất.
+
+---
+
+### Ví dụ minh họa:
+
+Tam giác:
+
+```
+   2
+  3 4
+ 6 5 7
+4 1 8 3
+```
+
+Bắt đầu từ hàng cuối `[4,1,8,3]`:
+
+```
+dp = [4,1,8,3,0]   # 0 là phần tử dự phòng
+```
+
+Xử lý hàng trên `[6,5,7]`:
+
+* `dp[0] = min(4,1) + 6 = 7`
+* `dp[1] = min(1,8) + 5 = 6`
+* `dp[2] = min(8,3) + 7 = 10`
+
+```
+dp = [7,6,10,3,0]
+```
+
+Ở đây thấy rõ, khi tính `dp[0]`, ta dùng **cả `dp[0]` và `dp[1]` (tức `dp[i]` và `dp[i+1]`)**.
+
+---
+
+👉 Kết luận:
+`dp[i+1]` là bắt buộc vì mỗi phần tử trong tam giác có **2 lựa chọn đường đi xuống**, không thể chỉ dùng `dp[i]`.
+
+---
+
+Bạn có muốn mình vẽ sơ đồ mũi tên (đường đi từ `triangle[row][i]` xuống `dp[i]` và `dp[i+1]`) để thấy trực quan hơn không?
+Ok, mình giải thích chi tiết vì sao **kết quả cuối cùng là `dp[0]`** nhé 👇
+
+---
+
+### Ý tưởng:
+
+* Mình duyệt tam giác từ **dưới lên trên**.
+* Mỗi lần cập nhật, `dp[i]` sẽ lưu **tổng đường đi nhỏ nhất bắt đầu từ ô `[row][i]` xuống đáy**.
+
+👉 Sau khi xử lý hết tất cả các hàng, chỉ còn **một ô duy nhất ở đỉnh** (`triangle[0][0]`).
+
+* Đỉnh tam giác này chính là điểm bắt đầu của tất cả các đường đi.
+* Do đó, giá trị nhỏ nhất của đường đi từ đỉnh xuống đáy chính là `dp[0]`.
+
+---
+
+### Ví dụ minh họa:
+
+Tam giác:
+
+```
+   2
+  3 4
+ 6 5 7
+4 1 8 3
+```
+
+* Sau khi xử lý hàng cuối cùng:
+
+```
+dp = [4, 1, 8, 3, 0]
+```
+
+* Sau khi xử lý `[6,5,7]`:
+
+```
+dp = [7, 6, 10, 3, 0]
+```
+
+* Sau khi xử lý `[3,4]`:
+
+```
+dp = [9, 10, 10, 3, 0]
+```
+
+* Sau khi xử lý `[2]` (đỉnh):
+
+```
+dp = [11, 10, 10, 3, 0]
+```
+
+👉 Lúc này `dp[0] = 11` chính là **tổng nhỏ nhất từ đỉnh tới đáy**.
+
+---
+
+✅ **Tóm lại:**
+
+* `dp[i]` chứa tổng nhỏ nhất từ ô `[row][i]` đến đáy.
+* Khi đi lên đến hàng đầu tiên (`row = 0`), chỉ còn duy nhất ô đỉnh `triangle[0][0]`.
+* Vì vậy, kết quả cuối cùng phải là `dp[0]`.
+
+---
+
+Bạn có muốn mình viết lại đoạn code có **print trung gian mảng dp** để bạn thấy rõ cách nó cập nhật thành `dp[0]` không?
+Hay, mình giải thích chi tiết dòng này nhé 👇
+
+```python
+for i, n in enumerate(row):
+```
+
+---
+
+### 1. `enumerate(row)` là gì?
+
+* `row` là **một danh sách** (list) chứa các số trong một hàng của tam giác.
+* `enumerate(row)` sẽ trả về **cặp (chỉ số, giá trị)** cho từng phần tử trong `row`.
+
+Ví dụ:
+
+```python
+row = [6, 5, 7]
+for i, n in enumerate(row):
+    print(i, n)
+```
+
+Kết quả:
+
+```
+0 6
+1 5
+2 7
+```
+
+👉 Ở đây:
+
+* `i` = vị trí (index) của phần tử trong hàng
+* `n` = giá trị của phần tử đó
+
+---
+
+### 2. Tại sao cần cả `i` và `n`?
+
+* `i` được dùng để truy cập và cập nhật `dp[i]`.
+* `n` chính là số trong tam giác tại vị trí đó (`triangle[row][i]`).
+
+Ví dụ:
+
+```python
+dp[i] = min(dp[i], dp[i+1]) + n
+```
+
+* `dp[i], dp[i+1]` → lấy kết quả từ hàng dưới.
+* `+ n` → cộng thêm giá trị của ô hiện tại.
+
+---
+
+✅ **Tóm lại:**
+`for i, n in enumerate(row):` giúp ta **vừa có index `i` để làm việc với mảng `dp`**, **vừa có giá trị `n` để cộng thêm vào kết quả**.
+
+---
+
+Bạn có muốn mình viết lại đoạn `for i, n in enumerate(row):` thành một vòng `for` bình thường (không dùng `enumerate`) để thấy rõ hơn sự khác biệt không?
+Ok mình sẽ giải thích lại từ đầu, thật chậm và minh họa rõ ràng để bạn thấy tại sao phải **`+ n`** nhé 👇
+
+---
+
+## Bài toán:
+
+Tam giác:
+
+```
+   2
+  3 4
+ 6 5 7
+4 1 8 3
+```
+
+Cần tìm **đường đi từ đỉnh xuống đáy có tổng nhỏ nhất**.
+
+---
+
+## Ý tưởng Bottom-up
+
+* `dp[i]` lưu **tổng nhỏ nhất từ một ô ở hàng hiện tại đi xuống đáy**.
+* Khi tính tại ô `triangle[row][i] = n`, ta phải tính:
+
+  ```
+  tổng nhỏ nhất từ ô này = giá trị ô hiện tại (n) + tổng nhỏ nhất của một trong 2 đường đi phía dưới
+  ```
+
+---
+
+## Ví dụ cụ thể
+
+### Bước 1: Khởi tạo `dp` bằng hàng cuối cùng
+
+```
+dp = [4, 1, 8, 3, 0]   # thêm 0 để tránh lỗi dp[i+1]
+```
+
+### Bước 2: Xử lý hàng \[6, 5, 7]
+
+* Ô `6`:
+
+  ```
+  dp[0] = min(4, 1) + 6 = 7
+  ```
+* Ô `5`:
+
+  ```
+  dp[1] = min(1, 8) + 5 = 6
+  ```
+* Ô `7`:
+
+  ```
+  dp[2] = min(8, 3) + 7 = 10
+  ```
+
+👉 Lúc này `dp = [7, 6, 10, 3, 0]`
+
+**Chú ý:** Nếu không cộng `+ n` (tức giá trị ô hiện tại), thì kết quả sẽ chỉ là `min(4,1)=1` thay vì `7`. Điều đó sai vì bạn đang tính từ ô `6` xuống đáy mà lại bỏ mất chính số `6`.
+
+---
+
+## Tại sao phải cộng `+ n`?
+
+Vì mỗi `dp[i]` không chỉ là **kết quả từ hàng dưới**, mà là **kết quả từ ô hiện tại + đường đi tốt nhất phía dưới**.
+
+Nếu bỏ `+ n`, thì bạn chỉ tính được từ hàng dưới, mà quên mất giá trị ô hiện tại → tổng bị thiếu.
+
+---
+
+## Kết quả cuối cùng
+
+Tiếp tục xử lý lên đến đỉnh:
+
+* Tới khi xử lý ô `2` (đỉnh), ta được:
+
+  ```
+  dp[0] = 2 + min(9, 10) = 11
+  ```
+
+👉 `dp[0] = 11` chính là **tổng nhỏ nhất từ đỉnh tới đáy**.
+
+---
+
+✅ **Tóm lại:**
+Dòng này:
+
+```python
+dp[i] = min(dp[i], dp[i+1]) + n
+```
+
+có `+ n` vì ta **đang đứng ở một ô**, muốn tính tổng đường đi từ ô đó xuống đáy thì phải **cộng giá trị ô hiện tại** (`n`) + đường đi tốt nhất từ hàng dưới.
+
+---
+
+👉 Bạn có muốn mình vẽ lại bằng sơ đồ mũi tên (từ ô `6` đi xuống `4` và `1`) để thấy rõ hơn là phải cộng thêm `6` không?

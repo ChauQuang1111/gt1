@@ -1,0 +1,176 @@
+class Result {
+
+    /*
+     * Complete the 'miniMaxSum' function below.
+     *
+     * The function accepts INTEGER_ARRAY arr as parameter.
+     */
+
+    public static void miniMaxSum(List<Integer> arr) {
+        long total = 0;
+        int min = Integer.MAX_VALUE;
+        int max = Integer.MIN_VALUE;
+
+        for (int num : arr) {
+            total += num;
+            if (num < min) min = num;
+            if (num > max) max = num;
+        }
+
+        long minSum = total - max;  // exclude the largest
+        long maxSum = total - min;  // exclude the smallest
+
+        // ✅ print result
+        System.out.println(minSum + " " + maxSum);
+    }
+}
+Được — mình giải thích **chi tiết, từng bước** thuật toán của đoạn code đó (viẹc tính `minSum` và `maxSum`) bằng tiếng Việt, kèm ví dụ minh hoạ, lý do chọn kiểu dữ liệu, phức tạp thuật toán và các lưu ý thực tiễn.
+
+---
+
+# Mục tiêu
+
+Cho một danh sách `arr` (trong đề gốc thường là 5 số), ta cần in:
+
+* `minSum` = tổng của 4 số nhỏ nhất (tức tổng tất cả trừ số lớn nhất),
+* `maxSum` = tổng của 4 số lớn nhất (tức tổng tất cả trừ số nhỏ nhất).
+
+Đoạn code:
+
+```java
+long total = 0;
+int min = Integer.MAX_VALUE;
+int max = Integer.MIN_VALUE;
+
+for (int num : arr) {
+    total += num;
+    if (num < min) min = num;
+    if (num > max) max = num;
+}
+
+long minSum = total - max;
+long maxSum = total - min;
+System.out.println(minSum + " " + maxSum);
+```
+
+---
+
+# Giải thích chi tiết từng bước
+
+### 1. Khởi tạo
+
+* `total = 0` — sẽ giữ **tổng của tất cả phần tử** sau khi duyệt hết mảng.
+* `min = Integer.MAX_VALUE` — đặt `min` bằng giá trị int lớn nhất (2147483647) để mọi phần tử trong mảng chắc chắn nhỏ hơn giá trị ban đầu này và sẽ cập nhật lần đầu.
+* `max = Integer.MIN_VALUE` — đặt `max` bằng giá trị int nhỏ nhất (-2147483648) để mọi phần tử trong mảng chắc chắn lớn hơn giá trị ban đầu này và sẽ cập nhật lần đầu.
+
+> Mục đích: dùng hai biến `min`/`max` giữ min và max hiện tại trong khi duyệt mảng. Khởi tạo như trên đảm bảo phần tử đầu tiên sẽ cập nhật cả `min` và `max`.
+
+---
+
+### 2. Duyệt mảng (vòng `for`)
+
+Với mỗi `num` trong `arr`:
+
+* `total += num;` → cộng `num` vào tổng.
+* `if (num < min) min = num;` → nếu `num` nhỏ hơn `min` hiện tại, cập nhật `min`.
+* `if (num > max) max = num;` → nếu `num` lớn hơn `max` hiện tại, cập nhật `max`.
+
+**Invariant (bất biến)** sau khi đã xử lý k phần tử đầu tiên:
+
+* `total` = sum của k phần tử đầu,
+* `min` = nhỏ nhất trong k phần tử đầu,
+* `max` = lớn nhất trong k phần tử đầu.
+
+Sau khi duyệt xong toàn bộ mảng, `total` là tổng mọi phần tử, `min` là phần tử nhỏ nhất của toàn mảng, `max` là phần tử lớn nhất của toàn mảng.
+
+---
+
+### 3. Tính `minSum` và `maxSum`
+
+* `minSum = total - max;`
+  Vì `total` là tổng toàn bộ các phần tử; bỏ số lớn nhất (`max`) ra thì còn lại tổng của các phần tử khác — tức là tổng 4 số **nhỏ nhất** (khi mảng có 5 phần tử).
+* `maxSum = total - min;`
+  Tương tự, bỏ số nhỏ nhất (`min`) ra thì còn lại tổng của 4 số **lớn nhất**.
+
+Sau đó in `minSum` và `maxSum`.
+
+---
+
+# Ví dụ minh hoạ, từng bước
+
+Ví dụ `arr = [1, 3, 5, 7, 9]`
+
+Bảng cập nhật sau mỗi phần tử:
+
+| Bước | num | total (sau) |  min (sau) |   max (sau) |
+| ---- | --- | ----------: | ---------: | ----------: |
+| 0    | -   |           0 | 2147483647 | -2147483648 |
+| 1    | 1   |           1 |          1 |           1 |
+| 2    | 3   |           4 |          1 |           3 |
+| 3    | 5   |           9 |          1 |           5 |
+| 4    | 7   |          16 |          1 |           7 |
+| 5    | 9   |          25 |          1 |           9 |
+
+Cuối cùng:
+
+* `total = 25`
+* `min = 1`, `max = 9`
+* `minSum = total - max = 25 - 9 = 16`  → (1+3+5+7)
+* `maxSum = total - min = 25 - 1 = 24`  → (3+5+7+9)
+
+In: `16 24`
+
+---
+
+# Một số trường hợp khác
+
+1. **Tất cả phần tử bằng nhau**: `arr = [5,5,5,5,5]`
+
+   * `total = 25`, `min = 5`, `max = 5`
+   * `minSum = 25 - 5 = 20`, `maxSum = 25 - 5 = 20` (cùng một kết quả).
+
+2. **Số lớn (overflow)**:
+   Nếu phần tử có thể lớn (ví dụ 1e9) và có 5 phần tử = 5e9, tổng vượt quá giới hạn `int` (≈2.1e9). Vì vậy dùng `long total` để tránh tràn. Nếu dùng `int total` sẽ bị sai khi tổng lớn.
+
+3. **Kích thước mảng khác 5**:
+   Công thức `total - max` cho tổng "n-1 phần tử" (bỏ max). Nếu đề yêu cầu khác (ví dụ chọn 3/5), cần điều chỉnh. Nhưng với bài mini-max (4 of 5) thì cách này đúng.
+
+4. **Mảng rỗng**:
+   Đoạn code hiện tại sẽ giữ `min=Integer.MAX_VALUE` và `max=Integer.MIN_VALUE` — không hợp lệ. Thường phải kiểm tra `arr` không rỗng trước khi dùng.
+
+---
+
+# Độ phức tạp
+
+* **Thời gian:** O(n) — duyệt mảng 1 lần.
+* **Bộ nhớ:** O(1) — chỉ dùng vài biến phụ (không dùng mảng phụ).
+
+So sánh với phương án sắp xếp:
+
+* Sort: O(n log n) thời gian (kém hơn O(n) cho mảng lớn).
+* Sorting dễ viết/hiểu nhưng không tối ưu nếu n lớn.
+
+---
+
+# Tại sao không khởi tạo `min = 0` và `max = 0`?
+
+Nếu khởi tạo `min = 0`:
+
+* Với mảng toàn số dương, `min` sau cùng có thể đúng nhưng nếu mảng chứa số âm thì không: ví dụ `arr = [-5, -3]`, `min` phải trở thành -5 nhưng `min=0` ban đầu sẽ không cập nhật đúng nếu logic viết sai. Dùng `Integer.MAX_VALUE`/`MIN_VALUE` là cách an toàn chung.
+
+---
+
+# Tóm tắt (ngắn gọn)
+
+* Duyệt mảng một lần để thu được `total`, `min`, `max`.
+* `minSum = total - max` → tổng khi bỏ phần tử lớn nhất.
+* `maxSum = total - min` → tổng khi bỏ phần tử nhỏ nhất.
+* Dùng `long` cho `total` để tránh overflow; độ phức tạp O(n), bộ nhớ O(1).
+
+---
+
+Nếu bạn muốn mình:
+
+* viết 1 phiên bản kiểm tra an toàn (xử lý mảng rỗng) → mình gửi code;
+* hoặc show thêm demo chạy với nhiều input (nhỏ, lẻ, lớn) → mình gửi luôn. Bạn muốn cái nào?
+

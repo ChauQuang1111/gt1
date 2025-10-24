@@ -1,0 +1,120 @@
+Replace Non-Coprime Numbers in Array(19/06/2025)
+ // Hàm chính giải bài toán
+    public List<Integer> replaceNonCoprimes(int[] nums) {
+        int n = nums.length;
+
+        // Mô phỏng stack bằng mảng
+        int[] stack = new int[n];
+        int top = -1; // con trỏ "đỉnh" stack, ban đầu rỗng
+
+        for (int num : nums) {
+            // Khi còn phần tử trên stack và gcd > 1 thì hợp nhất
+            while (top != -1) {
+                int x = gcd(stack[top], num);
+                if (x == 1) break; // nếu coprime thì dừng
+                num *= stack[top--] / x; // hợp nhất bằng LCM
+            }
+
+            // push num vào stack
+            stack[++top] = num;
+        }
+
+        // Chuyển stack thành danh sách kết quả
+        List<Integer> result = new ArrayList<>(top + 1);
+        for (int i = 0; i <= top; ++i) {
+            result.add(stack[i]);
+        }
+
+        return result;
+    }
+
+    // Hàm gcd (Ước số chung lớn nhất)
+    public int gcd(int a, int b) {
+        return b == 0 ? a : gcd(b, a % b);
+    }
+Ok, mình phân tích kỹ đoạn này nhé 👇
+
+---
+
+### Code:
+
+```java
+while (top != -1) {
+    int x = gcd(stack[top], num);
+    if (x == 1) break; // nếu coprime thì dừng
+    num *= stack[top--] / x; // hợp nhất bằng LCM
+}
+```
+
+---
+
+## 🎯 Ý nghĩa thuật toán
+
+* Đây là phần xử lý **gộp các số không nguyên tố cùng nhau (non-coprime)**.
+* Ta có `num` (số hiện tại đang xét) và `stack[top]` (số trước đó trong stack).
+
+Bước xử lý:
+
+1. **Điều kiện vòng while: `top != -1`**
+
+   * `top` = -1 nghĩa là stack rỗng, không có phần tử nào để so sánh.
+   * Chỉ khi stack còn phần tử (`top >= 0`) thì ta mới so sánh `num` với phần tử đỉnh stack (`stack[top]`).
+
+2. **Tính `gcd(stack[top], num)`**
+
+   * Nếu `gcd = 1` → hai số coprime (không gộp được) → thoát vòng lặp (`break`).
+   * Nếu `gcd > 1` → có chung ước số → gộp lại bằng **LCM**.
+
+3. **Công thức gộp:**
+
+   ```java
+   num *= stack[top--] / x;
+   ```
+
+   * Công thức LCM:
+
+     $$
+     LCM(a, b) = \frac{a \times b}{gcd(a, b)}
+     $$
+   * Ở đây: `a = stack[top]`, `b = num`, `x = gcd(a, b)`.
+   * Ta viết lại `num = num * (stack[top] / x)` → đúng công thức LCM.
+   * Sau đó `top--` để loại bỏ phần tử vừa gộp ra khỏi stack.
+
+4. **Tiếp tục vòng lặp**
+
+   * Sau khi gộp, `num` có thể vẫn không coprime với phần tử mới ở `stack[top-1]`.
+   * Vòng `while` giúp ta gộp liên tục cho đến khi:
+
+     * stack rỗng (`top == -1`), hoặc
+     * gặp phần tử coprime (`gcd == 1`).
+
+---
+
+## 📌 Ví dụ minh họa
+
+Giả sử `nums = [6, 4, 3]`
+
+* B1: stack = \[6], top = 0
+* B2: xét `num = 4`
+
+  * gcd(6,4) = 2 > 1 → gộp → num = lcm(6,4) = 12 → pop 6 khỏi stack → top = -1
+  * stack = \[]
+* Push num = 12 → stack = \[12], top = 0
+* B3: xét `num = 3`
+
+  * gcd(12,3) = 3 > 1 → gộp → num = lcm(12,3) = 12 → pop 12 khỏi stack → top = -1
+  * stack = \[]
+* Push num = 12 → stack = \[12]
+
+👉 Kết quả cuối: `[12]`
+
+---
+
+✅ Tóm gọn:
+
+* `while (top != -1)` đảm bảo còn phần tử trong stack để kiểm tra/gộp.
+* Vòng lặp này giúp **gộp liên tục** nhiều số liền kề không coprime thành **một số duy nhất (LCM)**.
+
+---
+
+Bạn có muốn mình vẽ thêm **timeline stack (push/pop từng bước)** để dễ hình dung trực quan hơn không?

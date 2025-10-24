@@ -1,0 +1,13 @@
+Find Resultant Array After Removing Anagrams
+from itertools import groupby
+from typing import List
+
+class Solution:
+    def removeAnagrams(self, words: List[str]) -> List[str]:
+        # groupby(words, sorted) sẽ nhóm các từ LIỀN KỀ trong danh sách `words`
+        # có cùng "key" — tức là cùng giá trị trả về của hàm sorted(word)
+        # (sorted(word) trả về danh sách ký tự đã sắp xếp, nên các anagram sẽ có cùng key)
+        
+        # Với mỗi nhóm gộp được (g), ta chỉ lấy phần tử đầu tiên (next(g))
+        # => bỏ qua các từ liền kề là anagram
+        return [next(g) for _, g in groupby(words, sorted)]

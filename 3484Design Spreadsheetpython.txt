@@ -1,0 +1,357 @@
+# 3484. Design Spreadsheet(19/09/2025)
+class Spreadsheet:
+
+    def __init__(self, rows: int):
+        self.sheet = {}
+
+    def setCell(self, cell: str, value: int) -> None:
+        self.sheet[cell] = value
+
+    def resetCell(self, cell: str) -> None:
+        self.sheet[cell] = 0
+
+    def getValue(self, formula: str) -> int:
+        x,y = formula[1:].split('+')
+
+        
+        if x in self.sheet:
+            x_val = self.sheet[x]
+        else:
+            if x.isdigit():
+                x_val = int(x)
+            else:
+                x_val = 0
+
+                
+        if y in self.sheet:
+            y_val = self.sheet[y]
+        else:
+            if y.isdigit():
+                y_val = int(y)
+            else:
+                y_val = 0
+
+        return x_val + y_val
+Ok mình sẽ giải thích chi tiết 2 chỗ bạn hỏi nhé 👇
+
+---
+
+### 1. Hàm **`resetCell`**
+
+```python
+def resetCell(self, cell: str) -> None:
+    self.sheet[cell] = 0
+```
+
+* Khi bạn gọi `resetCell("A1")`, thì trong `self.sheet` ô `"A1"` sẽ được gán giá trị **0**.
+* Nghĩa là bạn **không xóa ô khỏi dictionary**, mà chỉ gán lại giá trị bằng `0`.
+
+👉 Lý do: trong mô phỏng bảng tính (giống Excel), khi reset 1 ô thì ô đó **không biến mất**, mà vẫn tồn tại nhưng giá trị bằng `0`.
+Ví dụ:
+
+```python
+sheet.setCell("A1", 10)   # A1 = 10
+sheet.resetCell("A1")     # A1 = 0
+```
+
+---
+
+### 2. Dòng **`x, y = formula[1:].split('+')`**
+
+```python
+def getValue(self, formula: str) -> int:
+    x, y = formula[1:].split('+')
+```
+
+* `formula` luôn ở dạng chuỗi bắt đầu bằng `"="`, ví dụ: `"=A1+6"`.
+* `formula[1:]` → bỏ ký tự `=` ở đầu.
+
+  * `"=A1+6"` → `"A1+6"`.
+* `.split('+')` → tách chuỗi thành 2 phần dựa trên dấu `"+"`.
+
+  * `"A1+6"` → `["A1", "6"]`.
+* `x, y = ...` → gán `"A1"` vào `x`, `"6"` vào `y`.
+
+👉 Mục đích: lấy ra **2 toán hạng** để xử lý riêng biệt.
+
+---
+
+### 📌 Tại sao lại trả về `0` khi không tìm thấy trong `sheet`
+
+Trong code `getValue` của bạn:
+
+```python
+if x in self.sheet:
+    x_val = self.sheet[x]
+else:
+    if x.isdigit():
+        x_val = int(x)
+    else:
+        x_val = 0   # mặc định = 0 nếu không phải số và không có trong sheet
+```
+
+* Nếu `x` là một ô đã được set → lấy giá trị.
+* Nếu `x` là một số → chuyển sang `int`.
+* Nếu `x` **không phải số, cũng không tồn tại trong sheet** → gán `0`.
+
+👉 Lý do: mô phỏng hành vi bảng tính — nếu bạn tham chiếu tới 1 ô chưa có giá trị (chưa set), thì mặc định coi nó bằng **0**.
+
+Ví dụ:
+
+```python
+sheet = Spreadsheet(3)
+print(sheet.getValue("=A1+5"))  
+# A1 chưa set -> coi A1 = 0, kết quả = 0 + 5 = 5
+```
+
+---
+
+👉 Tóm lại:
+
+* `resetCell` đặt giá trị ô thành **0** thay vì xóa, vì ô vẫn tồn tại nhưng rỗng trong bảng tính.
+* `formula[1:].split('+')` để tách công thức thành 2 toán hạng.
+* Khi không có trong sheet và cũng không phải số → gán mặc định bằng `0` để tránh lỗi và giữ hành vi giống Excel.
+
+---
+
+Bạn có muốn mình vẽ **sơ đồ luồng xử lý khi gọi `getValue("=A1+5")`** để trực quan hơn không?
+Rồi 👍 mình sẽ giải thích chi tiết đoạn code này.
+
+---
+
+### 📌 Ý nghĩa chung
+
+Đây là phần xử lý 2 toán hạng `x` và `y` của công thức `"=X+Y"`.
+Nó quyết định giá trị số nguyên tương ứng với từng toán hạng, sau đó cộng lại.
+
+---
+
+### 📌 Chi tiết từng bước
+
+#### 1. Xử lý toán hạng `x`
+
+```python
+if x in self.sheet:
+    x_val = self.sheet[x]
+else:
+    if x.isdigit():
+        x_val = int(x)
+    else:
+        x_val = 0
+```
+
+* **Nếu `x` là tên ô có trong bảng (`self.sheet`)**
+  → Lấy giá trị đã lưu trong sheet.
+  Ví dụ: nếu trước đó `setCell("A1", 10)` thì `self.sheet["A1"] = 10`.
+
+* **Nếu `x` không nằm trong sheet nhưng là số (chỉ chứa chữ số, ví dụ `"5"`)**
+  → Ép sang số nguyên (`int("5") = 5`).
+
+* **Nếu `x` không nằm trong sheet và cũng không phải số**
+  → Gán mặc định bằng `0`.
+  Lý do: coi ô chưa set giá trị thì bằng 0 (giống Excel mặc định).
+
+---
+
+#### 2. Xử lý toán hạng `y`
+
+```python
+if y in self.sheet:
+    y_val = self.sheet[y]
+else:
+    if y.isdigit():
+        y_val = int(y)
+    else:
+        y_val = 0
+```
+
+Hoàn toàn tương tự như `x`:
+
+* Nếu `y` là tên ô đã có trong sheet → lấy giá trị.
+* Nếu `y` là số → ép sang int.
+* Nếu không phải → mặc định bằng 0.
+
+---
+
+#### 3. Cộng kết quả
+
+```python
+return x_val + y_val
+```
+
+* Trả về tổng của 2 toán hạng sau khi chuyển đổi.
+
+---
+
+### 📌 Ví dụ minh họa
+
+1. Trường hợp 1:
+
+```python
+sheet.setCell("A1", 10)
+sheet.getValue("=A1+6")
+```
+
+* `x = "A1"`, nằm trong sheet → `x_val = 10`.
+* `y = "6"`, là số → `y_val = 6`.
+* Trả về `10 + 6 = 16`.
+
+---
+
+2. Trường hợp 2:
+
+```python
+sheet.getValue("=B2+5")
+```
+
+* `x = "B2"`, chưa có trong sheet → `x_val = 0`.
+* `y = "5"`, là số → `y_val = 5`.
+* Trả về `0 + 5 = 5`.
+
+---
+
+3. Trường hợp 3:
+
+```python
+sheet.getValue("=X+Y")
+```
+
+* `x = "X"`, không có trong sheet, cũng không phải số → `x_val = 0`.
+* `y = "Y"`, tương tự → `y_val = 0`.
+* Trả về `0 + 0 = 0`.
+
+---
+
+👉 Tóm lại:
+Thuật toán này **chuyển đổi từng toán hạng** theo quy tắc:
+
+* Nếu là **ô hợp lệ trong sheet** → lấy giá trị.
+* Nếu là **số** → đổi sang int.
+* Nếu **không hợp lệ** → mặc định 0.
+
+Rồi cuối cùng trả về tổng `x_val + y_val`.
+
+---
+
+Bạn có muốn mình viết lại thành **hàm con `_to_value(token)`** cho gọn hơn (khỏi lặp lại logic cho x và y) không?
+Ok mình giải thích chi tiết cho bạn nhé 👇
+
+### 1. `x.isdigit()`
+
+* Đây là **method (hàm)** của kiểu dữ liệu **string** (`str`) trong Python.
+* Nó trả về:
+
+  * **`True`** nếu **tất cả ký tự trong chuỗi là số (0–9)**.
+  * **`False`** nếu có ký tự khác số (ví dụ chữ cái, dấu `+`, dấu cách...).
+
+👉 Ví dụ:
+
+```python
+"123".isdigit()   # True vì toàn bộ ký tự là số
+"A1".isdigit()    # False vì có chữ A
+"007".isdigit()   # True vì toàn bộ ký tự là số
+"".isdigit()      # False vì chuỗi rỗng
+```
+
+### 2. `int(x)`
+
+* Đây là **hàm dựng sẵn (built-in function)** trong Python.
+* Nó chuyển chuỗi số (`str`) thành kiểu **số nguyên (`int`)**.
+
+👉 Ví dụ:
+
+```python
+int("123")   # 123 (kiểu int)
+int("007")   # 7   (int, số 0 đầu bị bỏ)
+```
+
+⚠️ Nếu chuỗi không phải là số (ví dụ `"A1"`), gọi `int("A1")` sẽ báo lỗi:
+
+```
+ValueError: invalid literal for int() with base 10: 'A1'
+```
+
+---
+
+### 3. Ý nghĩa trong đoạn code của bạn
+
+```python
+if x.isdigit():
+    x_val = int(x)
+else:
+    x_val = 0
+```
+
+* Nếu `x` là một **số dạng chuỗi** (ví dụ `"12"`), thì:
+
+  * `x.isdigit()` → `True`
+  * `x_val = int(x)` → chuyển `"12"` thành `12` (số int để tính toán).
+
+* Nếu `x` **không phải số** (ví dụ `"A1"` hay `"B2"`), thì:
+
+  * `x.isdigit()` → `False`
+  * `x_val = 0` → gán mặc định giá trị bằng 0 (tránh lỗi).
+
+---
+
+👉 Tóm gọn:
+
+* `isdigit()` = kiểm tra chuỗi có phải toàn số không.
+* `int(x)` = chuyển chuỗi số thành số nguyên để tính toán.
+
+Bạn có muốn mình viết lại đoạn code đó thành phiên bản **ngắn gọn hơn** (dùng `x_val = int(x) if x.isdigit() else 0`) để dễ đọc không?
+Ok, mình giải thích đoạn này nhé 👇
+
+```python
+if y in self.sheet:
+    y_val = self.sheet[y]
+```
+
+### 1. `if y in self.sheet:`
+
+* `self.sheet` ở đây thường là một **dictionary (dict)**, ví dụ:
+
+  ```python
+  self.sheet = {"A1": 10, "B2": 15}
+  ```
+* Câu lệnh `if y in self.sheet` nghĩa là: **kiểm tra xem key `y` có tồn tại trong dictionary `self.sheet` không**.
+
+👉 Ví dụ:
+
+```python
+"A1" in {"A1": 10, "B2": 15}   # True
+"C3" in {"A1": 10, "B2": 15}   # False
+```
+
+---
+
+### 2. `y_val = self.sheet[y]`
+
+* Nếu `y` có tồn tại trong dictionary, thì ta **lấy giá trị (value) tương ứng với key `y`**.
+
+👉 Ví dụ:
+
+```python
+self.sheet = {"A1": 10, "B2": 15}
+y = "B2"
+
+y_val = self.sheet[y]   # lấy giá trị 15
+```
+
+---
+
+### 3. Ý nghĩa trong đoạn code
+
+* Nếu công thức có tham chiếu đến một **ô đã lưu trong sheet** (ví dụ `"B2"` đã được set bằng 15), thì `y_val` sẽ nhận đúng giá trị đó.
+* Nếu ô chưa tồn tại (ví dụ `"C3"`), thì `if` sẽ **sai** và nó sẽ xử lý ở `else` (kiểm tra xem có phải số không, nếu không thì mặc định = 0).
+
+---
+
+👉 Tóm gọn:
+
+* `if y in self.sheet` = kiểm tra ô `y` có trong bảng tính không.
+* `self.sheet[y]` = lấy giá trị đã lưu ở ô đó.
+
+---
+
+Bạn có muốn mình vẽ **luồng hoạt động đầy đủ** của `getValue` (từ lúc nhập công thức `"=A1+B2"` cho đến khi nó tính ra kết quả) để bạn hình dung dễ hơn không?

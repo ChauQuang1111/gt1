@@ -1,0 +1,295 @@
+Sort Vowels in a String(11/09/2025)
+class Solution:
+    def sortVowels(self, s: str) -> str:
+        vowels = ['A', 'E', 'I', 'O', 'U', 'a', 'e', 'i', 'o', 'u']
+        count_char = Counter(s)
+        s_vowels = []
+        for char in count_char.keys():
+            if char in vowels:
+                s_vowels.append(char)                
+                s = s.replace(char, '_')                              
+        s_vowels.sort()
+        for char in s_vowels:
+            s = s.replace('_', char, count_char[char])
+        return s
+Ok 👍 mình giải thích dòng này thật chi tiết cho bạn:
+
+```python
+count_char = Counter(s)
+```
+
+---
+
+### 1. `Counter` là gì?
+
+* `Counter` là một **class** trong module `collections` của Python.
+* Nó hoạt động giống như một **từ điển (dict)** nhưng chuyên dùng để **đếm số lần xuất hiện** của từng phần tử trong một chuỗi, list, hoặc iterable bất kỳ.
+
+Ví dụ:
+
+```python
+from collections import Counter
+Counter("leetcode")
+```
+
+👉 Kết quả:
+
+```python
+Counter({'e': 3, 'l': 1, 't': 1, 'c': 1, 'o': 1, 'd': 1})
+```
+
+---
+
+### 2. Ý nghĩa trong bài
+
+`count_char = Counter(s)`
+
+* Nó sẽ tạo ra một dict-like, trong đó:
+
+  * **key** = ký tự trong chuỗi `s`
+  * **value** = số lần ký tự đó xuất hiện
+
+Ví dụ với `s = "leetcode"`:
+
+```python
+count_char = {
+    'l': 1,
+    'e': 3,
+    't': 1,
+    'c': 1,
+    'o': 1,
+    'd': 1
+}
+```
+
+---
+
+### 3. Vì sao cần dùng?
+
+* Để biết trong chuỗi có bao nhiêu nguyên âm (a, e, i, o, u).
+* Sau đó dễ dàng xử lý, ví dụ thay thế hoặc sắp xếp lại chúng.
+
+---
+
+👉 Tóm gọn:
+`Counter(s)` = **“đếm số lần mỗi ký tự trong chuỗi xuất hiện”**.
+
+---
+
+Bạn có muốn mình so sánh `Counter` trong Python với cách làm tương tự bên Java (`int[] stringCharCount = new int[128]`) để dễ liên hệ không?
+Ok 👍 mình giải thích rõ ràng từng bước đoạn code Python này nhé:
+
+```python
+s_vowels = []
+for char in count_char.keys():
+    if char in vowels:
+        s_vowels.append(char)                
+        s = s.replace(char, '_')                              
+s_vowels.sort()
+for char in s_vowels:
+    s = s.replace('_', char, count_char[char])
+return s
+```
+
+---
+
+### 🔎 Bước 1: Tạo danh sách nguyên âm
+
+```python
+s_vowels = []
+for char in count_char.keys():
+    if char in vowels:
+        s_vowels.append(char)                
+        s = s.replace(char, '_')
+```
+
+* `count_char.keys()` → duyệt qua tất cả ký tự xuất hiện trong chuỗi `s`.
+* Nếu ký tự đó là **nguyên âm** → thêm vào danh sách `s_vowels`.
+* Đồng thời, trong chuỗi gốc `s`, thay thế nguyên âm đó bằng dấu `'_'` để **chừa chỗ trống** cho việc điền lại sau này.
+
+📌 Ví dụ:
+`s = "leetcode"`
+
+* Nguyên âm là `'e', 'o'`
+* Sau bước này:
+
+  * `s_vowels = ['e', 'o']`
+  * `s = "l__tc_d_"`
+
+---
+
+### 🔎 Bước 2: Sắp xếp nguyên âm
+
+```python
+s_vowels.sort()
+```
+
+* Sắp xếp danh sách nguyên âm theo **thứ tự từ điển**.
+* Với `"leetcode"`, ta có nguyên âm `['e', 'o']` → sau sort vẫn là `['e', 'o']`.
+* Nhưng với `s = "POiuE"`, thì `['P','O','i','u','E']` chỉ lấy nguyên âm → `['O','i','u','E']` → sort thành `['E','O','i','u']`.
+
+---
+
+### 🔎 Bước 3: Điền lại nguyên âm đã sắp xếp
+
+```python
+for char in s_vowels:
+    s = s.replace('_', char, count_char[char])
+```
+
+* Với mỗi nguyên âm đã sắp xếp:
+
+  * Thay lần lượt các ký tự `'_'` trong chuỗi bằng nguyên âm đó.
+  * `count_char[char]` → đảm bảo thay đúng số lần ký tự đó xuất hiện ban đầu.
+
+📌 Ví dụ:
+`s = "l__tc_d_"`, `s_vowels = ['e','o']`, `count_char = {'e':3,'o':1}`
+
+* Thay `'e'` → `"leetce_d_"`
+* Thay `'o'` → `"leetcode"`
+
+---
+
+### 🔎 Bước 4: Trả về chuỗi mới
+
+```python
+return s
+```
+
+* Chuỗi kết quả sau khi nguyên âm đã được sắp xếp và điền lại.
+
+---
+
+## 🎯 Tóm tắt dễ nhớ
+
+1. **Lấy nguyên âm ra** + thay bằng `'_'`.
+2. **Sắp xếp nguyên âm** theo thứ tự.
+3. **Điền lại vào vị trí `'_'`** đúng số lần xuất hiện.
+
+👉 Hiểu nhanh: **“Bốc nguyên âm ra, sort, rồi trả lại chỗ cũ”**.
+
+---
+
+Bạn có muốn mình viết lại đoạn này thành **cách tiếp cận ngắn gọn hơn** (không dùng `replace`, chỉ dùng index) để dễ hiểu và chạy nhanh hơn không?
+Ok 👍 mình rút gọn lại cho bạn dễ học – dễ nhớ – dễ review:
+
+---
+
+## 🎯 Tóm tắt thuật toán Sort Vowels in a String (Python code bạn đưa)
+
+1. **Đếm ký tự**
+
+   * Dùng `Counter(s)` để biết mỗi ký tự xuất hiện bao nhiêu lần.
+
+2. **Bốc nguyên âm ra ngoài**
+
+   * Duyệt chuỗi, nếu là nguyên âm → cho vào list `s_vowels`,
+   * Đồng thời thay nguyên âm trong chuỗi bằng `'_'` (để nhớ chỗ).
+
+3. **Sắp xếp nguyên âm**
+
+   * Sort `s_vowels` theo thứ tự chữ cái.
+
+4. **Điền lại nguyên âm**
+
+   * Duyệt từng nguyên âm trong `s_vowels`,
+   * Lần lượt thay `'_'` bằng nguyên âm tương ứng, đúng số lần nó xuất hiện.
+
+5. **Trả về kết quả**
+
+   * Chuỗi mới có nguyên âm đã được sắp xếp, phụ âm giữ nguyên.
+
+---
+
+👉 Công thức nhớ nhanh:
+**“Đếm → Bốc → Sort → Điền lại → Trả kết quả”** ✅
+
+---
+
+Bạn có muốn mình viết thêm **1 ví dụ minh họa step-by-step với chuỗi `leetcode`** để lúc ôn bạn chỉ cần nhìn hình là nhớ ngay không?
+Ok 👍 mình làm ví dụ step-by-step với chuỗi `leetcode` để bạn dễ hình dung:
+
+---
+
+## 🔎 Input
+
+```
+s = "leetcode"
+```
+
+---
+
+## 🛠 Các bước
+
+### 1. Đếm ký tự
+
+```python
+count_char = Counter("leetcode")
+```
+
+Kết quả:
+
+```
+{'l':1, 'e':3, 't':1, 'c':1, 'o':1, 'd':1}
+```
+
+---
+
+### 2. Bốc nguyên âm & thay bằng `_`
+
+* Nguyên âm trong `leetcode`: `['e','e','e','o']`
+* Thay vào chuỗi:
+
+```
+s = "l__tc_d_"
+s_vowels = ['e','o']   # chỉ lưu key (chữ cái)
+```
+
+---
+
+### 3. Sắp xếp nguyên âm
+
+```python
+s_vowels.sort()
+```
+
+```
+s_vowels = ['e','o']   # vẫn giữ nguyên vì 'e' < 'o'
+```
+
+---
+
+### 4. Điền lại nguyên âm theo thứ tự
+
+* Bắt đầu với: `"l__tc_d_"`
+
+✔ Thay `'e'` (3 lần)
+
+```
+"leetce_d_"
+```
+
+✔ Thay `'o'` (1 lần)
+
+```
+"leetcode"
+```
+
+---
+
+### 5. Kết quả
+
+```
+Output = "leetcode"
+```
+
+---
+
+## 🎯 Công thức nhớ nhanh
+
+👉 Với input `"leetcode"`
+**“Bốc \['e','e','e','o'] → Sort \['e','e','e','o'] → Điền lại vào `_` → 'leetcode'”**
+
+---
+
+Bạn có muốn mình làm thêm ví dụ khác như `"POiuE"` để thấy rõ sự thay đổi khi sort nguyên âm không?

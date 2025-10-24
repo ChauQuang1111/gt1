@@ -1,0 +1,136 @@
+xây cây
+public static TreeNode buildTree(int[] arr) {
+        if (arr.length == 0 || arr[0] == -1)
+            return null;
+
+        TreeNode root = new TreeNode(arr[0]);
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.add(root);
+
+        int i = 1;
+        while (!queue.isEmpty() && i < arr.length) {
+            TreeNode curr = queue.poll();
+
+            // Xử lý con trái
+            if (arr[i] != -1) {
+                curr.left = new TreeNode(arr[i]);
+                queue.add(curr.left);
+            }
+            i++;
+
+            if (i >= arr.length)
+                break;
+
+            // Xử lý con phải
+            if (arr[i] != -1) {
+                curr.right = new TreeNode(arr[i]);
+                queue.add(curr.right);
+            }
+            i++;
+        }
+        return root;
+    }
+Rồi 👍, mình giải thích chi tiết cho bạn thuật toán của hàm `buildTree` này nhé:
+
+### Mục đích
+
+Hàm này xây dựng cây nhị phân từ một mảng `arr[]` dạng **level-order traversal** (duyệt theo tầng).
+
+* `-1` được dùng để biểu diễn **null node** (tức là chỗ trống, không có con).
+* Ví dụ: `arr = [1,2,3,-1,4]` sẽ xây dựng cây:
+
+```
+        1
+       / \
+      2   3
+       \
+        4
+```
+
+---
+
+### Thuật toán
+
+1. **Xử lý trường hợp rỗng**
+
+```java
+if (arr.length == 0 || arr[0] == -1) 
+    return null;
+```
+
+👉 Nếu mảng rỗng hoặc phần tử đầu tiên là `-1` → không có gốc → cây rỗng.
+
+---
+
+2. **Khởi tạo root**
+
+```java
+TreeNode root = new TreeNode(arr[0]);
+Queue<TreeNode> queue = new LinkedList<>();
+queue.add(root);
+```
+
+👉 Gốc của cây là phần tử đầu tiên `arr[0]`.
+👉 Dùng `queue` để lưu các node cần gán con trái/phải (theo kiểu BFS).
+
+---
+
+3. **Duyệt mảng bằng vòng lặp while**
+
+```java
+int i = 1;
+while (!queue.isEmpty() && i < arr.length) {
+    TreeNode curr = queue.poll();
+```
+
+👉 Lấy node đầu hàng đợi (`curr`) để gán con cho nó.
+👉 Biến `i` dùng để duyệt tiếp các phần tử trong `arr`.
+
+---
+
+4. **Xử lý con trái**
+
+```java
+if (arr[i] != -1) {
+    curr.left = new TreeNode(arr[i]);
+    queue.add(curr.left);
+}
+i++;
+```
+
+👉 Nếu `arr[i]` khác `-1` → tạo `TreeNode` mới, gán vào `curr.left`, và đưa node này vào queue để sau còn xét con của nó.
+👉 Nếu là `-1` thì không gán con trái.
+👉 Tăng `i`.
+
+---
+
+5. **Xử lý con phải**
+
+```java
+if (i >= arr.length) break;  // nếu hết mảng thì dừng
+
+if (arr[i] != -1) {
+    curr.right = new TreeNode(arr[i]);
+    queue.add(curr.right);
+}
+i++;
+```
+
+👉 Tương tự con trái, nhưng lần này gán `curr.right`.
+👉 Sau đó tăng `i`.
+
+---
+
+6. **Lặp lại**
+   Hàng đợi vẫn còn node → tiếp tục lặp để gán con cho node đó, đến khi hết mảng `arr`.
+
+---
+
+### Tóm tắt
+
+* **Ý tưởng chính**: duyệt mảng theo thứ tự level-order, đồng thời dùng queue để giữ node cha chờ gán con.
+* **Cấu trúc queue** đảm bảo rằng thứ tự phần tử trong mảng được ánh xạ chính xác thành cây nhị phân.
+
+---
+
+👉 Bạn có muốn mình viết lại hàm này sang **Python** luôn không, để bạn test với cái `isSameTree` BFS lúc trước?

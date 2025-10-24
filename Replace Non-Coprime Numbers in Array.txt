@@ -1,0 +1,80 @@
+2197. Replace Non-Coprime Numbers in Array(19/06/2025)
+
+from typing import List
+from math import gcd, lcm
+
+class Solution:
+    def replaceNonCoprimes(self, nums: List[int]) -> List[int]:
+        """Thuật toán hợp nhất số không nguyên tố cùng nhau bằng LCM."""
+        ans = []            # stack lưu kết quả tạm
+        curr = nums[0]      # phần tử đang xử lý
+
+        # duyệt qua các phần tử từ index 1 trở đi
+        for x in nums[1:]:
+            if gcd(curr, x) > 1:           # nếu curr và x không nguyên tố cùng nhau
+                curr = lcm(curr, x)        # gộp thành LCM
+
+                # sau khi gộp, kiểm tra xem curr có gộp tiếp được với phần tử cuối stack không
+                while ans and gcd(curr, ans[-1]) > 1:
+                    curr = lcm(curr, ans.pop())  # pop ra, gộp tiếp
+            else:
+                # nếu curr và x nguyên tố cùng nhau → đẩy curr vào stack
+                ans.append(curr)
+                curr = x   # cập nhật curr = x để xử lý tiếp
+
+        # push phần tử cuối cùng vào stack
+        ans.append(curr)
+
+        return ans
+À mình hiểu chỗ bạn thắc mắc 👍. Để mình giải thích cú pháp trong Python nhé:
+
+---
+
+### 1. `for x in nums[1:]:`
+
+* `nums[1:]` nghĩa là **cắt mảng từ chỉ số 1 trở đi** (bỏ qua phần tử đầu tiên).
+  Ví dụ:
+
+  ```python
+  nums = [6, 4, 3, 2]
+  nums[1:]  # [4, 3, 2]
+  ```
+* Lý do: biến `curr` đã giữ `nums[0]`, nên ta chỉ cần duyệt từ `nums[1]` trở đi.
+
+---
+
+### 2. `ans[-1]`
+
+* Trong Python, **chỉ số âm** dùng để truy cập từ cuối mảng.
+
+  * `ans[-1]` → phần tử cuối cùng của list `ans`.
+  * `ans[-2]` → phần tử kế cuối.
+  * `ans[-3]` → phần tử thứ ba từ cuối.
+
+Ví dụ:
+
+```python
+ans = [12, 7, 6]
+ans[-1]   # 6
+ans[-2]   # 7
+```
+
+* Tại sao dùng `-1`? Vì ta muốn kiểm tra/gộp **phần tử cuối cùng trong stack** với `curr`.
+
+---
+
+### 3. `while ans and gcd(curr, ans[-1]) > 1:`
+
+* `while ans` → kiểm tra `ans` có rỗng không. Nếu list rỗng thì `False`, không truy cập `ans[-1]` được.
+* `gcd(curr, ans[-1]) > 1` → kiểm tra `curr` và phần tử cuối stack có ước chung > 1 → nếu có thì gộp tiếp bằng `lcm`.
+
+---
+
+👉 Tóm gọn:
+
+* `nums[1:]`: duyệt từ phần tử số 2 trở đi vì phần tử đầu đã gán cho `curr`.
+* `ans[-1]`: lấy **phần tử cuối stack** để xem có thể gộp tiếp với `curr` không.
+
+---
+
+Bạn có muốn mình minh họa **bảng từng vòng lặp** (giá trị `curr`, `ans`, `x`) để thấy `-1` hoạt động thế nào không?

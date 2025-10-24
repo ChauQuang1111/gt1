@@ -1,0 +1,699 @@
+23. Merge k Sorted Lists
+class Solution {
+   
+    public static ListNode mergeKLists(ListNode[] lists) {
+        if(lists.length == 0) return null;
+
+        int max = Integer.MIN_VALUE; 
+        int min = Integer.MAX_VALUE;
+        
+
+            for (ListNode nodeRow : lists) {
+                  for(ListNode head = nodeRow; head != null; head = head.next) {
+                        min = Math.min(min, head.val);
+                        max = Math.max(max, head.val);
+                  } 
+            }
+
+        min = Math.abs(min);
+        int freq[] = new int[max + min + 1];
+
+            for (ListNode nodeRow : lists) {
+                  for(ListNode head = nodeRow; head != null; head = head.next) {
+                        freq[head.val + min]++;
+                  } 
+            }
+
+        ListNode dummy = new ListNode(-1);
+        ListNode temp = dummy;
+
+            for (int i = 0; i < freq.length; i++) {
+                    if (freq[i] > 0) {
+                        int val = i - min;
+                            while (freq[i] --> 0) {
+                                    temp.next = new ListNode(val);
+                                    temp = temp.next;
+                            }
+                    }
+            }
+
+        return dummy.next;
+    }
+}
+
+
+
+À 👌 cái này là **kỹ thuật khởi tạo giá trị biên** (sentinel values).
+Để mình giải thích thật rõ nhé:
+
+---
+
+### 1. Trường hợp của bạn:
+
+```java
+int max = Integer.MIN_VALUE; // giá trị nhỏ nhất có thể của int
+int min = Integer.MAX_VALUE; // giá trị lớn nhất có thể của int
+```
+
+Rồi sau đó đi duyệt:
+
+```java
+for (ListNode nodeRow : lists) {
+    for (ListNode head = nodeRow; head != null; head = head.next) {
+        min = Math.min(min, head.val);
+        max = Math.max(max, head.val);
+    }
+}
+```
+
+* Với **min**: ban đầu đặt nó = giá trị lớn nhất có thể (`+2^31 - 1`).
+  Như vậy bất kỳ `head.val` nào gặp được cũng sẽ **nhỏ hơn min**, nên min chắc chắn được cập nhật đúng ngay từ lần so sánh đầu tiên.
+
+* Với **max**: ban đầu đặt nó = giá trị nhỏ nhất có thể (`-2^31`).
+  Bất kỳ `head.val` nào cũng sẽ **lớn hơn max**, nên max chắc chắn được cập nhật đúng ngay từ đầu.
+
+👉 Đây là cách đảm bảo **biến min, max được cập nhật chính xác** khi duyệt mảng/list mà không cần xử lý đặc biệt cho phần tử đầu tiên.
+
+---
+
+### 2. Vì sao nhiều người dùng kỹ thuật này?
+
+* Tránh phải viết code rườm rà như:
+
+  ```java
+  if (firstElement) {
+      min = head.val;
+      max = head.val;
+      firstElement = false;
+  }
+  ```
+* Đơn giản, gọn hơn: chỉ cần duyệt từ đầu đến cuối, không quan tâm phần tử đầu tiên.
+
+---
+
+### 3. Ví dụ minh họa:
+
+```java
+int[] arr = {3, 7, -2, 9};
+
+int min = Integer.MAX_VALUE; // ban đầu = 2147483647
+int max = Integer.MIN_VALUE; // ban đầu = -2147483648
+
+for (int x : arr) {
+    min = Math.min(min, x);
+    max = Math.max(max, x);
+}
+System.out.println(min); // -2
+System.out.println(max); // 9
+```
+
+Nếu không dùng kỹ thuật này, ta phải gán `min = arr[0]`, `max = arr[0]` rồi duyệt từ i = 1.
+
+---
+
+👉 Tóm lại: Đây là **mẹo khởi tạo giá trị biên** để tính min/max mà không cần xử lý đặc biệt cho phần tử đầu tiên.
+
+---
+
+Bạn có muốn mình so sánh cách này với cách **khởi tạo bằng phần tử đầu tiên của mảng** để thấy sự khác biệt không?
+Đúng rồi, câu hỏi rất hay 👍
+
+---
+
+### ❓ Tại sao khi tìm **max** lại đặt trước là `Integer.MIN_VALUE`?
+
+* Bởi vì ta muốn một **mốc ban đầu nhỏ nhất có thể**, để bất kỳ số nào trong dữ liệu cũng sẽ **lớn hơn mốc này** ⇒ chắc chắn cập nhật được.
+
+👉 Nếu ta đặt max = 0 mà dữ liệu toàn số âm (ví dụ `[-5, -8, -2]`), thì max sẽ **không bao giờ được cập nhật đúng**.
+Nhưng nếu đặt max = `Integer.MIN_VALUE` (≈ -2,147,483,648), thì chắc chắn `-5`, `-8`, `-2` đều lớn hơn nó ⇒ max cập nhật chuẩn.
+
+---
+
+### ❓ Tại sao khi tìm **min** lại đặt trước là `Integer.MAX_VALUE`?
+
+* Vì cần một **mốc ban đầu lớn nhất có thể**, để bất kỳ số nào trong dữ liệu cũng **nhỏ hơn mốc này** ⇒ chắc chắn cập nhật được.
+
+👉 Nếu ta đặt min = 0 mà dữ liệu toàn số dương (ví dụ `[3, 7, 2]`), thì min sẽ giữ nguyên 0 ⇒ sai.
+Còn nếu đặt min = `Integer.MAX_VALUE` (≈ 2,147,483,647), thì chắc chắn `[3, 7, 2]` đều nhỏ hơn nó ⇒ min được cập nhật đúng.
+
+---
+
+### 🔑 Tóm gọn:
+
+* `max = Integer.MIN_VALUE`: để đảm bảo max luôn được cập nhật chính xác ngay cả khi toàn bộ dữ liệu là số âm.
+* `min = Integer.MAX_VALUE`: để đảm bảo min luôn được cập nhật chính xác ngay cả khi toàn bộ dữ liệu là số dương.
+
+👉 Đây là lý do tại sao người ta chọn cách này thay vì gán 0 hay một giá trị bất kỳ.
+
+---
+
+Bạn có muốn mình minh họa bằng 1 ví dụ **sai kết quả** khi khởi tạo max = 0 và min = 0 không?
+Đoạn code bạn đưa ra có ý nghĩa như sau 👇
+
+```java
+for (ListNode nodeRow : lists) {                // duyệt qua từng danh sách liên kết trong mảng lists
+    for (ListNode head = nodeRow; head != null; head = head.next) {  
+        // duyệt qua từng node trong danh sách liên kết hiện tại
+
+        min = Math.min(min, head.val);  // cập nhật giá trị nhỏ nhất gặp được
+        max = Math.max(max, head.val);  // cập nhật giá trị lớn nhất gặp được
+    } 
+}
+```
+
+---
+
+### 🔎 Giải thích chi tiết
+
+* `lists` là một mảng chứa nhiều **danh sách liên kết đã sắp xếp**.
+* Vòng `for (ListNode nodeRow : lists)` lấy từng danh sách ra.
+* Vòng `for (ListNode head = nodeRow; head != null; head = head.next)` duyệt từng node trong danh sách đó.
+* `min = Math.min(min, head.val);`
+
+  * So sánh giá trị của node hiện tại (`head.val`) với `min`.
+  * Nếu `head.val` nhỏ hơn thì cập nhật `min`.
+* `max = Math.max(max, head.val);`
+
+  * So sánh `head.val` với `max`.
+  * Nếu `head.val` lớn hơn thì cập nhật `max`.
+
+👉 Sau khi chạy xong 2 vòng lặp lồng nhau, ta có:
+
+* `min` = giá trị nhỏ nhất trong **toàn bộ các danh sách**.
+* `max` = giá trị lớn nhất trong **toàn bộ các danh sách**.
+
+---
+
+### 📌 Ví dụ minh họa
+
+Giả sử có 3 danh sách:
+
+```
+lists = [
+    1 -> 4 -> 5,
+    1 -> 3 -> 4,
+    2 -> 6
+]
+```
+
+* Bắt đầu: `min = Integer.MAX_VALUE`, `max = Integer.MIN_VALUE`.
+* Duyệt lần lượt:
+
+  * gặp `1`: min = 1, max = 1
+  * gặp `4`: min = 1, max = 4
+  * gặp `5`: min = 1, max = 5
+  * gặp `1`: min = 1, max = 5
+  * gặp `3`: min = 1, max = 5
+  * gặp `4`: min = 1, max = 5
+  * gặp `2`: min = 1, max = 5
+  * gặp `6`: min = 1, max = 6
+
+👉 Kết quả cuối cùng: `min = 1`, `max = 6`.
+
+---
+
+Bạn có muốn mình giải thích thêm **tại sao cần tìm min và max trước khi tạo mảng tần suất (freq[])** trong thuật toán không?
+Rồi 👍 mình giải thích kỹ đoạn này:
+
+```java
+for (ListNode head = nodeRow; head != null; head = head.next) {
+    freq[head.val + min]++;
+}
+```
+
+---
+
+### 1. Ý nghĩa chung
+
+* Đoạn này đang **đếm tần suất (frequency)** xuất hiện của từng giá trị trong tất cả các linked list.
+* Kỹ thuật gọi là **counting sort idea** → thay vì lưu từng số, ta lưu số lần mỗi giá trị xuất hiện.
+
+---
+
+### 2. Tại sao `head.val + min`?
+
+* Trong Java, mảng `freq` chỉ nhận **chỉ số ≥ 0**.
+* Nhưng `head.val` có thể **âm**. Ví dụ: giá trị nhỏ nhất (min) là `-5`.
+* Nếu ta để `freq[head.val]`, thì sẽ có `freq[-5]` → lỗi (index âm).
+
+👉 Giải pháp: **dời trục** bằng cách cộng thêm `min` (đã lấy `Math.abs(min)` trước đó).
+
+* Ví dụ:
+
+  * Nếu `min = 5` (giá trị nhỏ nhất là -5),
+  * thì `head.val = -5` → index = `-5 + 5 = 0`
+  * `head.val = 0` → index = `0 + 5 = 5`
+  * `head.val = 7` → index = `7 + 5 = 12`
+
+=> Như vậy tất cả giá trị đều ánh xạ về index ≥ 0.
+
+---
+
+### 3. Tại sao `++`?
+
+* Vì ta muốn **đếm số lần** xuất hiện của giá trị đó.
+* Mỗi khi gặp một `head.val`, ta tăng bộ đếm của nó lên 1.
+
+Ví dụ:
+
+```
+Danh sách: 1 -> 3 -> 1 -> -2
+min = 2 (do giá trị nhỏ nhất là -2 → lấy Math.abs(-2))
+
+freq[1 + 2]++  // freq[3]++
+freq[3 + 2]++  // freq[5]++
+freq[1 + 2]++  // freq[3]++
+freq[-2 + 2]++ // freq[0]++
+```
+
+Kết quả:
+
+```
+freq[0] = 1  (tức có 1 số -2)
+freq[3] = 2  (tức có 2 số 1)
+freq[5] = 1  (tức có 1 số 3)
+```
+
+---
+
+### ✅ Tóm lại:
+
+* `head.val + min`: để chuyển giá trị (có thể âm) thành chỉ số hợp lệ (≥ 0).
+* `++`: để **tăng bộ đếm** số lần giá trị đó xuất hiện.
+
+---
+
+Bạn có muốn mình vẽ **min/max + ví dụ freq[] hoàn chỉnh** với một input cụ thể (ví dụ `lists = [[-2,1],[3],[1]]`) để thấy rõ cách freq hoạt động không?
+Ok, đoạn này là chỗ quan trọng trong thuật toán của bạn 👍
+
+```java
+min = Math.abs(min);
+int freq[] = new int[max + min + 1];
+```
+
+---
+
+### 1. Vì sao lại `min = Math.abs(min)`?
+
+* Ban đầu bạn duyệt tất cả giá trị trong các danh sách để tìm `min` (nhỏ nhất) và `max` (lớn nhất).
+* Nếu dữ liệu có số âm, `min` sẽ âm → khó dùng làm chỉ số mảng.
+* Vì vậy, bạn lấy **giá trị tuyệt đối của min** (`Math.abs(min)`), coi như là **độ lệch để dịch trục về 0**.
+
+Ví dụ:
+
+* Giá trị nhỏ nhất = -5, lớn nhất = 7.
+* Sau `min = Math.abs(min)`, ta có `min = 5`.
+* Khi đó:
+
+  * `-5` được ánh xạ thành index `-5 + 5 = 0`
+  * `0` ánh xạ thành index `0 + 5 = 5`
+  * `7` ánh xạ thành index `7 + 5 = 12`
+
+👉 Tất cả giá trị từ `minVal` → `maxVal` đều ánh xạ thành index ≥ 0.
+
+---
+
+### 2. Vì sao `max + min + 1`?
+
+* `max` ở đây là giá trị lớn nhất trong danh sách.
+* `min` lúc này là **độ dịch** (offset).
+* Khi ánh xạ: `index = head.val + min`.
+
+  * Giá trị nhỏ nhất → index = 0
+  * Giá trị lớn nhất → index = `max + min`
+
+⇒ Mảng `freq` cần có **kích thước = max + min + 1** để chứa đủ mọi index từ 0 đến `max+min`.
+
+---
+
+### 3. Ví dụ minh họa
+
+Giả sử các danh sách có các giá trị:
+
+```
+[-5, -3, 0, 2, 7]
+```
+
+* Bước 1: Tìm min, max
+
+  * min = -5
+  * max = 7
+
+* Bước 2: Dịch trục
+
+  ```
+  min = Math.abs(min) = 5
+  ```
+
+* Bước 3: Tạo freq
+
+  ```
+  freq = new int[max + min + 1] 
+       = new int[7 + 5 + 1] 
+       = new int[13]
+  ```
+
+  ⇒ mảng có chỉ số từ 0 đến 12.
+
+* Bước 4: Ánh xạ
+
+  * `-5` → index = -5 + 5 = 0
+  * `-3` → index = -3 + 5 = 2
+  * `0`  → index = 0 + 5 = 5
+  * `2`  → index = 2 + 5 = 7
+  * `7`  → index = 7 + 5 = 12
+
+---
+
+✅ **Tóm lại**:
+
+* `min = Math.abs(min)` để làm **độ dịch**, chuyển giá trị âm thành chỉ số dương.
+* `max + min + 1` là kích thước mảng cần thiết để bao hết từ giá trị nhỏ nhất tới lớn nhất sau khi dịch.
+
+---
+
+Bạn có muốn mình viết thử code Java nhỏ in ra mapping từ `head.val → index` để trực quan hơn không?
+Ok mình giải thích thật dễ hiểu nha 👇
+
+---
+
+### Vấn đề chính
+
+Bạn muốn tạo một **mảng tần suất (frequency array)** để đếm số lần xuất hiện của từng giá trị trong các node của linked list.
+
+Trong mảng, **chỉ số (index)** phải luôn là **số nguyên không âm**. Nhưng trong linked list, giá trị (`val`) có thể là **âm, 0, hoặc dương**.
+
+---
+
+### Vì sao `+ min`?
+
+Ví dụ:
+Danh sách có giá trị: `[-3, -1, 0, 2, 5]`
+
+* Giá trị nhỏ nhất (**min**) = `-3`
+* Giá trị lớn nhất (**max**) = `5`
+
+Nếu bạn tạo mảng `freq[max+1] = freq[6]`, bạn **không thể lưu `-3` ở chỉ số -3** → vì mảng không có index âm.
+
+👉 Cách giải quyết: **Dời tất cả giá trị sang dương**.
+
+* Công thức: `freq[value - min]++` hoặc `freq[value + |min|]++`
+
+Ví dụ:
+
+```
+value = -3 → index = -3 - (-3) = 0
+value = -1 → index = -1 - (-3) = 2
+value =  0 → index = 0 - (-3) = 3
+value =  2 → index = 2 - (-3) = 5
+value =  5 → index = 5 - (-3) = 8
+```
+
+---
+
+### Vì sao `max + min + 1`?
+
+Sau khi dịch sang dương, ta cần biết **kích thước mảng tối thiểu**.
+
+* Khoảng giá trị từ `min` → `max` có tổng số phần tử là:
+
+  ```
+  (max - min + 1)
+  ```
+
+* Nhưng trong code bạn viết:
+
+  ```java
+  min = Math.abs(min);
+  int freq[] = new int[max + min + 1];
+  ```
+
+  tức là bạn **dùng |min| thay vì (−min)**.
+
+Ví dụ:
+
+* `min = -3 → Math.abs(min) = 3`
+* `max = 5`
+* `max + min + 1 = 5 + 3 + 1 = 9`
+* Mảng `freq` sẽ có index từ `0..8`, vừa đủ để chứa giá trị từ `-3..5`. ✅
+
+---
+
+👉 Tóm lại:
+
+* `+min` (hay `+|min|`) là để **dời giá trị âm sang dương** làm index.
+* `max + min + 1` chính là **độ dài mảng**, đủ để chứa tất cả giá trị từ `min` đến `max` sau khi đã dịch.
+
+---
+
+Bạn có muốn mình viết **ví dụ code minh họa in ra mảng freq** (trước khi dịch và sau khi dịch) để bạn thấy rõ cơ chế không?
+Ok, mình giải thích từng bước đoạn code này nha 👇
+
+---
+
+### Bối cảnh
+
+Bạn đang viết hàm **mergeKLists** (gộp K danh sách liên kết đã sắp xếp).
+Trước đó bạn đã duyệt toàn bộ node, đếm tần suất giá trị trong mảng `freq`.
+Giờ bạn cần **tạo lại linked list đã gộp**, theo thứ tự tăng dần.
+
+---
+
+### Code phân tích
+
+```java
+for (int i = 0; i < freq.length; i++) {
+    if (freq[i] > 0) {
+        int val = i - min;   // dịch ngược index về giá trị gốc
+        while (freq[i]-- > 0) {  // thêm freq[i] lần node vào danh sách
+            temp.next = new ListNode(val);
+            temp = temp.next;
+        }
+    }
+}
+return dummy.next;
+```
+
+---
+
+### Giải thích chi tiết
+
+1. **`for (int i = 0; i < freq.length; i++)`**
+
+   * Duyệt toàn bộ mảng tần suất `freq`.
+   * Mỗi `i` đại diện cho một giá trị gốc đã được dịch (do cộng `min` lúc lưu).
+
+---
+
+2. **`if (freq[i] > 0)`**
+
+   * Chỉ quan tâm đến những giá trị xuất hiện ít nhất 1 lần.
+
+---
+
+3. **`int val = i - min;`**
+
+   * `i` là chỉ số trong mảng `freq`.
+   * Trước đó khi lưu, bạn đã làm: `freq[val + min]++`.
+   * Giờ cần **dịch ngược lại** để tìm lại giá trị thật (`val`).
+
+---
+
+4. **`while (freq[i]-- > 0)`**
+
+   * Đây là cách viết rút gọn, nghĩa là:
+
+     * Lặp đúng số lần `freq[i]`.
+     * Sau mỗi lần lặp thì giảm `freq[i]` đi 1.
+   * Ví dụ:
+
+     * Nếu `freq[i] = 3`, thì vòng lặp chạy 3 lần, và sau khi xong `freq[i] = 0`.
+
+---
+
+5. **`temp.next = new ListNode(val); temp = temp.next;`**
+
+   * Tạo node mới có giá trị `val`.
+   * Gắn node đó vào cuối danh sách liên kết hiện tại.
+   * Dời con trỏ `temp` sang node mới này.
+
+---
+
+6. **`return dummy.next;`**
+
+   * `dummy` là node giả tạo lúc đầu để dễ thao tác.
+   * `dummy.next` chính là **head** của danh sách liên kết đã gộp và sắp xếp.
+
+---
+
+### Ví dụ minh họa
+
+Giả sử input là 3 linked list:
+
+```
+[1, 4]
+[2, 2, 5]
+[1, 3]
+```
+
+👉 Sau khi đếm tần suất (`freq`):
+
+```
+freq[1] = 2
+freq[2] = 2
+freq[3] = 1
+freq[4] = 1
+freq[5] = 1
+```
+
+👉 Vòng `for` sẽ sinh ra linked list:
+
+```
+1 -> 1 -> 2 -> 2 -> 3 -> 4 -> 5
+```
+
+---
+
+👉 Tóm lại:
+Đoạn code này **dùng mảng tần suất để tái tạo lại linked list theo thứ tự tăng dần**.
+
+* `i` là index đã dịch,
+* `val = i - min` khôi phục giá trị thật,
+* `while (freq[i]-- > 0)` tạo đúng số node tương ứng.
+
+---
+
+Bạn có muốn mình viết **phiên bản đầy đủ code mergeKLists bằng Counting Sort** (cả phần tính min/max, tạo freq, và tái tạo danh sách) không?
+Ok, mình vẽ sơ đồ trực quan để bạn dễ thấy **quá trình dịch giá trị → lưu trong mảng freq → rồi dịch ngược lại** 👇
+
+---
+
+### 🎯 Giả sử dữ liệu gốc:
+
+```
+[-3, -1, 0, 2]
+```
+
+* minValue = **-3**
+* maxValue = **2**
+* min = `abs(minValue)` = 3
+* freq.length = `max + min + 1 = 2 + 3 + 1 = 6`
+
+---
+
+### 1️⃣ Dịch giá trị gốc sang chỉ số mảng
+
+Mỗi giá trị gốc `val` → lưu vào `freq[val + min]`
+
+```
+ val   + min (=3)   → index trong freq
+-------------------------------------
+ -3    + 3 = 0      → freq[0]++
+ -1    + 3 = 2      → freq[2]++
+  0    + 3 = 3      → freq[3]++
+  2    + 3 = 5      → freq[5]++
+```
+
+👉 Mảng freq sau khi đếm:
+
+```
+index:  0   1   2   3   4   5
+freq : [1, 0, 1, 1, 0, 1]
+```
+
+---
+
+### 2️⃣ Duyệt mảng freq để khôi phục giá trị
+
+Công thức:
+
+```java
+val = i - min
+```
+
+```
+ index   freq[i]   val = i - min (3)
+------------------------------------
+   0        1           0 - 3 = -3
+   1        0           1 - 3 = -2   (nhưng freq=0 → bỏ qua)
+   2        1           2 - 3 = -1
+   3        1           3 - 3 = 0
+   4        0           4 - 3 = 1   (bỏ qua)
+   5        1           5 - 3 = 2
+```
+
+---
+
+### 3️⃣ Kết quả cuối cùng
+
+Ta tái tạo lại list:
+
+```
+-3 → -1 → 0 → 2
+```
+
+Đúng thứ tự ban đầu đã merge sorted! ✅
+
+---
+
+📌 **Tóm lại sơ đồ:**
+
+```
+Giá trị gốc (val) ──(+min)──▶ index freq
+       ▲                             │
+       └──────(i - min)──────────────┘
+```
+
+---
+
+Bạn có muốn mình viết lại đoạn code **Java có thêm println debug** để khi chạy bạn thấy rõ mapping `val → index` và `index → val` không?
+Ok mình tập trung giải thích đúng chỗ bạn chưa hiểu:
+
+`val = i - min;` dùng để **khôi phục giá trị thật** từ chỉ số `i` trong mảng `freq`.
+
+---
+
+### Vì sao cần làm vậy?
+
+Khi lưu giá trị vào mảng `freq`, ta đã **dịch đi** một đoạn `+min` để loại bỏ số âm.
+👉 Ví dụ: nếu `min = 3` (do trong danh sách có số âm nhỏ nhất là -3), thì:
+
+* Giá trị thật `-3` được lưu tại `freq[0]` (vì -3 + 3 = 0)
+* Giá trị thật `-1` được lưu tại `freq[2]` (vì -1 + 3 = 2)
+* Giá trị thật `0` được lưu tại `freq[3]` (vì 0 + 3 = 3)
+* Giá trị thật `2` được lưu tại `freq[5]` (vì 2 + 3 = 5)
+
+---
+
+### Khi duyệt ngược lại
+
+Lúc xuất dữ liệu, `i` chính là chỉ số trong mảng `freq`.
+Nhưng đó là chỉ số **đã bị dịch**.
+Muốn lấy lại giá trị ban đầu ⇒ phải **dịch ngược lại**.
+
+👉 Công thức:
+
+```
+val = i - min
+```
+
+---
+
+### Ví dụ minh họa
+
+Giả sử `min = 3`.
+
+| i (chỉ số mảng) | val = i - min | Ý nghĩa              |
+| --------------- | ------------- | -------------------- |
+| 0               | 0 - 3 = -3    | Khôi phục giá trị -3 |
+| 2               | 2 - 3 = -1    | Khôi phục giá trị -1 |
+| 3               | 3 - 3 = 0     | Khôi phục giá trị 0  |
+| 5               | 5 - 3 = 2     | Khôi phục giá trị 2  |
+
+---
+
+👉 Vậy: `val = i - min` chính là bước **dịch ngược lại** để lấy số gốc (trước khi cộng `+min`).
+
+---
+
+Bạn có muốn mình viết một đoạn code Java nhỏ **in ra từng bước** để thấy rõ `val` biến đổi thế nào không?

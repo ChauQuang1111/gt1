@@ -1,0 +1,128 @@
+ Để tìm tất cả vị trí xuất hiện của các phần tử giống nhau** (phần tử lặp lại) trong một `list` hoặc `string` trong Python, bạn không thể dùng trực tiếp phương thức `index()` vì nó chỉ trả về **vị trí xuất hiện đầu tiên** thôi.
+
+Cách hiệu quả nhất là sử dụng một **vòng lặp `for` kết hợp với `enumerate()`** để duyệt qua cả phần tử và chỉ số của nó.
+
+-----
+
+## 💡 Phương pháp tốt nhất: Dùng `enumerate()`
+
+Hàm `enumerate()` sẽ trả về cặp **(chỉ số, giá trị)** cho mỗi phần tử, giúp bạn dễ dàng so sánh giá trị và lưu lại chỉ số.
+
+### Ví dụ cho List (Danh sách)
+
+```python
+def tim_tat_ca_vi_tri(list_hoac_chuoi, phan_tu_can_tim):
+    """
+    Tìm tất cả các chỉ số (index) mà phần tử cần tìm xuất hiện.
+    """
+    vi_tri_tim_thay = []
+    # Dùng enumerate để duyệt qua cả chỉ số (index) và giá trị (value)
+    for index, value in enumerate(list_hoac_chuoi):
+        if value == phan_tu_can_tim:
+            vi_tri_tim_thay.append(index)
+    return vi_tri_tim_thay
+
+# Ví dụ
+my_list = [10, 20, 30, 20, 40, 20, 50]
+phan_tu = 20
+ket_qua = tim_tat_ca_vi_tri(my_list, phan_tu)
+
+print(f"Danh sách: {my_list}")
+print(f"Phần tử cần tìm: {phan_tu}")
+print(f"Các vị trí xuất hiện: {ket_qua}")
+# Kết quả: Các vị trí xuất hiện: [1, 3, 5]
+```
+
+### Ví dụ cho String (Chuỗi)
+
+Cách này cũng hoạt động tương tự cho chuỗi vì chuỗi cũng là một loại iterable (có thể lặp):
+
+```python
+my_string = "hello world"
+ky_tu = 'l'
+ket_qua = tim_tat_ca_vi_tri(my_string, ky_tu)
+
+print(f"Chuỗi: '{my_string}'")
+print(f"Ký tự cần tìm: '{ky_tu}'")
+print(f"Các vị trí xuất hiện: {ket_qua}")
+# Kết quả: Các vị trí xuất hiện: [2, 3, 9]
+```
+
+-----
+
+## ⚡️ Phương pháp thay thế: Sử dụng List Comprehension
+
+Nếu bạn muốn viết gọn hơn, có thể dùng **List Comprehension** (cú pháp tạo danh sách ngắn gọn):
+
+```python
+my_list = [10, 20, 30, 20, 40, 20, 50]
+phan_tu = 20
+
+# Cú pháp List Comprehension
+vi_tri = [index for index, value in enumerate(my_list) if value == phan_tu]
+
+print(f"Các vị trí xuất hiện: {vi_tri}")
+# Kết quả: [1, 3, 5]
+```
+Hàm `set()` trong Python được sử dụng để tạo một **tập hợp (set)**. Trong trường hợp bạn muốn dùng `set` để tìm vị trí của **tất cả các phần tử bị trùng lặp** trong một list, bạn có thể áp dụng cách sau:
+
+Vì **set chỉ chứa các giá trị duy nhất** (unique values), nên bạn có thể dùng nó để tìm ra những phần tử nào bị lặp lại, sau đó dùng các phần tử đó để tìm tất cả các vị trí của chúng trong list ban đầu.
+
+## 1\. Tìm ra các phần tử bị trùng lặp
+
+Bạn dùng `set` để tìm các giá trị duy nhất có trong list, sau đó dùng phương thức `count()` để kiểm tra xem giá trị đó xuất hiện bao nhiêu lần.
+
+```python
+def find_duplicate_elements(input_list):
+    # Dùng set để lấy danh sách các phần tử duy nhất
+    unique_elements = set(input_list) 
+    
+    # Dùng list comprehension để lọc ra các phần tử xuất hiện > 1 lần
+    duplicate_elements = {item for item in unique_elements if input_list.count(item) > 1}
+    
+    return duplicate_elements
+
+my_list = [10, 20, 30, 20, 40, 30, 50, 20, 10]
+duplicates = find_duplicate_elements(my_list)
+
+print(f"Các phần tử bị trùng lặp (dùng set): {duplicates}")
+# Kết quả: {10, 20, 30}
+```
+
+-----
+
+## 2\. Tìm tất cả vị trí của các phần tử trùng lặp
+
+Sau khi đã xác định được các phần tử bị trùng lặp, bạn lặp qua list gốc và dùng hàm `enumerate()` để thu thập tất cả các chỉ mục (index) của các phần tử đó.
+
+```python
+def find_all_indices_of_duplicates(input_list):
+    # Bước 1: Tìm các phần tử bị trùng lặp
+    unique_elements = set(input_list)
+    duplicate_elements = {item for item in unique_elements if input_list.count(item) > 1}
+
+    # Bước 2: Tìm tất cả các vị trí cho các phần tử bị trùng lặp
+    # Dùng Dictionary để lưu trữ: {phần tử: [list_vị_trí]}
+    duplicate_indices = {}
+    
+    for index, value in enumerate(input_list):
+        if value in duplicate_elements:
+            if value not in duplicate_indices:
+                duplicate_indices[value] = []
+            duplicate_indices[value].append(index)
+            
+    return duplicate_indices
+
+my_list = [10, 20, 30, 20, 40, 30, 50, 20, 10]
+result = find_all_indices_of_duplicates(my_list)
+
+print("Vị trí của tất cả các phần tử trùng lặp:")
+for element, indices in result.items():
+    print(f"Phần tử {element}: {indices}")
+# Kết quả:
+# Phần tử 10: [0, 8]
+# Phần tử 20: [1, 3, 7]
+# Phần tử 30: [2, 5]
+```
+
+**Lưu ý:** Việc sử dụng `list.count()` trong vòng lặp có thể không hiệu quả với list rất lớn. Phương pháp hiệu quả hơn là sử dụng `collections.Counter` hoặc `defaultdict` như đã trình bày trong câu trả lời trước. Tuy nhiên, cách làm trên đã hoàn thành đúng yêu cầu là sử dụng `set` để xác định các phần tử cần tìm.

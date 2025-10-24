@@ -1,0 +1,537 @@
+Adjacent Increasing Subarrays Detection II
+class Solution {
+    public int maxIncreasingSubarrays(List<Integer> list) {
+        Integer[] nums = list.toArray(Integer[]::new);
+        int n = nums.length, i = 0, res = 0;
+        int prev = 0;
+
+        while (i < n) {
+            int start = i;
+
+            while (i + 1 < n && nums[i] < nums[i + 1]) {
+                i++;
+            }
+
+            int curr = i - start + 1;
+            res = Math.max(res, Math.max(curr / 2, Math.min(curr, prev)));
+            
+            prev = curr;
+            i++;
+        }
+        
+        return res;
+    }
+}
+Rất hay 👏 — dòng này:
+
+```java
+Integer[] nums = list.toArray(Integer[]::new);
+```
+
+là **một cú pháp ngắn gọn và hiện đại trong Java (từ Java 11 trở lên)**, dùng để **chuyển một `List<Integer>` sang một mảng `Integer[]`.**
+
+---
+
+## 🔍 Giải thích chi tiết từng phần:
+
+### 1️⃣ `list.toArray(...)`
+
+* Đây là **phương thức của interface `List`** trong Java.
+* Nó có tác dụng **chuyển danh sách (`List`) thành một mảng (`Array`)**.
+
+Ví dụ:
+
+```java
+List<Integer> list = Arrays.asList(1, 2, 3);
+Integer[] arr = list.toArray(new Integer[0]);
+```
+
+👉 Kết quả: `arr = [1, 2, 3]`
+
+---
+
+### 2️⃣ `Integer[]::new`
+
+Đây là **method reference** (tham chiếu hàm) — một cú pháp ngắn gọn trong Java 8+.
+
+Cụ thể:
+
+* `Integer[]::new` tương đương với một **lambda expression**:
+
+  ```java
+  size -> new Integer[size]
+  ```
+
+  Nghĩa là: “Tạo một mảng `Integer` mới có kích thước `size`.”
+
+---
+
+### 3️⃣ Vì sao viết `toArray(Integer[]::new)`?
+
+Java có 2 cách phổ biến để chuyển `List` sang mảng:
+
+| Cách cũ                        | Cách mới (từ Java 11)            |
+| ------------------------------ | -------------------------------- |
+| `list.toArray(new Integer[0])` | ✅ `list.toArray(Integer[]::new)` |
+
+Hai cách **cho kết quả giống nhau**, nhưng:
+
+* `Integer[]::new` **ngắn gọn hơn**.
+* **Tránh việc cấp phát mảng rỗng** chỉ để lấy kích thước.
+* **Hiệu suất tốt hơn một chút**, vì JVM có thể tối ưu trực tiếp.
+
+---
+
+### 💡 Tóm lại:
+
+```java
+Integer[] nums = list.toArray(Integer[]::new);
+```
+
+nghĩa là:
+
+> “Chuyển danh sách `list` kiểu `List<Integer>` thành một mảng `nums` kiểu `Integer[]`.”
+
+---
+
+### 🧩 Ví dụ minh họa:
+
+```java
+List<Integer> list = Arrays.asList(5, 10, 15);
+Integer[] nums = list.toArray(Integer[]::new);
+
+System.out.println(Arrays.toString(nums)); // [5, 10, 15]
+```
+
+---
+
+Bạn có muốn mình giải thích **sự khác biệt giữa `Integer[]` và `int[]`** (tức là wrapper class vs primitive array) — vì nó rất quan trọng khi làm LeetCode trong Java không?
+Rất hay 👍 — dòng này là **phần cốt lõi của thuật toán**, giúp **tìm ra một đoạn con tăng liên tiếp** (increasing subarray) trong mảng.
+Giờ mình sẽ giải thích thật chi tiết từng phần nhé 👇
+
+---
+
+### 🔹 Cả đoạn code:
+
+```java
+while (i + 1 < n && nums[i] < nums[i + 1]) {
+    i++;
+}
+```
+
+---
+
+### 🔍 Ý nghĩa tổng quát:
+
+➡️ **Duyệt liên tục các phần tử kế tiếp trong mảng miễn là chúng tạo thành một dãy tăng.**
+
+Nói cách khác:
+
+> “Chừng nào phần tử hiện tại nhỏ hơn phần tử kế tiếp (`nums[i] < nums[i+1]`), ta tiếp tục mở rộng đoạn tăng đó.”
+
+---
+
+### 🔧 Phân tích chi tiết điều kiện `while`:
+
+| Phần                    | Ý nghĩa                                                                |
+| ----------------------- | ---------------------------------------------------------------------- |
+| `i + 1 < n`             | đảm bảo **không bị vượt giới hạn mảng** (vì `nums[i+1]` phải tồn tại). |
+| `nums[i] < nums[i + 1]` | kiểm tra xem **cặp phần tử hiện tại và kế tiếp có tăng không**.        |
+
+Nếu cả hai điều kiện đều đúng, ta **tăng `i` lên 1** để tiếp tục kiểm tra phần tử kế tiếp.
+
+---
+
+### 🔁 Ví dụ minh họa:
+
+Giả sử:
+
+```java
+nums = [1, 2, 3, 2, 5]
+```
+
+Bắt đầu:
+
+```
+i = 0 → nums[0] = 1, nums[1] = 2  → 1 < 2 ✅ → i = 1
+i = 1 → nums[1] = 2, nums[2] = 3  → 2 < 3 ✅ → i = 2
+i = 2 → nums[2] = 3, nums[3] = 2  → 3 < 2 ❌ → dừng
+```
+
+👉 Khi vòng while dừng, ta có **một đoạn tăng liên tiếp [1, 2, 3]**,
+và `i = 2` là **vị trí kết thúc** của đoạn này.
+
+---
+
+### 🔸 Sau khi vòng while kết thúc:
+
+```java
+int curr = i - start + 1;
+```
+
+→ Tính **độ dài của đoạn tăng** vừa tìm được (từ `start` đến `i`).
+
+---
+
+### 🧠 Tóm tắt lại:
+
+Vòng `while` này:
+
+* Dò từng phần tử để tìm **đoạn tăng liên tiếp** trong mảng.
+* Dừng lại khi gặp **điểm gãy** (phần tử không còn tăng).
+* Giúp ta **chia mảng thành các đoạn tăng rời nhau**, ví dụ:
+
+  ```
+  [1,2,3,4,2,3,4,5]
+  ↓       ↓
+  [1,2,3,4] và [2,3,4,5]
+  ```
+
+---
+
+Bạn có muốn mình minh họa trực quan hơn (vẽ sơ đồ dòng chảy i chạy qua từng phần tử) để dễ hình dung không?
+Rất hay 👏 — đoạn này là **trái tim của thuật toán**, nơi ta **tính độ dài của đoạn tăng vừa tìm được** và **cập nhật kết quả lớn nhất** (`res`).
+Giờ mình giải thích từng dòng một cách chi tiết nhất nhé 👇
+
+---
+
+### 🔹 Toàn bộ đoạn code:
+
+```java
+int curr = i - start + 1;
+res = Math.max(res, Math.max(curr / 2, Math.min(curr, prev)));
+
+prev = curr;
+i++;
+```
+
+---
+
+## 🧩 1️⃣ `int curr = i - start + 1;`
+
+👉 Đây là **độ dài của đoạn tăng hiện tại (current increasing subarray).**
+
+* `start` là **vị trí bắt đầu** của đoạn tăng (được lưu trước đó).
+* `i` là **vị trí kết thúc** (sau vòng `while (nums[i] < nums[i+1])` dừng lại).
+
+➡️ Công thức `i - start + 1` = số phần tử trong đoạn `[start, i]`.
+
+**Ví dụ:**
+
+```
+nums = [1, 2, 3, 5, 4]
+start = 0, i = 3
+→ curr = 3 - 0 + 1 = 4
+→ đoạn tăng là [1, 2, 3, 5]
+```
+
+---
+
+## 🧩 2️⃣ `res = Math.max(res, Math.max(curr / 2, Math.min(curr, prev)));`
+
+Đây là phần **tính giá trị tốt nhất (res)** đến thời điểm hiện tại.
+
+Giải thích từng phần:
+
+| Biểu thức                                  | Ý nghĩa                                                                                                                                                                                    |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `curr / 2`                                 | Nếu đoạn hiện tại **rất dài**, ta có thể **tách nó làm hai đoạn tăng liên tiếp** (ví dụ `[1,2,3,4] → [1,2] + [3,4]`, mỗi đoạn dài `curr/2`).                                               |
+| `Math.min(curr, prev)`                     | Nếu **có đoạn tăng liền trước** (`prev`), ta có thể **ghép hai đoạn tăng kề nhau**. Chiều dài tối đa của hai đoạn kề nhau là **độ dài của đoạn ngắn hơn** (vì phải liền nhau và đều tăng). |
+| `Math.max(curr / 2, Math.min(curr, prev))` | Chọn **giá trị tốt hơn** giữa hai cách trên.                                                                                                                                               |
+| `Math.max(res, …)`                         | So sánh với **kết quả cũ** để giữ lại giá trị lớn nhất tổng thể.                                                                                                                           |
+
+---
+
+### 🔍 Ví dụ minh họa:
+
+#### Ví dụ 1:
+
+```
+nums = [1, 2, 3, 4, 2, 3, 4, 5]
+
+Các đoạn tăng:
+[1,2,3,4] → curr = 4
+[2,3,4,5] → curr = 4, prev = 4
+```
+
+→ `Math.min(curr, prev) = 4`, `curr / 2 = 2`
+→ `res = max(res, max(4, 2)) = 4`
+
+✅ Kết quả = 4 → hai đoạn tăng kề nhau đều dài 4.
+
+---
+
+#### Ví dụ 2:
+
+```
+nums = [1, 2, 3, 4, 5]
+Chỉ có một đoạn tăng: curr = 5
+→ prev = 0
+```
+
+`Math.min(curr, prev) = 0`, `curr / 2 = 2`
+→ `res = max(0, max(2, 0)) = 2`
+✅ Ta có thể tách [1,2,3,4,5] thành [1,2] và [3,4,5] ⇒ mỗi bên ít nhất 2 phần tử.
+
+---
+
+## 🧩 3️⃣ `prev = curr;`
+
+Ghi nhớ độ dài đoạn tăng hiện tại (`curr`) để **làm đoạn trước** khi tìm đoạn tăng tiếp theo.
+
+---
+
+## 🧩 4️⃣ `i++;`
+
+Tiếp tục dịch sang phần tử kế tiếp để **tìm đoạn tăng mới.**
+
+---
+
+## 🧠 Tóm tắt ý tưởng:
+
+| Biến              | Vai trò                               |
+| ----------------- | ------------------------------------- |
+| `curr`            | Độ dài đoạn tăng hiện tại             |
+| `prev`            | Độ dài đoạn tăng trước đó             |
+| `res`             | Kết quả lớn nhất tìm được             |
+| `curr/2`          | Tách một đoạn tăng dài thành hai phần |
+| `min(curr, prev)` | Ghép hai đoạn tăng liền kề            |
+| `Math.max(...)`   | Giữ giá trị lớn nhất                  |
+
+---
+
+### 💡 Tóm gọn lại:
+
+Mỗi lần tìm được một đoạn tăng liên tiếp, ta:
+
+1. Tính độ dài đoạn (`curr`).
+2. So sánh hai trường hợp:
+
+   * Tách đoạn hiện tại làm đôi (`curr/2`).
+   * Ghép với đoạn trước (`min(curr, prev)`).
+3. Giữ giá trị lớn nhất vào `res`.
+
+---
+
+Bạn có muốn mình thêm **hình minh họa bằng mũi tên cho biến `i`, `start`, `curr`, `prev` di chuyển** để thấy trực quan hơn cách thuật toán hoạt động không?
+Câu hỏi này rất hay 👏 — đây chính là phần khiến nhiều người **rối khi đọc lần đầu**, vì có **hai `Math.max` và một `Math.min`** lồng nhau.
+Giờ mình sẽ **giải thích từng tầng rõ ràng** cho bạn hiểu **ý nghĩa toán học và logic của từng hàm** nhé 👇
+
+---
+
+## 🔹 Câu lệnh đầy đủ:
+
+```java
+res = Math.max(res, Math.max(curr / 2, Math.min(curr, prev)));
+```
+
+Ta sẽ **phân tích từ trong ra ngoài**.
+
+---
+
+## 🧩 1️⃣ `Math.min(curr, prev)`
+
+👉 Hàm này chọn **độ dài nhỏ hơn** giữa:
+
+* `curr`: độ dài đoạn tăng hiện tại,
+* `prev`: độ dài đoạn tăng liền trước.
+
+**→ Ý nghĩa:**
+Nếu ta có hai đoạn tăng **liền kề nhau**, thì khi ghép chúng lại,
+độ dài tối đa của “cặp đoạn tăng liền nhau” chỉ bằng **độ dài của đoạn ngắn hơn** (vì đoạn ngắn hơn sẽ giới hạn cặp đó).
+
+**Ví dụ:**
+
+```
+Đoạn 1: [1,2,3,4] → độ dài 4
+Đoạn 2: [2,3,4,5,6] → độ dài 5
+→ Cặp liền nhau = min(4, 5) = 4
+```
+
+---
+
+## 🧩 2️⃣ `Math.max(curr / 2, Math.min(curr, prev))`
+
+Bây giờ ta so sánh **hai tình huống khác nhau** để chọn tình huống tốt hơn:
+
+| Trường hợp             | Ý nghĩa                                                                                                   | Khi nào dùng                                                    |
+| ---------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `curr / 2`             | Nếu chỉ có **một đoạn tăng dài**, ta có thể **tách nó làm hai nửa liền nhau** (mỗi nửa là một đoạn tăng). | Khi chưa có đoạn trước (`prev = 0`) hoặc đoạn hiện tại quá dài. |
+| `Math.min(curr, prev)` | Nếu có **hai đoạn tăng kề nhau**, ta **ghép chúng lại**.                                                  | Khi có hai đoạn tăng liên tiếp.                                 |
+
+**→ `Math.max(...)` ở đây chọn cách nào cho kết quả lớn hơn.**
+
+---
+
+## 🧩 3️⃣ `Math.max(res, ...)`
+
+Sau khi tính được giá trị tốt nhất cho trường hợp hiện tại,
+ta cần so sánh với **kết quả lớn nhất từ trước tới giờ (`res`)** để **giữ lại giá trị lớn nhất tổng thể**.
+
+**→ Đây là lý do có thêm `Math.max` ở ngoài cùng.**
+
+---
+
+## 💡 Tóm tắt logic:
+
+Công thức ba tầng này có thể đọc hiểu như sau:
+
+> “Cập nhật kết quả lớn nhất (`res`) bằng cách lấy giá trị lớn nhất giữa kết quả cũ và hai khả năng mới:
+>
+> * hoặc tách đoạn hiện tại làm hai (`curr/2`)
+> * hoặc ghép đoạn hiện tại với đoạn trước (`min(curr, prev)`).”
+
+---
+
+## 🔍 Ví dụ minh họa:
+
+Giả sử mảng:
+
+```
+nums = [1,2,3,4,2,3,4,5]
+```
+
+Ta có:
+
+```
+Đoạn 1: [1,2,3,4] → curr = 4
+Đoạn 2: [2,3,4,5] → prev = 4
+```
+
+Khi xử lý đoạn 2:
+
+```
+curr / 2 = 4 / 2 = 2
+min(curr, prev) = min(4,4) = 4
+→ max(curr/2, min(curr, prev)) = max(2,4) = 4
+→ res = max(res, 4) = 4
+```
+
+✅ Kết quả là `4`.
+
+---
+
+## 🧠 Tóm tắt biểu thức theo ngôn ngữ tự nhiên:
+
+| Biểu thức               | Nghĩa                                            |
+| ----------------------- | ------------------------------------------------ |
+| `Math.min(curr, prev)`  | Ghép hai đoạn tăng kề nhau, lấy độ dài nhỏ hơn.  |
+| `Math.max(curr / 2, …)` | Nếu không thể ghép, chia đôi đoạn tăng dài nhất. |
+| `Math.max(res, …)`      | Cập nhật kết quả tối đa toàn cục.                |
+
+---
+
+### 👉 Câu nhớ dễ hiểu:
+
+> “Trong mỗi bước, ta chọn giữa:
+>
+> * Tách một đoạn tăng dài làm hai, hoặc
+> * Ghép hai đoạn tăng kề nhau.
+>
+> Sau đó, lấy kết quả tốt nhất trong toàn bộ mảng.”
+
+---
+
+Bạn có muốn mình **vẽ sơ đồ cây biểu thức (min–max)** để bạn thấy rõ cách `Math.max` và `Math.min` kết hợp không?
+Tuyệt vời 👏 Dưới đây là **sơ đồ cây biểu thức** cho dòng:
+
+```java
+res = Math.max(res, Math.max(curr / 2, Math.min(curr, prev)));
+```
+
+Mình sẽ **vẽ theo dạng cây logic** để bạn thấy rõ **thứ tự tính toán** và **ý nghĩa của từng nhánh** 👇
+
+---
+
+## 🌳 **Sơ đồ cây biểu thức**
+
+```
+                ┌────────────────────────────────────┐
+                │        Math.max (cấp ngoài)         │
+                │  → chọn giữa res và giá trị mới     │
+                └────────────────────────────────────┘
+                             ▲
+                             │
+               ┌─────────────┴──────────────────┐
+               │                                │
+            (A) res                      (B) Math.max(curr / 2, Math.min(curr, prev))
+                                            ▲
+                                            │
+                          ┌─────────────────┴─────────────────┐
+                          │                                   │
+                    (B1) curr / 2                     (B2) Math.min(curr, prev)
+                                                       ▲
+                                                       │
+                                    ┌──────────────────┴──────────────────┐
+                                    │                                     │
+                              (C1) curr                           (C2) prev
+```
+
+---
+
+## 🔍 Giải thích theo cây:
+
+### 🟩 **Tầng trong cùng (`Math.min(curr, prev)`)**
+
+* So sánh **độ dài đoạn tăng hiện tại** (`curr`)
+  với **độ dài đoạn tăng trước đó** (`prev`).
+* Kết quả là đoạn ngắn hơn → vì hai đoạn liền kề chỉ có thể "ghép" đến độ dài nhỏ hơn.
+
+> Ví dụ: curr=5, prev=3 → min=3 → hai đoạn ghép nhau tối đa dài 3.
+
+---
+
+### 🟨 **Tầng giữa (`Math.max(curr/2, Math.min(curr, prev))`)**
+
+* So sánh **hai chiến lược**:
+
+  1. **Tách đoạn hiện tại** làm 2 phần: `curr / 2`.
+  2. **Ghép đoạn hiện tại với đoạn trước**: `min(curr, prev)`.
+
+→ Chọn chiến lược nào tạo được “đôi đoạn tăng” dài hơn.
+
+> Ví dụ: curr=6, prev=3 → curr/2=3, min=3 → max=3
+> Ví dụ: curr=8, prev=2 → curr/2=4, min=2 → max=4 (tách tốt hơn ghép)
+
+---
+
+### 🟦 **Tầng ngoài cùng (`Math.max(res, ...)`)**
+
+* So sánh **giá trị mới vừa tính được** (ở tầng giữa)
+  với **kết quả tốt nhất trước đó (`res`)**.
+* Cập nhật `res` để luôn giữ **độ dài lớn nhất toàn cục**.
+
+---
+
+## 🧠 Tổng hợp lại ý nghĩa từng tầng:
+
+| Tầng       | Biểu thức               | Ý nghĩa                                                 |
+| ---------- | ----------------------- | ------------------------------------------------------- |
+| Trong cùng | `Math.min(curr, prev)`  | Ghép hai đoạn tăng liền nhau, lấy độ dài đoạn ngắn hơn. |
+| Giữa       | `Math.max(curr / 2, …)` | So sánh giữa tách và ghép, chọn phương án dài hơn.      |
+| Ngoài cùng | `Math.max(res, …)`      | Giữ lại kết quả lớn nhất toàn mảng.                     |
+
+---
+
+## 🎯 Ví dụ minh họa thực tế
+
+Mảng:
+
+```
+nums = [1, 2, 3, 4, 2, 3, 4, 5]
+```
+
+| Biến                      | Giá trị                   |
+| ------------------------- | ------------------------- |
+| curr = 4                  | Đoạn hiện tại: [2,3,4,5]  |
+| prev = 4                  | Đoạn trước: [1,2,3,4]     |
+| curr/2 = 2                | Nếu tách đoạn hiện tại    |
+| min(curr, prev) = 4       | Nếu ghép hai đoạn kề nhau |
+| max(curr/2, min(...)) = 4 | Chọn ghép                 |
+| max(res, 4) = 4           | Cập nhật kết quả lớn nhất |
+
+✅ Kết quả cuối cùng `res = 4`.
+
+---
+
+Bạn có muốn mình **minh họa bằng mũi tên chạy trên mảng thực tế** (ví dụ `i`, `start`, `curr`, `prev` di chuyển) để thấy thuật toán hoạt động từng bước không?

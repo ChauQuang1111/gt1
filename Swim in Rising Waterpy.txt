@@ -1,0 +1,660 @@
+Swim in Rising Water
+class Solution:
+    def swimInWater(self, grid: List[List[int]]) -> int:
+        n = len(grid)
+        dirs = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+
+        visited = set()
+
+        def dfs(r, c, max_time):
+            # print(f"DFS from {(r, c)} with max time {max_time}")
+            
+            if r == n - 1 and c == n - 1:
+                return True 
+            
+            visited.add((r, c))
+
+            for dr, dc in dirs:
+                nr, nc = dr + r, dc + c
+
+                if 0 <= nr < n and 0 <= nc < n and (nr, nc) not in visited and grid[nr][nc] <= max_time:
+                    # print(f"Exploring {(nr, nc)}")
+                    if dfs(nr, nc, max_time):
+                        return True 
+        
+            return False
+        
+        s = max(grid[0][0], grid[n-1][n-1])
+        e = n * n - 1
+
+        res = e
+
+        while s <= e:
+            m = (s + e) // 2
+            visited = set()
+
+            if dfs(0, 0, m):
+                # print(f"Reachable with max time {m}")
+                e = m - 1
+                res = m
+            else:
+                s = m + 1
+        
+        return res
+		
+		
+Rồi nhé 👇 — mình sẽ **giải thích chi tiết từng dòng** trong đoạn code Python này của bài **LeetCode 778 – Swim in Rising Water**, bao gồm cả logic của hàm `dfs` và hai biến `s` – `e` ở cuối.
+
+---
+
+### 🧩 Tổng quan bài toán:
+
+Bạn có một ma trận `grid` kích thước `n x n`, trong đó:
+
+* `grid[i][j]` là **độ cao** của ô đó.
+* Nước dâng dần theo thời gian `t`.
+* Tại thời điểm `t`, bạn chỉ có thể bơi qua các ô có `grid[i][j] <= t`.
+
+👉 Mục tiêu: Tìm **thời gian nhỏ nhất** để có thể đi từ ô `(0,0)` đến ô `(n-1,n-1)`.
+
+---
+
+### 💻 Code & Giải thích từng dòng:
+
+```python
+def dfs(r, c, max_time):
+    # print(f"DFS from {(r, c)} with max time {max_time}")
+```
+
+🔹 Hàm `dfs` dùng để **kiểm tra xem có thể đi đến đích** `(n-1, n-1)` khi **mực nước hiện tại = max_time**.
+🔹 `r, c`: vị trí hiện tại.
+🔹 `max_time`: mức nước ta đang kiểm tra.
+🔹 (Dòng `print` chỉ dùng để debug, tạm thời bị comment lại.)
+
+---
+
+```python
+    if r == n - 1 and c == n - 1:
+        return True
+```
+
+✅ Nếu đã đến được ô cuối cùng `(n-1, n-1)` → có đường đi hợp lệ → trả về `True`.
+
+---
+
+```python
+    visited.add((r, c))
+```
+
+🔹 Đánh dấu ô `(r, c)` đã được thăm → tránh lặp lại và gây đệ quy vô hạn.
+
+---
+
+```python
+    for dr, dc in dirs:
+        nr, nc = dr + r, dc + c
+```
+
+🔹 Duyệt qua **4 hướng** có thể di chuyển (trái, phải, lên, xuống).
+🔹 `dirs` là danh sách các hướng:
+
+```python
+dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+```
+
+🔹 `nr, nc` là **tọa độ ô mới** sau khi di chuyển.
+
+---
+
+```python
+        if 0 <= nr < n and 0 <= nc < n and (nr, nc) not in visited and grid[nr][nc] <= max_time:
+```
+
+🔹 Kiểm tra xem ô mới `(nr, nc)` có hợp lệ không:
+
+* Nằm **trong lưới**.
+* **Chưa được thăm**.
+* Độ cao `grid[nr][nc] <= max_time` → tức là **có thể bơi tới** tại thời điểm hiện tại.
+
+---
+
+```python
+            if dfs(nr, nc, max_time):
+                return True
+```
+
+🔹 Nếu đệ quy từ ô `(nr, nc)` có thể đi đến đích → trả về `True` ngay lập tức.
+🔹 Nghĩa là đã tìm thấy **đường đi hợp lệ** cho mức nước `max_time`.
+
+---
+
+```python
+    return False
+```
+
+🔹 Nếu đã thử tất cả hướng mà không đến đích được → trả về `False`.
+🔹 Nghĩa là **mức nước `max_time` này chưa đủ cao** để đi đến cuối.
+
+---
+
+### 🔢 Hai biến cuối:
+
+```python
+s = max(grid[0][0], grid[n-1][n-1])
+e = n * n - 1
+```
+
+🔹 `s`: Mực nước nhỏ nhất có thể bắt đầu kiểm tra.
+
+* Vì bạn **phải đứng được ở ô đầu tiên (0,0)** → `grid[0][0] ≤ t`.
+* Và **phải đến được ô cuối cùng (n-1,n-1)** → `grid[n-1][n-1] ≤ t`.
+  👉 Nên mực nước ban đầu phải ít nhất là:
+
+```python
+s = max(grid[0][0], grid[n-1][n-1])
+```
+
+🔹 `e`: Mực nước lớn nhất cần kiểm tra.
+
+* Vì trong ma trận `grid`, giá trị tối đa có thể là `n*n - 1` (theo đề bài).
+  👉 Nên ta **binary search** trong khoảng `[s, e]`.
+
+---
+
+### 🧠 Tóm tắt hoạt động:
+
+* Dùng **binary search** trên `t` (mực nước).
+* Với mỗi `t = mid`, gọi `dfs(0, 0, mid)` để kiểm tra:
+  🔸 Có thể đi đến đích không?
+* Nếu có → giảm `t`.
+* Nếu không → tăng `t`.
+* Kết quả cuối cùng là **mức nước nhỏ nhất đủ để đến đích**.
+
+---
+
+Bạn có muốn mình **ghép toàn bộ đoạn code Python đầy đủ (có binary search + dfs + comment chi tiết)** cho bạn không?
+Mình có thể trình bày nó thành code hoàn chỉnh dễ đọc để bạn nắm toàn bộ flow luôn.
+Rất hay — đây là một dòng **rất quan trọng** trong thuật toán 🧠
+
+Cụ thể:
+
+```python
+e = n * n - 1
+```
+
+---
+
+### 🧩 Ý nghĩa:
+
+`e` là **mực nước lớn nhất (giá trị cao nhất có thể)** mà ta cần kiểm tra trong quá trình **binary search**.
+
+---
+
+### 💡 Giải thích chi tiết:
+
+Trong đề bài **LeetCode 778 – Swim in Rising Water**, ta có:
+
+* `grid` là một ma trận `n x n`.
+* Mỗi ô `grid[i][j]` chứa **một số nguyên duy nhất** trong phạm vi từ `0` → `n² - 1`.
+
+📘 Cụ thể:
+
+> "Each value `grid[i][j]` is unique and between 0 and n² - 1 inclusive."
+
+---
+
+### 🔢 Ví dụ:
+
+Giả sử `n = 3`, thì:
+
+* Các giá trị trong `grid` nằm trong `[0, 8]`.
+* Nghĩa là **mức nước cao nhất có thể** (tức là khi toàn bộ ô đều chìm) là `8`.
+
+Vì vậy, ta đặt:
+
+```python
+e = n * n - 1  # e = 9 - 1 = 8
+```
+
+---
+
+### 🧭 Vai trò của `e` trong thuật toán:
+
+Thuật toán **binary search** tìm mức nước nhỏ nhất `t` sao cho bạn có thể bơi từ `(0,0)` đến `(n-1,n-1)`.
+
+Ta cần một **khoảng tìm kiếm ban đầu `[s, e]`**, trong đó:
+
+* `s` = mực nước thấp nhất có thể → `max(grid[0][0], grid[n-1][n-1])`
+* `e` = mực nước cao nhất có thể → `n*n - 1`
+
+→ Vì chắc chắn nếu nước dâng **đến mức cao nhất (`e`)**, bạn **có thể đi bất kỳ đâu**.
+
+---
+
+### 🧠 Tóm tắt:
+
+| Biến | Ý nghĩa                                | Lý do chọn                                   |
+| ---- | -------------------------------------- | -------------------------------------------- |
+| `s`  | mực nước thấp nhất cần thử             | phải ít nhất bằng độ cao của ô đầu và ô cuối |
+| `e`  | mực nước cao nhất có thể có trong grid | vì giá trị lớn nhất trong grid là `n² - 1`   |
+
+---
+
+➡️ Nói ngắn gọn:
+
+```python
+e = n * n - 1
+```
+
+là **giới hạn trên của mực nước** (cao nhất có thể tồn tại trong grid),
+vì tất cả các ô đều có giá trị nhỏ hơn hoặc bằng `n² - 1`.
+Ok 👍 mình sẽ **giải thích lại cực dễ hiểu, từng bước, bằng ví dụ cụ thể** nhé.
+
+---
+
+### 🧩 Bối cảnh của bài
+
+Ta có một **lưới (grid)** kích thước `n x n`, ví dụ:
+
+```
+grid = [
+  [0, 2, 5],
+  [4, 3, 6],
+  [7, 1, 8]
+]
+```
+
+Ở đây `n = 3`.
+
+---
+
+### 🧠 Ý nghĩa của các con số trong grid:
+
+Mỗi số trong `grid` là **độ cao của ô đó**.
+Ví dụ:
+
+* Ô có giá trị `0` là **thấp nhất** (mực nước thấp là đã ngập).
+* Ô có giá trị `8` là **cao nhất** (chỉ ngập khi nước dâng lên 8).
+
+---
+
+### 💧 Mực nước (t)
+
+Nước bắt đầu dâng dần từ `t = 0`, `t = 1`, `t = 2`, ...
+
+Tại **một thời điểm `t`** nào đó, bạn **chỉ có thể đi qua** các ô có giá trị `≤ t`.
+Ví dụ:
+
+* Khi `t = 2`, bạn chỉ đi được qua các ô có giá trị `0`, `1`, hoặc `2`.
+
+---
+
+### 🎯 Mục tiêu
+
+Tìm **mức nước nhỏ nhất `t`** để bạn có thể đi từ ô `(0,0)` đến ô `(n-1,n-1)`.
+
+---
+
+### 🧮 Giờ đến dòng này:
+
+```python
+e = n * n - 1
+```
+
+* Với `n = 3`, ta có `e = 3 * 3 - 1 = 8`.
+
+Tức là `e` là **mực nước cao nhất có thể xảy ra**.
+
+---
+
+### ❓Tại sao là `n * n - 1`?
+
+Vì theo đề bài:
+
+> Mỗi ô trong grid có giá trị **duy nhất** từ `0` → `n² - 1`.
+
+📘 Nghĩa là:
+
+* Trong grid `3x3`, các ô có giá trị từ `0` đến `8`.
+* Trong grid `4x4`, các ô có giá trị từ `0` đến `15`.
+* Trong grid `5x5`, các ô có giá trị từ `0` đến `24`.
+
+Vì vậy:
+👉 **Giá trị lớn nhất trong grid luôn là `n² - 1`**
+→ Nếu nước dâng tới `n² - 1`, **mọi ô đều bị ngập** → chắc chắn đi được.
+
+---
+
+### 🧭 Dòng này làm nhiệm vụ gì?
+
+```python
+e = n * n - 1
+```
+
+→ Đây là **giới hạn trên của mức nước khi tìm kiếm**.
+Ta sẽ **binary search** trong khoảng từ:
+
+```
+s = max(grid[0][0], grid[n-1][n-1])   # mực nước thấp nhất cần thử
+e = n * n - 1                         # mực nước cao nhất có thể
+```
+
+---
+
+### 🔢 Ví dụ minh họa
+
+Với `n = 3`, giá trị các ô là từ `0` đến `8`.
+
+Giả sử `grid[0][0] = 5`, `grid[2][2] = 7`,
+→ mực nước tối thiểu cần thử là `max(5, 7) = 7`.
+→ mực nước tối đa là `8` (vì `n*n - 1 = 8`).
+
+→ **Ta binary search trong [7, 8]** để tìm thời điểm nhỏ nhất có thể đi tới đích.
+
+---
+
+👉 Tóm lại:
+
+* `n * n - 1` là **số lớn nhất trong grid**.
+* Nếu nước cao đến mức này → **chắc chắn đi được đến đích**.
+* Dòng `e = n * n - 1` giúp ta **giới hạn vùng tìm kiếm** trong binary search.
+
+---
+
+Bạn có muốn mình vẽ một **hình minh họa** mô phỏng quá trình nước dâng (tăng từ `0` → `n² - 1`) để bạn dễ hình dung hơn không?
+Rất tốt 👍 — đây chính là **phần quan trọng nhất** của thuật toán: phần **binary search (tìm kiếm nhị phân)** kết hợp với DFS để tìm **mức nước nhỏ nhất có thể bơi tới đích**.
+Giờ mình sẽ **giải thích từng dòng một** thật chi tiết, dễ hiểu nhé 👇
+
+---
+
+### 🧩 Toàn bộ đoạn code:
+
+```python
+res = e
+
+while s <= e:
+    m = (s + e) // 2
+    visited = set()
+
+    if dfs(0, 0, m):
+        e = m - 1
+        res = m
+    else:
+        s = m + 1
+
+return res
+```
+
+---
+
+### 💡 Bối cảnh:
+
+Ta đang muốn tìm **mức nước nhỏ nhất (`t`)** sao cho có thể đi được từ `(0,0)` đến `(n-1,n-1)`.
+
+* `s`: mực nước nhỏ nhất có thể thử (bắt đầu từ `max(grid[0][0], grid[n-1][n-1])`)
+* `e`: mực nước cao nhất có thể (bằng `n*n - 1`)
+* `dfs(0, 0, m)` sẽ kiểm tra **có đường đi được không** nếu mực nước hiện tại là `m`.
+
+---
+
+### 🔍 Giải thích từng dòng:
+
+#### 1️⃣
+
+```python
+res = e
+```
+
+* Biến `res` lưu kết quả (mức nước nhỏ nhất có thể đi đến đích).
+* Ban đầu gán = `e` (giá trị lớn nhất có thể), vì ta sẽ **tìm dần mức nhỏ hơn**.
+
+---
+
+#### 2️⃣
+
+```python
+while s <= e:
+```
+
+* Đây là **vòng lặp binary search**.
+* Mỗi lần ta kiểm tra một giá trị `m` nằm giữa `s` và `e`.
+
+---
+
+#### 3️⃣
+
+```python
+m = (s + e) // 2
+```
+
+* `m` là **mức nước trung bình** (mực nước đang thử).
+* Dùng `(s + e) // 2` để lấy trung bình nguyên.
+
+---
+
+#### 4️⃣
+
+```python
+visited = set()
+```
+
+* Mỗi lần thử một `m` mới, ta **reset lại tập visited** (các ô đã đi qua).
+* Vì ta sẽ chạy DFS từ đầu, nên cần xóa dấu vết cũ.
+
+---
+
+#### 5️⃣
+
+```python
+if dfs(0, 0, m):
+```
+
+* Gọi hàm DFS bắt đầu từ ô `(0,0)`, với **mực nước hiện tại = m**.
+* Nếu DFS trả về `True` → có đường đi được đến `(n-1,n-1)`.
+
+---
+
+#### 6️⃣
+
+```python
+    e = m - 1
+    res = m
+```
+
+✅ Nếu đi được:
+
+* Nghĩa là **mức nước `m` đủ cao để đi đến đích**.
+* Nhưng có thể **vẫn còn mức thấp hơn** mà vẫn đi được → ta **giảm `e` xuống** để tìm m nhỏ hơn.
+* Đồng thời **cập nhật kết quả tạm thời** `res = m`.
+
+---
+
+#### 7️⃣
+
+```python
+else:
+    s = m + 1
+```
+
+❌ Nếu **không đi được**:
+
+* Nghĩa là mực nước `m` **chưa đủ cao** → cần tăng thêm.
+* Ta tăng `s = m + 1` để thử mức cao hơn.
+
+---
+
+#### 8️⃣
+
+```python
+return res
+```
+
+* Sau khi vòng lặp kết thúc, `res` sẽ là **mức nước nhỏ nhất mà có thể bơi đến đích**.
+
+---
+
+### ⚙️ Tóm tắt ý tưởng Binary Search + DFS
+
+| Biến    | Vai trò                                               |
+| ------- | ----------------------------------------------------- |
+| `s`     | Giới hạn dưới của mực nước                            |
+| `e`     | Giới hạn trên của mực nước                            |
+| `m`     | Mức nước đang thử                                     |
+| `dfs()` | Kiểm tra xem có thể đi tới đích khi mực nước = m      |
+| `res`   | Kết quả cuối cùng (mức nước nhỏ nhất có thể đến đích) |
+
+---
+
+### 🔢 Ví dụ minh họa:
+
+Giả sử:
+
+```
+s = 3, e = 8
+```
+
+Vòng lặp chạy như sau:
+
+| Lần                                        | m | DFS kết quả | Điều chỉnh | res |
+| ------------------------------------------ | - | ----------- | ---------- | --- |
+| 1                                          | 5 | False       | s = 6      | 8   |
+| 2                                          | 7 | True        | e = 6      | 7   |
+| 3                                          | 6 | True        | e = 5      | 6   |
+| → Dừng lại khi `s > e`, kết quả: `res = 6` |   |             |            |     |
+
+=> **Mức nước nhỏ nhất để đến đích là 6.**
+
+---
+
+Nếu bạn muốn, mình có thể **thêm phần comment chi tiết ngay trong code Python đầy đủ** (từng dòng) để bạn dễ học theo — bạn muốn mình làm vậy không?
+Rất tốt 👍 — đây là bảng mô tả **toàn bộ quá trình binary search** trong thuật toán tìm mực nước nhỏ nhất (bài *Swim in Rising Water*).
+Giờ mình sẽ **giải thích cực dễ hiểu từng hàng của bảng** để bạn nắm rõ hoàn toàn nhé 👇
+
+---
+
+### 🧠 Mục tiêu
+
+Ta muốn tìm **mức nước nhỏ nhất `t`** để có thể đi từ ô `(0,0)` đến ô `(n-1,n-1)`.
+
+Ta đang dùng **Binary Search** trên đoạn `[s, e]`, trong đó:
+
+* `s` là mực nước nhỏ nhất cần thử.
+* `e` là mực nước lớn nhất có thể (bằng `n*n - 1`).
+
+Ở mỗi vòng lặp, ta chọn **mức trung bình `m = (s + e)//2`**, rồi:
+
+* Gọi `dfs(0, 0, m)` để xem nếu nước cao `m` thì có đi tới đích được không.
+* Nếu đi được → giảm `e`.
+* Nếu không đi được → tăng `s`.
+
+---
+
+### 🧩 Giả sử ban đầu:
+
+```
+s = 3, e = 8
+```
+
+(ví dụ `grid[0][0] = 3`, `grid[n-1][n-1] = 8`)
+→ Lúc này `res = e = 8` (tạm coi kết quả là lớn nhất).
+
+---
+
+### 📊 Giải thích bảng:
+
+| Lần                                        | m | DFS kết quả | Điều chỉnh | res |
+| ------------------------------------------ | - | ----------- | ---------- | --- |
+| 1                                          | 5 | False       | s = 6      | 8   |
+| 2                                          | 7 | True        | e = 6      | 7   |
+| 3                                          | 6 | True        | e = 5      | 6   |
+| → Dừng lại khi `s > e`, kết quả: `res = 6` |   |             |            |     |
+
+---
+
+### 🔍 Phân tích từng dòng:
+
+#### ✅ Lần 1:
+
+* **Tính `m = (3 + 8)//2 = 5`.**
+* Kiểm tra `dfs(0,0,5)` → **False**, nghĩa là:
+
+  > Mực nước 5 chưa đủ cao → không thể đi đến đích.
+* Do đó ta **tăng giới hạn dưới**:
+
+  ```
+  s = m + 1 = 6
+  ```
+* `res` vẫn giữ nguyên = 8 (chưa có kết quả mới).
+
+---
+
+#### ✅ Lần 2:
+
+* Bây giờ: `s = 6, e = 8`.
+* **Tính `m = (6 + 8)//2 = 7`.**
+* Kiểm tra `dfs(0,0,7)` → **True**, nghĩa là:
+
+  > Khi nước dâng tới 7, đã đi được đến đích!
+* Ta muốn tìm **mức nhỏ hơn** vẫn đi được, nên **giảm `e` xuống**:
+
+  ```
+  e = m - 1 = 6
+  ```
+* Đồng thời lưu lại **kết quả tạm thời**:
+
+  ```
+  res = 7
+  ```
+
+---
+
+#### ✅ Lần 3:
+
+* Bây giờ: `s = 6, e = 6`.
+* **Tính `m = (6 + 6)//2 = 6`.**
+* Kiểm tra `dfs(0,0,6)` → **True**, nghĩa là:
+
+  > Nước dâng đến 6 là đủ rồi, không cần tới 7.
+* Giảm `e` tiếp:
+
+  ```
+  e = m - 1 = 5
+  ```
+* Cập nhật:
+
+  ```
+  res = 6
+  ```
+
+---
+
+#### 🚫 Dừng:
+
+* Giờ `s = 6, e = 5`, tức là `s > e`.
+* Vòng lặp **kết thúc**.
+* Kết quả cuối cùng là:
+
+  ```
+  res = 6
+  ```
+
+---
+
+### 🧩 Kết luận:
+
+| Ký hiệu       | Ý nghĩa                                       |
+| ------------- | --------------------------------------------- |
+| `m`           | Mực nước đang kiểm tra                        |
+| `DFS kết quả` | Có thể đi tới đích với mực nước này không     |
+| `Điều chỉnh`  | Cập nhật lại giới hạn tìm kiếm (`s` hoặc `e`) |
+| `res`         | Kết quả nhỏ nhất tạm thời tìm được            |
+
+---
+
+👉 Cuối cùng, **`res = 6`** nghĩa là:
+
+> Khi nước dâng đến **6**, bạn có thể bơi từ `(0,0)` đến `(n-1,n-1)` — và **không cần mực nước cao hơn nữa**.
+
+---
+
+Nếu bạn muốn, mình có thể minh họa thêm **hình ảnh trực quan** cho thấy nước dâng đến mức 5, 6, 7 sẽ bơi được/không được như thế nào — bạn có muốn mình làm phần đó không?

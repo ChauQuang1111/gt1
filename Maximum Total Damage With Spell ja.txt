@@ -1,0 +1,372 @@
+Maximum Total Damage With Spell 
+class Solution {
+    public long maximumTotalDamage(int[] power) {
+        Arrays.sort(power);
+
+        long[] dp = new long[power.length];
+        long md = 0;
+        dp[0] = power[0];
+        for (int i = 1, j = 0; i < power.length; i++) {
+            if (power[i] == power[i-1]) {
+                dp[i] = dp[i-1]+power[i];
+            } else {
+                while (power[j]+2 < power[i]) {
+                    md = Math.max(md, dp[j]);
+                    j++;
+                }
+                dp[i] = md + power[i];
+            }
+        }
+        
+        long max = 0;
+        for (long n : dp) {
+            max = Math.max(max, n);
+        }
+        return max;
+    }
+}
+
+
+Rồi 👌 mình giải thích **từng dòng một** cho đoạn này nhé:
+
+```java
+Arrays.sort(power);
+
+long[] dp = new long[power.length];
+long md = 0;
+dp[0] = power[0];
+```
+
+---
+
+### 🧩 1️⃣ `Arrays.sort(power);`
+
+👉 **Mục đích:** Sắp xếp mảng `power` theo thứ tự tăng dần.
+
+Vì trong bài toán này, ta cần so sánh các giá trị `power[i]` với các giá trị trước đó (`power[j]`) để kiểm tra xem **chúng có cách nhau nhiều hơn 2 hay không** (quy tắc “nếu chọn một phép có sức mạnh x, thì không được chọn phép có sức mạnh x-1 hoặc x-2”).
+
+➡️ Nếu mảng không sắp xếp, ta không thể dễ dàng kiểm tra điều này.
+Do đó **phải sort trước**.
+
+Ví dụ:
+`power = [6, 1, 3]`
+→ Sau khi sort: `power = [1, 3, 6]`.
+
+---
+
+### 🧩 2️⃣ `long[] dp = new long[power.length];`
+
+👉 Tạo mảng `dp` để **lưu trữ kết quả quy hoạch động**.
+
+Cụ thể:
+
+* `dp[i]` = **tổng sát thương lớn nhất có thể đạt được** khi xét đến phép thứ `i`.
+
+Ta dùng `long` thay vì `int` vì tổng sát thương có thể rất lớn.
+
+---
+
+### 🧩 3️⃣ `long md = 0;`
+
+👉 `md` viết tắt là **max damage so far**, tức là **giá trị `dp[j]` lớn nhất cho tới vị trí j nào đó trước i**, mà thỏa điều kiện khoảng cách `power[j] + 2 < power[i]`.
+
+Nói cách khác, `md` lưu:
+
+> Tổng sát thương tốt nhất của những phép không xung đột với phép hiện tại `power[i]`.
+
+---
+
+### 🧩 4️⃣ `dp[0] = power[0];`
+
+👉 Cơ sở khởi tạo của DP.
+
+* Khi chỉ có **một phép duy nhất** (chính là phép đầu tiên),
+  thì tổng sát thương lớn nhất chính là **sức mạnh của phép đó**.
+
+Ví dụ:
+
+```
+power = [1, 3, 6]
+dp[0] = 1   // chỉ có phép sức mạnh 1, thì chọn nó
+```
+
+---
+
+### 🧠 Tóm tắt ý nghĩa đoạn code:
+
+| Lệnh                                 | Ý nghĩa                                                                   |
+| ------------------------------------ | ------------------------------------------------------------------------- |
+| `Arrays.sort(power)`                 | Sắp xếp mảng để dễ so sánh khoảng cách giữa các phép                      |
+| `long[] dp = new long[power.length]` | Tạo mảng lưu tổng sát thương lớn nhất khi xét đến mỗi phép                |
+| `long md = 0`                        | Lưu giá trị sát thương lớn nhất “an toàn” tính đến thời điểm hiện tại     |
+| `dp[0] = power[0]`                   | Khởi tạo: khi chỉ có 1 phép, tổng sát thương = chính sức mạnh của phép đó |
+
+---
+
+Nếu bạn muốn, mình có thể tiếp tục **giải thích từng dòng tiếp theo** (vòng for và các điều kiện `if (power[i] == power[i-1])`, `while (power[j] + 2 < power[i])`...) — vì phần đó là “linh hồn” của thuật toán.
+Bạn muốn mình giải thích tiếp phần đó không?
+Tốt lắm 👍 đoạn này chính là **trái tim của thuật toán** — phần xử lý quy hoạch động (DP) trong bài **3186. Maximum Total Damage With Spell Casting**.
+Giờ mình giải thích cực chi tiết từng dòng một, cho bạn hiểu tại sao công thức được hình thành và hoạt động thế nào 👇
+
+---
+
+### 🧩 Mục tiêu tổng quát:
+
+Ta muốn chọn ra **một tập các phép (power)** sao cho:
+
+* Không chọn hai phép có sức mạnh chênh nhau ≤ 2.
+* Tổng sát thương (damage) đạt **lớn nhất**.
+
+---
+
+### 🧠 Cấu trúc chính:
+
+```java
+for (int i = 1, j = 0; i < power.length; i++) {
+    if (power[i] == power[i-1]) {
+        dp[i] = dp[i-1] + power[i];
+    } else {
+        while (power[j] + 2 < power[i]) {
+            md = Math.max(md, dp[j]);
+            j++;
+        }
+        dp[i] = md + power[i];
+    }
+}
+```
+
+Giờ ta đi từng phần nhé 👇
+
+---
+
+## 🧩 1️⃣ `for (int i = 1, j = 0; i < power.length; i++)`
+
+* `i`: duyệt qua từng phép (đã **sort tăng dần** từ trước)
+* `j`: dùng để tìm **vị trí xa nhất** mà phép tại `j` **không xung đột** với phép `i` (tức là `power[j] + 2 < power[i]`)
+
+`j` chỉ **tăng dần**, không reset mỗi lần, vì ta **duyệt một chiều**, đảm bảo O(n) thời gian.
+
+---
+
+## 🧩 2️⃣ `if (power[i] == power[i-1])`
+
+👉 Trường hợp **các phép trùng nhau** (ví dụ `[3, 3, 3]`)
+
+Vì phép giống nhau có thể cộng dồn sát thương:
+
+```java
+dp[i] = dp[i-1] + power[i];
+```
+
+Giải thích:
+
+* Nếu 2 phép có cùng power, ta coi như “gộp” lại thành một nhóm cùng loại.
+* `dp[i]` = tổng sát thương đến phép i, trong đó ta thêm thêm 1 bản sao phép đó.
+
+🧮 Ví dụ:
+
+```
+power = [3, 3, 3]
+dp[0] = 3
+dp[1] = 3 + 3 = 6
+dp[2] = 6 + 3 = 9
+```
+
+---
+
+## 🧩 3️⃣ `else { while (power[j] + 2 < power[i]) { ... } }`
+
+Đây là phần **xử lý khi chuyển sang loại phép mới**, khác với phép trước.
+
+Ta cần tìm xem:
+
+> Phép hiện tại `power[i]` có thể kết hợp với phép nào trước đó mà **không xung đột**?
+
+Theo quy tắc bài:
+
+> Hai phép xung đột nếu `|a - b| ≤ 2`.
+
+=> Ta cần tìm tất cả `power[j]` sao cho:
+
+```
+power[j] + 2 < power[i]
+```
+
+(tức là phép `j` nhỏ hơn phép `i` ít nhất 3 đơn vị)
+
+---
+
+## 🧩 4️⃣ `md = Math.max(md, dp[j]); j++;`
+
+Mỗi lần điều kiện `power[j] + 2 < power[i]` đúng:
+
+* Cập nhật `md` (max damage an toàn) bằng `dp[j]` nếu nó lớn hơn giá trị cũ.
+* Rồi **tăng j lên**, để xét phép tiếp theo.
+
+Sau khi vòng `while` kết thúc,
+`md` sẽ lưu trữ **tổng sát thương lớn nhất có thể đạt được** từ những phép không xung đột với `power[i]`.
+
+---
+
+## 🧩 5️⃣ `dp[i] = md + power[i];`
+
+Đây là công thức chính của DP 👇
+
+> Tổng sát thương lớn nhất khi chọn phép `i` =
+> Tổng sát thương lớn nhất **trước đó (không xung đột)** `+` sức mạnh phép hiện tại.
+
+Vì `md` chứa “phần tối đa an toàn” (không xung đột), ta chỉ cần cộng thêm `power[i]`.
+
+---
+
+## 🔍 Ví dụ minh họa
+
+Giả sử:
+
+```
+power = [1, 3, 6]
+```
+
+👉 Bắt đầu:
+
+```
+dp[0] = 1
+```
+
+### i = 1 (power[i] = 3)
+
+* power[0] + 2 = 3 → **không nhỏ hơn 3**, nên không thỏa
+* Không có phép nào nhỏ hơn `3 - 2`, nên md = 0
+  → dp[1] = md + 3 = 0 + 3 = 3
+
+### i = 2 (power[i] = 6)
+
+* power[0] + 2 = 3 < 6 → ✅ md = max(0, dp[0]) = 1
+* power[1] + 2 = 5 < 6 → ✅ md = max(1, dp[1]) = 3
+  → dp[2] = md + 6 = 3 + 6 = 9
+
+Kết quả:
+`dp = [1, 3, 9]`
+→ Tổng sát thương tối đa = 9 ✅
+
+---
+
+## 📘 Tổng kết ý nghĩa từng phần:
+
+| Dòng code                         | Ý nghĩa                                           |
+| --------------------------------- | ------------------------------------------------- |
+| `if (power[i] == power[i-1])`     | Cộng dồn sát thương cho các phép trùng nhau       |
+| `while (power[j] + 2 < power[i])` | Tìm phép trước đó không xung đột (cách nhau ≥ 3)  |
+| `md = Math.max(md, dp[j])`        | Lưu tổng sát thương lớn nhất không xung đột       |
+| `dp[i] = md + power[i]`           | Cập nhật tổng sát thương tối đa khi chọn phép `i` |
+
+---
+
+Nếu bạn muốn, tui có thể vẽ **bảng chi tiết theo từng bước `i`, j, md, dp[i]`** cho 1 ví dụ cụ thể (`power = [1, 3, 3, 6]`) — nhìn cực dễ hiểu luôn 😄
+Bạn có muốn tui làm bảng đó không?
+Rất hay 👏 — đây là **phần kết** của toàn bộ thuật toán, nơi ta tìm ra kết quả cuối cùng sau khi đã tính xong mảng `dp`.
+Giờ mình giải thích chi tiết từng dòng nhé 👇
+
+---
+
+### 🧩 Đoạn code:
+
+```java
+long max = 0;
+for (long n : dp) {
+    max = Math.max(max, n);
+}
+return max;
+```
+
+---
+
+## 🧠 Ý nghĩa tổng quát
+
+Sau khi ta đã duyệt xong mảng `power`, mỗi `dp[i]` chứa:
+
+> Tổng sát thương tối đa **khi xét đến phép power[i]** (và có thể chọn nó).
+
+Tuy nhiên, **tổng sát thương cuối cùng** (khi kết thúc dungeon) có thể nằm ở **bất kỳ vị trí nào trong dp**, chứ không chỉ ở phần tử cuối.
+
+👉 Vì vậy, ta cần duyệt qua toàn bộ `dp` để tìm **giá trị lớn nhất**.
+
+---
+
+## 🔍 Giải thích từng dòng
+
+### 🟦 `long max = 0;`
+
+Khởi tạo biến `max` để lưu **tổng sát thương lớn nhất** tìm được cho đến hiện tại.
+
+Dùng `long` để tránh tràn số (vì tổng có thể lớn hơn `int`).
+
+---
+
+### 🟦 `for (long n : dp) { ... }`
+
+Duyệt qua từng phần tử `n` trong mảng `dp`.
+
+Tức là:
+
+* `n` lần lượt là `dp[0], dp[1], dp[2], ...`
+
+---
+
+### 🟦 `max = Math.max(max, n);`
+
+Cập nhật giá trị lớn nhất:
+
+> Nếu `n` (tức `dp[i]`) lớn hơn `max` hiện tại, thì cập nhật `max = n`.
+
+---
+
+### 🟦 `return max;`
+
+Sau khi duyệt hết mảng `dp`, ta trả về **giá trị lớn nhất** — chính là:
+
+> **Tổng sát thương tối đa có thể đạt được** với tập phép tối ưu.
+
+---
+
+## 💡 Ví dụ minh họa
+
+Giả sử sau khi tính xong:
+
+```
+dp = [3, 5, 9, 8]
+```
+
+Ta duyệt:
+
+| i | n (dp[i]) | max trước đó | max sau khi cập nhật |
+| - | --------- | ------------ | -------------------- |
+| 0 | 3         | 0            | 3                    |
+| 1 | 5         | 3            | 5                    |
+| 2 | 9         | 5            | 9                    |
+| 3 | 8         | 9            | 9                    |
+
+→ Kết quả cuối cùng: `return 9`
+
+---
+
+## 🎯 Kết luận
+
+| Dòng code                 | Ý nghĩa                                    |
+| ------------------------- | ------------------------------------------ |
+| `long max = 0;`           | Khởi tạo biến lưu tổng sát thương lớn nhất |
+| `for (long n : dp)`       | Duyệt qua tất cả kết quả trong mảng dp     |
+| `max = Math.max(max, n);` | Cập nhật giá trị lớn nhất                  |
+| `return max;`             | Trả về tổng sát thương tối đa cuối cùng    |
+
+---
+
+👉 Tóm gọn:
+
+> Sau khi tính `dp`, mỗi `dp[i]` là “phương án tối ưu nếu chọn phép i”.
+> `return max` chính là **phương án tối ưu nhất trong tất cả**.
+
+---
+
+Nếu bạn muốn, tui có thể viết lại **phiên bản có chú thích từng dòng trong code Java hoàn chỉnh** (từ đầu đến cuối hàm `maximumTotalDamage`).
+Bạn muốn tui thêm luôn không?

@@ -1,0 +1,335 @@
+Spam number
+import re
+
+def is_spam(phone_number: str) -> bool:
+    # Regex kiểm tra spam
+    # - Area code 123|666|999
+    # - Hoặc 4 số cuối giống nhau
+    spam_pattern = r"^\+\d+ \((123|666|999|\d{3})\) \d{3}-(\d{4})$"
+
+    m = re.match(spam_pattern, phone_number)
+    if not m:
+        return True  # Sai format => Spam
+
+    area, last4 = m.group(1), m.group(2)
+
+    # Nếu area thuộc blacklist hoặc last4 toàn số giống nhau => spam
+    return area in {"123", "666", "999"} or len(set(last4)) == 1
+
+
+if __name__ == "__main__":
+    test_numbers = [
+        "+1 (123) 456-7890",    # Spam (area code 123)
+        "+84 (888) 123-1111",   # Spam (1111 giống nhau)
+        "+84 (777) 123-4567",   # Not Spam
+        "84 123 456 7890"       # Spam (sai format)
+    ]
+
+    for num in test_numbers:
+        print(f"{num} => {'Spam' if is_spam(num) else 'Not Spam'}")
+Rồi 👍 mình sẽ giải thích **thuật toán** trong đoạn code Python bạn đưa ra:
+
+---
+
+## 1. Yêu cầu bài toán
+
+* Nhận vào một số điện thoại theo format chuẩn:
+
+  ```
+  +A (BBB) CCC-DDDD
+  ```
+
+  * `+A`: country code (một hoặc nhiều chữ số).
+  * `BBB`: area code (3 chữ số).
+  * `CCC`: 3 chữ số local.
+  * `DDDD`: 4 chữ số cuối local.
+
+* Trả về **True nếu số đó là spam**, **False nếu không spam**.
+
+Spam được xác định bởi:
+
+1. Nếu sai format → Spam.
+2. Nếu area code nằm trong blacklist (`123`, `666`, `999`) → Spam.
+3. Nếu 4 số cuối (`DDDD`) toàn giống nhau (ví dụ: `1111`, `2222`) → Spam.
+
+---
+
+## 2. Giải thích chi tiết thuật toán
+
+### Hàm `is_spam(phone_number)`
+
+```python
+spam_pattern = r"^\+\d+ \((123|666|999|\d{3})\) \d{3}-(\d{4})$"
+```
+
+* Regex này đảm bảo số điện thoại đúng **format chuẩn**:
+
+  * `^\+` → bắt đầu bằng dấu `+`.
+  * `\d+` → ít nhất một chữ số (country code).
+  * `\((123|666|999|\d{3})\)` → area code nằm trong ngoặc.
+
+    * Cho phép area code là `123`, `666`, `999` hoặc bất kỳ 3 chữ số nào (`\d{3}`).
+  * `\d{3}-\d{4}` → 3 chữ số, dấu `-`, rồi 4 chữ số.
+  * `$` → kết thúc chuỗi.
+
+👉 Nếu **không khớp regex** → return `True` (Spam).
+
+---
+
+```python
+area, last4 = m.group(1), m.group(2)
+```
+
+* `group(1)` → area code (BBB).
+* `group(2)` → 4 số cuối (DDDD).
+
+---
+
+```python
+return area in {"123", "666", "999"} or len(set(last4)) == 1
+```
+
+* Kiểm tra 2 điều kiện spam:
+
+  1. `area in {"123", "666", "999"}` → area code nằm trong blacklist.
+  2. `len(set(last4)) == 1` → nếu tất cả ký tự trong `last4` giống nhau (ví dụ `"1111"`, `"9999"`), thì `set(last4)` chỉ có 1 phần tử.
+
+---
+
+### Hàm `main`
+
+```python
+test_numbers = [
+    "+1 (123) 456-7890",    # Spam (area code 123 trong blacklist)
+    "+84 (888) 123-1111",   # Spam (4 số cuối 1111 giống nhau)
+    "+84 (777) 123-4567",   # Không Spam
+    "84 123 456 7890"       # Spam (sai format, thiếu dấu + và ngoặc)
+]
+```
+
+* Duyệt từng số điện thoại trong danh sách test.
+* Gọi `is_spam(num)` để kiểm tra.
+* In ra kết quả: `"Spam"` hoặc `"Not Spam"`.
+
+---
+
+## 3. Kết quả chạy
+
+```
++1 (123) 456-7890 => Spam
++84 (888) 123-1111 => Spam
++84 (777) 123-4567 => Not Spam
+84 123 456 7890 => Spam
+```
+
+---
+
+✅ **Tóm tắt thuật toán**:
+
+1. Dùng regex để kiểm tra **đúng format** số điện thoại.
+2. Tách `area code` và `4 số cuối`.
+3. Nếu area code trong blacklist → Spam.
+4. Nếu 4 số cuối giống nhau hết → Spam.
+5. Nếu không rơi vào 2 trường hợp trên → Not Spam.
+
+---
+
+Bạn có muốn mình vẽ cho bạn **flowchart (lưu đồ)** trực quan cho thuật toán này không?
+À, bạn muốn mình giải thích về **`.match`** trong Python đúng không? 👇
+
+---
+
+## 1. `.match()` trong Python
+
+`.match()` là phương thức của thư viện `re` (Regular Expression).
+
+```python
+m = re.match(pattern, string)
+```
+
+* Nó sẽ **so khớp regex pattern với string từ đầu chuỗi**.
+* Nếu khớp → trả về một **Match object** (có thể dùng `.group()` để lấy dữ liệu).
+* Nếu không khớp → trả về `None`.
+
+⚠️ Khác biệt:
+
+* `re.match()` → bắt buộc phải **khớp từ đầu chuỗi**.
+* `re.search()` → tìm **ở bất kỳ vị trí nào trong chuỗi**.
+
+---
+
+## 2. Ví dụ đơn giản
+
+```python
+import re
+
+text = "+84 (888) 123-1111"
+pattern = r"^\+(\d+) \((\d{3})\) (\d{3})-(\d{4})$"
+
+m = re.match(pattern, text)
+
+if m:
+    print("Khớp!")
+    print("Country code:", m.group(1))  # +84
+    print("Area code:", m.group(2))     # 888
+    print("Local 3:", m.group(3))       # 123
+    print("Local 4:", m.group(4))       # 1111
+else:
+    print("Không khớp!")
+```
+
+### Kết quả:
+
+```
+Khớp!
+Country code: 84
+Area code: 888
+Local 3: 123
+Local 4: 1111
+```
+
+---
+
+## 3. Trong code SpamDetector
+
+Trong code của bạn:
+
+```python
+m = re.match(spam_pattern, phone_number)
+```
+
+* Kiểm tra xem `phone_number` có đúng format không.
+* Nếu không đúng → `m = None`, return `True` (Spam).
+* Nếu đúng → có thể lấy `m.group(1)`, `m.group(2)` để truy xuất `area` và `last4`.
+
+---
+
+👉 Bạn có muốn mình so sánh **`match()` vs `fullmatch()` vs `search()`** trong Python regex để bạn thấy rõ sự khác biệt không?
+Okay 👍 mình giải thích rõ hơn về `.match` trong Python:
+
+---
+
+### `re.match(pattern, string)`
+
+* Đây là hàm trong module **`re`** (regular expression) của Python.
+* Nó **cố gắng khớp mẫu regex `pattern` với `string` từ **đầu chuỗi** (`index = 0`).
+* Nếu khớp được → trả về một **Match object**.
+* Nếu **không khớp** → trả về `None`.
+
+---
+
+### Ví dụ:
+
+```python
+import re
+
+pattern = r"\d+"   # một hoặc nhiều chữ số
+
+print(re.match(pattern, "123abc"))   # ✅ Khớp vì bắt đầu bằng số
+print(re.match(pattern, "abc123"))   # ❌ Không khớp vì không bắt đầu bằng số
+```
+
+**Kết quả:**
+
+```
+<re.Match object; span=(0, 3), match='123'>
+None
+```
+
+---
+
+### So sánh với `.search`
+
+* `re.match`: **chỉ kiểm tra ở đầu chuỗi**.
+* `re.search`: tìm mẫu regex **ở bất kỳ vị trí nào trong chuỗi**.
+
+Ví dụ:
+
+```python
+print(re.search(pattern, "abc123"))   # ✅ Tìm thấy "123" ở cuối
+```
+
+---
+
+### Trong code của bạn:
+
+```python
+m = re.match(spam_pattern, phone_number)
+```
+
+* Dùng để kiểm tra xem `phone_number` có đúng **format số điện thoại** (theo regex) ngay từ đầu chuỗi không.
+* Nếu đúng → `m` là Match object, bạn có thể dùng `m.group(1)` hoặc `m.group(2)` để lấy các nhóm trong regex.
+* Nếu sai format → `m = None`, coi như Spam.
+
+---
+
+👉 Bạn có muốn mình giải thích chi tiết luôn **`group(1)` và `group(2)`** trong code regex đó không?
+Hay, mình giải thích tiếp về **`re.fullmatch()`** nhé 🚀
+
+---
+
+### 🔑 `re.fullmatch(pattern, string)`
+
+* Kiểm tra xem **toàn bộ chuỗi** có khớp với `pattern` hay không.
+* Nếu khớp toàn bộ → trả về **Match object**.
+* Nếu chỉ khớp một phần → trả về `None`.
+
+---
+
+### 📌 So sánh với `.match()`
+
+* `re.match`: chỉ kiểm tra **từ đầu chuỗi**, phần còn lại không quan tâm.
+* `re.fullmatch`: yêu cầu **cả chuỗi phải khớp 100%**.
+
+---
+
+### Ví dụ:
+
+```python
+import re
+
+pattern = r"\d+"
+
+print(re.match(pattern, "123abc"))     # ✅ Khớp "123" ở đầu
+print(re.fullmatch(pattern, "123abc")) # ❌ Không khớp toàn bộ
+print(re.fullmatch(pattern, "123"))    # ✅ Khớp toàn bộ
+```
+
+**Kết quả:**
+
+```
+<re.Match object; span=(0, 3), match='123'>
+None
+<re.Match object; span=(0, 3), match='123'>
+```
+
+---
+
+### 📌 Áp dụng vào code của bạn
+
+Trong code bạn có:
+
+```python
+m = re.match(spam_pattern, phone_number)
+```
+
+Nếu thay bằng:
+
+```python
+m = re.fullmatch(spam_pattern, phone_number)
+```
+
+→ Bạn **không cần thêm ký hiệu `^...$` trong regex** nữa, vì `fullmatch` đã đảm bảo so khớp toàn bộ chuỗi.
+
+Ví dụ:
+
+```python
+spam_pattern = r"\+\d+ \((123|666|999|\d{3})\) \d{3}-(\d{4})"
+m = re.fullmatch(spam_pattern, phone_number)
+```
+
+Kết quả giống hệt nhưng code **sạch hơn**.
+
+---
+
+👉 Bạn muốn mình sửa lại code spam phone number của bạn để dùng `fullmatch` thay cho `match` không?

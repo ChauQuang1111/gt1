@@ -1,0 +1,521 @@
+ Adjacent Increasing Subarrays Detection I
+    public boolean hasIncreasingSubarrays(List<Integer> nums, int k) {
+        int n = nums.size();
+        int need = k - 1; 
+        if (need == 0) return true;
+        for (int j = k + 1; j < n; j++) {
+            if (nums.get(j) > nums.get(j - 1) && nums.get(j - k) > nums.get(j - k - 1)) {
+                need--; 
+            } else {
+                need = k - 1; 
+            }
+
+            if (need == 0) return true;
+        }
+        return false;
+    }
+}
+Câu hỏi rất hay 👍 — đây là **mấu chốt** của bài toán.
+Giờ mình sẽ **giải thích rõ vì sao là `k - 1`** nhé 👇
+
+---
+
+## 🧩 Mục tiêu của bài toán
+
+Ta cần **phát hiện 2 mảng con tăng dần (increasing subarrays)**
+mỗi mảng con có **độ dài = k**,
+và **chúng nằm liền nhau (adjacent)**.
+
+---
+
+## 🧠 Ví dụ minh họa
+
+Giả sử:
+
+```
+nums = [2,5,7,8,9,2,3,4,3,1]
+k = 3
+```
+
+Hai mảng con độ dài 3 liền nhau là:
+
+```
+[2,5,7] và [8,9,2]  ❌  mảng 2 không tăng
+[5,7,8] và [9,2,3]  ❌
+[7,8,9] và [2,3,4]  ✅ cả 2 đều tăng
+```
+
+→ Output = **true**
+
+---
+
+## 🧩 Vậy vì sao `need = k - 1`?
+
+Một **mảng con tăng độ dài k** có **(k - 1) cặp phần tử tăng liên tiếp**.
+Ví dụ `[7, 8, 9]` có:
+
+```
+7 < 8  ✅
+8 < 9  ✅
+→ 2 cặp tăng = k - 1
+```
+
+Để **có 2 mảng con liền nhau cùng tăng**, ta cần có **(k - 1) lần liên tiếp** mà:
+
+* `nums[j] > nums[j-1]`
+  và
+* `nums[j-k] > nums[j-k-1]`
+
+nghĩa là **2 chuỗi song song cùng tăng**.
+
+---
+
+## 📊 Minh họa cho `k = 3`
+
+Giả sử ta đang duyệt:
+
+```
+nums = [7,8,9,2,3,4]
+             ↑
+             j
+```
+
+* `nums[j] > nums[j-1]` → `3 > 2` ✅
+* `nums[j-k] > nums[j-k-1]` → `9 > 8` ✅
+
+Mỗi lần như vậy, `need--`.
+Khi `need == 0`, tức là ta đã thấy **(k-1) cặp tăng song song**,
+→ hai dãy độ dài `k` đều tăng → `return true`.
+
+---
+
+## ✅ Tóm tắt:
+
+| Ý nghĩa                | Giải thích                                       |
+| ---------------------- | ------------------------------------------------ |
+| `need = k - 1`         | số cặp tăng cần có để tạo ra dãy tăng độ dài `k` |
+| `need--`               | khi 2 dãy song song đều tiếp tục tăng            |
+| `need == 0`            | tìm thấy 2 mảng con tăng dần liền nhau           |
+| `need = k - 1` (reset) | nếu bị ngắt, bắt đầu lại                         |
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ mô phỏng từng bước** khi `k = 3` để thấy `need` giảm thế nào. Bạn có muốn xem không?
+Rất tốt 👍 — đây là trọng tâm thật sự của bài toán.
+Mình giải thích thật **ngắn gọn – dễ hiểu** cho bạn nhé 👇
+
+---
+
+## 🧠 1️⃣ Mỗi dãy tăng độ dài `k` có bao nhiêu "cặp tăng"?
+
+Ví dụ:
+
+```
+[2, 5, 7]   →   k = 3
+```
+
+Các **cặp phần tử liên tiếp** là:
+
+```
+(2,5), (5,7)
+```
+
+👉 Có **2 cặp tăng**, tức là `k - 1` cặp.
+
+---
+
+## 🧩 2️⃣ Vì sao ta đặt `need = k - 1`?
+
+Ta đang cần **2 dãy con liền nhau, mỗi dãy dài k**,
+và **cả hai đều tăng**.
+
+Để một dãy con độ dài `k` là tăng, nó phải có **k-1 lần tăng liên tiếp** (`nums[i+1] > nums[i]`).
+
+→ Cho nên, khi ta kiểm tra song song 2 dãy,
+ta cần **phát hiện ra k-1 lần liên tiếp mà cả hai đều đang tăng.**
+
+---
+
+## 💡 3️⃣ Tư duy thuật toán
+
+Mỗi lần kiểm tra:
+
+```java
+if (nums[j] > nums[j-1] && nums[j-k] > nums[j-k-1])
+    need--;
+else
+    need = k - 1;
+```
+
+* Nếu **cả 2 dãy** tiếp tục tăng song song → `need--`
+* Nếu bị ngắt → reset lại `k - 1`
+* Khi `need == 0` → tức là ta vừa có đủ **(k-1) lần tăng liên tiếp**
+  → nghĩa là **hai dãy độ dài k liền nhau đều tăng**
+
+---
+
+## 🧮 Ví dụ nhỏ
+
+`nums = [2,5,7,8,9,2,3,4]`, `k = 3`
+→ cần 2 dãy tăng liền nhau độ dài 3
+→ `need = k-1 = 2`
+
+Ta thấy:
+
+```
+[7,8,9] → 2 cặp tăng ✅
+[2,3,4] → 2 cặp tăng ✅
+```
+
+Hai dãy này liền nhau và đều tăng → `need` giảm xuống 0 → `true`.
+
+---
+
+✅ **Tóm lại:**
+`k - 1` là số **cặp phần tử cần liên tục tăng** để tạo nên **một dãy tăng độ dài k**.
+Đó là lý do tại sao ta khởi tạo `need = k - 1`.
+Rất hay 👍 — câu lệnh
+
+```java
+if (need == 0) return true;
+```
+
+là **điểm mấu chốt** xác nhận rằng ta đã tìm được **2 dãy con tăng liền nhau có độ dài k**.
+Giải thích chi tiết dưới đây 👇
+
+---
+
+## 🧠 1️⃣ Nhắc lại ý nghĩa của `need`
+
+Ta khởi tạo:
+
+```java
+int need = k - 1;
+```
+
+👉 `need` biểu thị **số lần tăng liên tiếp còn thiếu** để xác nhận rằng **2 dãy con liền nhau độ dài k đều tăng**.
+
+Ví dụ:
+
+* Nếu `k = 3`, thì cần `k - 1 = 2` lần tăng liên tiếp trong cả hai dãy.
+* Mỗi lần kiểm tra thấy cả 2 dãy đều tăng → `need--`
+* Nếu chuỗi tăng bị ngắt → reset lại `need = k - 1`
+
+---
+
+## ⚙️ 2️⃣ Khi nào `need == 0`?
+
+Điều này chỉ xảy ra **sau khi ta đã giảm đủ (k - 1) lần**,
+tức là ta vừa thấy được **2 dãy con liền nhau, mỗi dãy dài k, và cả hai đều tăng liên tiếp**.
+
+➡️ Đây chính là điều kiện mà đề bài yêu cầu.
+
+---
+
+## ✅ 3️⃣ Vì sao `return true`
+
+Ngay khi `need == 0`, nghĩa là:
+
+* Hai dãy con liền nhau (mỗi dãy dài k)
+* Cả hai đều **tăng dần**
+* Không cần kiểm tra tiếp nữa
+
+→ Thuật toán có thể **dừng sớm** bằng `return true`.
+
+---
+
+## 🔍 Ví dụ minh họa
+
+```
+nums = [2,5,7,8,9,2,3,4]
+k = 3
+```
+
+* `need = 2` ban đầu
+* Gặp dãy đầu `[7,8,9]`: có 2 lần tăng → `need` giảm 2 → `need == 0`
+* Lúc này 2 dãy `[7,8,9]` và `[2,3,4]` liền nhau, đều tăng
+  → `if (need == 0) return true;` được kích hoạt
+  → Kết luận: **đã thỏa điều kiện**.
+
+---
+
+📘 **Tóm lại:**
+`if (need == 0) return true;`
+→ có nghĩa là **đã tìm thấy hai dãy con tăng liền nhau độ dài k**,
+vì vậy **trả về true và kết thúc sớm** chương trình.
+Rất hay 👏 — đây là phần **trọng tâm** của thuật toán!
+Giờ mình sẽ **phân tích từng phần**:
+`j = k + 1`, điều kiện `nums.get(j) > nums.get(j - 1) && nums.get(j - k) > nums.get(j - k - 1)`, và tại sao lại `need--`.
+
+---
+
+## 🧩 1️⃣ Vòng lặp bắt đầu từ `j = k + 1`
+
+👉 Lý do:
+Ta đang muốn **so sánh hai dãy con liền nhau**, mỗi dãy dài `k`.
+
+* Dãy thứ nhất kết thúc tại vị trí `j - k`
+* Dãy thứ hai kết thúc tại `j`
+
+Nếu bắt đầu sớm hơn `k + 1`, thì **không thể tạo ra hai dãy con dài k liền nhau**, vì thiếu phần tử để so sánh.
+
+➡️ Ví dụ:
+
+```
+nums = [2, 5, 7, 8, 9, 2, 3, 4]
+k = 3
+```
+
+* Khi `j = 4` → dãy `[2,5,7,8]` mới có 4 phần tử → đủ để hình thành **hai dãy dài k = 3**:
+
+  * Dãy 1: `[2,5,7]`
+  * Dãy 2: `[5,7,8]`
+    => Vậy nên, ta bắt đầu từ `j = k + 1 = 4`.
+
+---
+
+## 🔢 2️⃣ Điều kiện
+
+```java
+nums.get(j) > nums.get(j - 1) && nums.get(j - k) > nums.get(j - k - 1)
+```
+
+### 💡 Ý nghĩa:
+
+Ta đang kiểm tra **2 dãy con liền nhau độ dài k** có đang **cùng tăng dần** không.
+
+* `nums.get(j) > nums.get(j - 1)` → kiểm tra **dãy hiện tại (thứ 2)** có đang tăng không
+* `nums.get(j - k) > nums.get(j - k - 1)` → kiểm tra **dãy trước (thứ 1)** có đang tăng không
+
+👉 Nếu **cả hai đều tăng ở cùng một vị trí tương ứng**,
+tức là **các phần tử tương ứng của 2 dãy cùng thỏa mãn điều kiện tăng**,
+thì ta giảm `need` đi 1.
+
+---
+
+## 🔁 3️⃣ Tại sao `need--`
+
+Nhớ rằng `need = k - 1`, nghĩa là cần `k - 1` **bước tăng song song** để hình thành hai dãy tăng liền nhau.
+
+Mỗi lần điều kiện trên đúng, ta phát hiện **một cặp tăng tương ứng** giữa 2 dãy.
+👉 Vì vậy, ta **giảm `need` đi 1**.
+
+Nếu điều kiện sai (chuỗi tăng bị ngắt):
+
+```java
+else {
+    need = k - 1;
+}
+```
+
+→ reset lại vì ta phải tìm lại từ đầu.
+
+---
+
+## ✅ 4️⃣ Khi `need == 0`
+
+Nếu `need` đã giảm hết về `0`,
+nghĩa là ta đã tìm đủ `k - 1` cặp tăng song song →
+**hai dãy độ dài k liền nhau đều tăng**
+→ `return true`.
+
+---
+
+## 📊 Ví dụ minh họa
+
+```
+nums = [2,5,7,8,9,2,3,4]
+k = 3
+```
+
+| j | nums[j] | nums[j-1] | nums[j-k] | nums[j-k-1] | Điều kiện | need | Giải thích |
+|---|----------|------------|------------|---------------|------------|-------------|
+| 4 | 9 | 8 | 7 | 5 | ✅ cả 2 tăng | 1 | giảm từ 2 → 1 |
+| 5 | 2 | 9 | 8 | 7 | ❌ | reset = 2 | bị ngắt |
+| 7 | 4 | 3 | 9 | 8 | ✅ | 1 | giảm 1 |
+| 8 | 3 | 4 | 2 | 9 | ❌ | reset = 2 | ngắt |
+| 9 | ... | ... | ... | ... | ✅ đủ | 0 | → `return true` |
+
+=> Đúng với ví dụ của bạn: **Output = true**.
+
+---
+
+✅ **Tóm lại:**
+
+| Thành phần                | Ý nghĩa                                                  |
+| ------------------------- | -------------------------------------------------------- |
+| `j = k + 1`               | Bắt đầu tại vị trí có thể tạo được 2 dãy con dài k       |
+| `nums[j] > nums[j-1]`     | Kiểm tra dãy hiện tại đang tăng                          |
+| `nums[j-k] > nums[j-k-1]` | Kiểm tra dãy trước đó cũng tăng                          |
+| `need--`                  | Giảm khi tìm được một cặp tăng song song                 |
+| `if (need == 0)`          | Đã đủ k-1 cặp tăng song song → có hai dãy tăng liền nhau |
+Rất hay 👍 — ta sẽ **vẽ rõ** vị trí các phần tử khi `j = k + 1` để bạn **nhìn thấy trực quan** cách thuật toán hoạt động.
+
+---
+
+### 🧮 Giả sử:
+
+```
+nums = [2, 5, 7, 8, 9, 2, 3, 4]
+k = 3
+```
+
+Ta cần kiểm tra xem có **2 dãy con liền nhau độ dài 3** cùng **tăng dần** hay không.
+
+---
+
+### ✅ Các chỉ số (index):
+
+| Chỉ số  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+| ------- | - | - | - | - | - | - | - | - |
+| Giá trị | 2 | 5 | 7 | 8 | 9 | 2 | 3 | 4 |
+
+---
+
+### 📍 Khi `k = 3`, thì `j = k + 1 = 4`.
+
+Ta đang xét **phần tử có chỉ số j = 4 (giá trị = 9)**.
+Thuật toán sẽ so sánh 2 điều kiện:
+
+```
+nums[j] > nums[j - 1]
+nums[j - k] > nums[j - k - 1]
+```
+
+---
+
+### ✳️ Thay số vào:
+
+```
+j = 4
+nums[j] = 9
+nums[j - 1] = 8
+nums[j - k] = nums[1] = 5
+nums[j - k - 1] = nums[0] = 2
+```
+
+---
+
+### 🔍 Kiểm tra điều kiện:
+
+```
+nums[j] > nums[j - 1]  → 9 > 8 ✅   (tức dãy sau đang tăng)
+nums[j - k] > nums[j - k - 1] → 5 > 2 ✅  (dãy trước cũng tăng)
+```
+
+---
+
+### 🎯 Giải thích bằng hình ảnh:
+
+```
+Chỉ số:   0   1   2   3   4
+Giá trị: [2] [5] [7] [8] [9]
+                |_________|   dãy thứ 1 (k=3): [2,5,7]
+                      |_________|   dãy thứ 2 (k=3): [5,7,8]
+                            |_________|   tại j=4, kiểm tra nối giữa 2 dãy này
+```
+
+👉 Khi `j=4`, ta **đang đứng ở điểm giao nhau** giữa hai dãy con liền nhau:
+
+* Dãy 1: `[2,5,7]` (chỉ số 0–2)
+* Dãy 2: `[5,7,8]` (chỉ số 1–3)
+
+và bây giờ `9` (ở vị trí `4`) là phần mở rộng tiếp theo cho dãy thứ hai → `[7,8,9]`.
+
+---
+
+### ✅ Kết luận:
+
+| Thành phần                 | Ý nghĩa                                                          |
+| -------------------------- | ---------------------------------------------------------------- |
+| `j = k + 1`                | Vị trí đầu tiên đủ để **so sánh hai dãy con liền nhau độ dài k** |
+| `nums[j] > nums[j-1]`      | Dãy hiện tại (sau) đang tăng                                     |
+| `nums[j-k] > nums[j-k-1]`  | Dãy trước cũng tăng                                              |
+| Khi cả hai đúng → `need--` | Tìm được thêm 1 cặp tăng song song                               |
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ 2 dãy chồng nhau bằng ký tự ASCII** để minh họa trực quan hơn (kiểu giống hình học). Bạn có muốn mình vẽ không?
+Rất hay — câu hỏi này đi sâu vào **bản chất của công thức `need = k - 1`**, nên mình sẽ giải thích từ **trực giác → ví dụ → công thức tổng quát** nhé 👇
+
+---
+
+### 🎯 Mục tiêu của bài toán
+
+Ta muốn **tìm 2 dãy con tăng liên tiếp** có **độ dài `k`**, ví dụ như:
+
+```
+nums = [2, 5, 7, 8, 9, 2, 3, 4, 3, 1]
+k = 3
+```
+
+Hai dãy con tăng có độ dài 3 là:
+
+```
+[2, 5, 7]  và  [2, 3, 4]
+```
+
+Hai dãy này **nối tiếp nhau** (không bị tách rời bởi giảm mạnh).
+
+---
+
+### 🧩 Bản chất của dãy tăng độ dài `k`
+
+Để có 1 **dãy tăng độ dài k**, ta cần **(k - 1) lần tăng liên tiếp**.
+Ví dụ:
+
+| Dãy       | Độ dài (k) | Số lần tăng (k-1)         |
+| --------- | ---------- | ------------------------- |
+| [2,5,7]   | 3          | 2 lần tăng: 2→5, 5→7      |
+| [1,2,3,4] | 4          | 3 lần tăng: 1→2, 2→3, 3→4 |
+
+👉 Nói cách khác, **muốn tạo được dãy tăng độ dài k thì phải có k-1 bước tăng liên tục**.
+
+---
+
+### 🧠 Do đó:
+
+Trong code, `need = k - 1` có nghĩa là:
+
+> “Chúng ta cần tìm đủ (k - 1) cặp tăng liên tiếp trong 2 dãy để khẳng định rằng có 2 dãy tăng liền nhau.”
+
+---
+
+### 📘 Cách hình thành công thức
+
+1️⃣ Ta bắt đầu chưa có bước tăng nào → `need = k - 1`
+2️⃣ Mỗi khi tìm được 1 cặp tăng hợp lệ (`nums[j] > nums[j-1]` và `nums[j-k] > nums[j-k-1]`)
+→ giảm `need--` (tức là ta đã tìm thêm 1 bước tăng liên tục).
+3️⃣ Khi `need == 0`
+→ nghĩa là ta đã có **(k-1)** cặp tăng liên tục ở cả 2 dãy
+→ tương đương **2 dãy tăng độ dài k** → `return true`.
+
+---
+
+### 🔍 Ví dụ minh họa
+
+```
+nums = [2, 5, 7, 8, 9, 2, 3, 4]
+k = 3
+```
+
+| j | nums[j] | nums[j-1] | nums[j-k] | nums[j-k-1] | Điều kiện | need          | Giải thích            |
+| - | ------- | --------- | --------- | ----------- | --------- | ------------- | --------------------- |
+| 4 | 9       | 8         | 5         | 2           | ✅         | need=1        | 1 bước tăng song song |
+| 5 | 2       | 9         | 7         | 5           | ❌         | reset=2       | chuỗi bị ngắt         |
+| 7 | 4       | 3         | 9         | 8           | ✅         | need=1        | tiếp tục tìm          |
+| 8 | —       | —         | —         | —           | ✅         | need=0 → true | đủ (k−1)=2 bước tăng  |
+
+---
+
+### ✅ Kết luận
+
+Công thức **`need = k - 1`** sinh ra từ:
+
+* Một dãy tăng độ dài `k` cần `(k - 1)` bước tăng liên tiếp.
+* Mỗi khi tìm thấy một “bước tăng song song” giữa hai dãy, ta giảm `need--`.
+* Khi `need == 0`, nghĩa là ta đã có đủ hai dãy tăng liền nhau → trả về `true`.
+
+---
+
+Bạn có muốn mình vẽ **hình minh họa dòng thời gian của các chỉ số j, j−1, j−k, j−k−1** để dễ thấy hai dãy song song tăng không?

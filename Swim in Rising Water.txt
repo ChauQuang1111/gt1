@@ -1,0 +1,241 @@
+Swim in Rising Water
+class Solution {
+  int len;
+final static int[][] dirs = new int[][]{{1,0},{0,1},{-1,0},{0,-1}};
+
+public int swimInWater(int[][] grid) {
+    len = grid.length;
+    int left = Math.max(grid[0][0], grid[len - 1][len - 1]), right = len * len - 1, mid, res = 0;
+    while (left <= right) {
+        mid = (left + right) / 2;
+        boolean[] seen = new boolean[len * len];
+        if (dfs(0, 0, grid, mid, seen)) {
+            res = mid;
+            right = mid - 1;
+        } else {
+            left = mid + 1;
+        }
+    }
+    return res;
+}
+public boolean dfs(int xn, int yn, int[][] grid, int mid, boolean[] seen) {
+    int idx = xn * len + yn;
+    if (seen[idx]) return true;
+    seen[idx] = true;
+    for (int i = 0; i < 4; i++) {
+        int newx = xn + dirs[i][0], newy = yn + dirs[i][1];
+        if (newx >= 0 && newx < len && newy >= 0
+                && newy < len && !seen[newx * len + newy] && grid[newx][newy] <= mid) {
+            if (newx == len - 1 && newy == len - 1) {
+                return true;
+            }
+            if (dfs(newx, newy, grid, mid, seen)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+}
+
+Rất hay 👍 — mình sẽ **giải thích chi tiết từng dòng** trong đoạn code này để bạn hiểu **rõ toàn bộ cơ chế hoạt động của thuật toán Binary Search + DFS** trong bài **Swim in Rising Water (LeetCode 778)**.
+
+---
+
+### 🔹 Hàm mục tiêu:
+
+```java
+public int swimInWater(int[][] grid) {
+```
+
+→ Hàm này trả về **thời gian nhỏ nhất (t)** mà bạn có thể đi từ ô `(0,0)` đến `(n-1,n-1)`.
+
+---
+
+### 🔹 Dòng 1:
+
+```java
+len = grid.length;
+```
+
+* Lấy kích thước của ma trận `grid` (vì là `n x n`, nên chỉ cần lấy chiều dài hàng).
+* Lưu vào biến `len` để dùng cho các phép tính sau (đỡ phải viết `grid.length` nhiều lần).
+
+---
+
+### 🔹 Dòng 2:
+
+```java
+int left = Math.max(grid[0][0], grid[len - 1][len - 1]), right = len * len - 1, mid, res = 0;
+```
+
+* **`left`**: giá trị nhỏ nhất mà ta cần thử (mực nước ban đầu).
+  → Nước phải cao ít nhất bằng **max(ô đầu, ô cuối)**, nếu thấp hơn thì không thể đi được.
+  Ví dụ: nếu ô đầu là `10` và ô cuối là `5` thì nước phải ≥ `10` mới rời được điểm đầu.
+
+* **`right`**: giá trị lớn nhất có thể có trong `grid`, vì đề bài đảm bảo các ô chứa giá trị từ `0` đến `n² - 1`.
+
+* **`mid`**: mực nước trung bình (nước dâng đến đây thì thử kiểm tra có đi được không).
+
+* **`res`**: kết quả cuối cùng (lưu lại mực nước nhỏ nhất đủ để đi tới đích).
+
+---
+
+### 🔹 Dòng 3:
+
+```java
+while (left <= right) {
+```
+
+* Dùng **Binary Search** trên đoạn `[left, right]`.
+* Mỗi lần ta sẽ thử một mực nước `mid` để xem **đi được hay không**.
+
+---
+
+### 🔹 Dòng 4:
+
+```java
+mid = (left + right) / 2;
+```
+
+* Tính **mực nước trung bình** `mid` giữa khoảng hiện tại.
+* Dùng `mid` này để kiểm tra bằng DFS.
+
+---
+
+### 🔹 Dòng 5:
+
+```java
+boolean[] seen = new boolean[len * len];
+```
+
+* Tạo mảng `seen` (đánh dấu ô đã thăm).
+* Dùng mảng 1 chiều thay cho 2D để tiết kiệm bộ nhớ:
+
+  * Ô `(x, y)` sẽ được ánh xạ thành chỉ số `x * len + y`.
+
+---
+
+### 🔹 Dòng 6–12:
+
+```java
+if (dfs(0, 0, grid, mid, seen)) {
+    res = mid;
+    right = mid - 1;
+} else {
+    left = mid + 1;
+}
+```
+
+#### ✅ Nếu `dfs(...)` trả về **true**:
+
+* Nghĩa là **có thể đi từ (0,0) → (n-1,n-1)** khi nước cao `mid`.
+* Khi đó:
+
+  * `res = mid`: cập nhật kết quả (tạm thời là mức nước đủ).
+  * `right = mid - 1`: thử **giảm mực nước xuống** để tìm giá trị nhỏ hơn vẫn đi được.
+
+#### ❌ Nếu `dfs(...)` trả về **false**:
+
+* Nghĩa là nước còn **chưa đủ cao để đi hết**.
+* Khi đó:
+
+  * `left = mid + 1`: **tăng mực nước lên**.
+
+---
+
+### 🔹 Dòng cuối:
+
+```java
+return res;
+```
+
+* Sau khi Binary Search kết thúc, `res` là **mực nước nhỏ nhất** giúp bạn đi tới đích.
+
+---
+
+## 🔁 **Tóm tắt luồng hoạt động**
+
+| Lần lặp             | mid (mực nước) | DFS kiểm tra         | Hành động tiếp theo |
+| ------------------- | -------------- | -------------------- | ------------------- |
+| 1                   | 10             | Không tới được       | left = mid + 1      |
+| 2                   | 15             | Tới được             | right = mid - 1     |
+| 3                   | 13             | Tới được             | right = mid - 1     |
+| 4                   | 12             | Không tới được       | left = mid + 1      |
+| ✅ Kết quả cuối cùng | `res = 13`     | Là mực nước nhỏ nhất |                     |
+
+---
+
+## 💡 Tóm gọn lại:
+
+* `left`, `right`: khoảng tìm kiếm mực nước.
+* `mid`: mực nước thử nghiệm.
+* `dfs(...)`: kiểm tra có thể đến đích với mực nước `mid` hay không.
+* `Binary Search`: thu hẹp phạm vi cho tới khi tìm được `res` nhỏ nhất.
+
+---
+
+Bạn có muốn mình **giải thích chi tiết luôn hàm `dfs()` từng dòng** (phần kiểm tra đường đi) cho khớp với đoạn này không?
+Rồi nhé — dưới đây là **giải thích chi tiết từng dòng code** của hàm `dfs` trong bài **LeetCode 778: Swim in Rising Water**, kèm chú thích trong code để bạn dễ hiểu luôn 👇
+
+---
+
+### 🧠 Ý tưởng tổng quát:
+
+Hàm `dfs` dùng để **kiểm tra xem có thể đi từ (0,0) đến (n-1,n-1)** khi mức nước hiện tại là `mid` hay không.
+Nếu tại mức nước `mid`, ta có thể đi qua các ô có giá trị ≤ `mid`, thì ta thử mức nước nhỏ hơn. Ngược lại, tăng mức nước lên.
+
+---
+
+### 💻 Code kèm chú thích:
+
+```java
+public boolean dfs(int xn, int yn, int[][] grid, int mid, boolean[] seen) {
+    // Tính chỉ số 1D tương ứng của ô (xn, yn) trong mảng seen 1D
+    int idx = xn * len + yn;
+
+    // Nếu ô này đã được thăm, trả về true (tránh lặp vô hạn)
+    if (seen[idx]) return true;
+
+    // Đánh dấu ô hiện tại đã được thăm
+    seen[idx] = true;
+
+    // Duyệt 4 hướng: lên, xuống, trái, phải
+    for (int i = 0; i < 4; i++) {
+        int newx = xn + dirs[i][0], newy = yn + dirs[i][1];
+
+        // Kiểm tra ô mới có nằm trong lưới và chưa thăm
+        // đồng thời độ cao của ô đó ≤ mid (tức là có thể bơi qua)
+        if (newx >= 0 && newx < len && newy >= 0
+                && newy < len && !seen[newx * len + newy] && grid[newx][newy] <= mid) {
+
+            // Nếu đã đến được đích (len-1, len-1) thì trả về true
+            if (newx == len - 1 && newy == len - 1) {
+                return true;
+            }
+
+            // Tiếp tục DFS sang ô mới
+            if (dfs(newx, newy, grid, mid, seen)) {
+                return true; // Nếu đường đi hợp lệ, trả về true ngay
+            }
+        }
+    }
+
+    // Nếu thử mọi hướng đều không đến được đích => false
+    return false;
+}
+```
+
+---
+
+### 📘 Tóm tắt hoạt động:
+
+* `mid` đại diện cho **mực nước hiện tại**.
+* `dfs()` duyệt **tất cả các ô có thể bơi tới** (độ cao ≤ `mid`).
+* Nếu có đường đến `(len-1, len-1)` → `true`.
+* Nếu không tìm thấy đường → `false`.
+* Kết hợp với **Binary Search** trong hàm `swimInWater` để tìm **mức nước nhỏ nhất cần thiết**.
+
+---
+
+Nếu bạn muốn, mình có thể ghép toàn bộ code (`main`, `swimInWater`, `dfs`) thành **một chương trình hoàn chỉnh có nhập Scanner và chú thích từng dòng** cho bạn — bạn có muốn mình làm luôn không?

@@ -1,0 +1,226 @@
+1912. Design Movie Rental System
+
+class MovieRentingSystem:
+
+    def __init__(self, n: int, entries: List[List[int]]):
+        self.available = {}  # (shop, movie) -> price
+        self.movie_shops = {}  # movie -> list of (price, shop)
+        self.rented = set()  # (shop, movie) that are currently rented
+
+     Ok 👍, mình sẽ giải thích thật chi tiết đoạn này nhé:
+
+```python
+for shop, movie, price in entries:
+    # Lưu giá của bộ phim này ở cửa hàng này
+    # Key là (shop, movie), value là price
+    # Ví dụ: (0,1) -> 5 nghĩa là shop 0 cho thuê movie 1 với giá 5
+    self.available[(shop, movie)] = price
+
+    # Nếu movie này chưa có trong danh sách movie_shops
+    # thì tạo một list rỗng để chứa các shop có movie này
+    if movie not in self.movie_shops:
+        self.movie_shops[movie] = []
+
+    # Thêm cặp (price, shop) vào danh sách shop cho movie này
+    # Để sau này dễ sắp xếp shop nào cho thuê phim rẻ nhất
+    self.movie_shops[movie].append((price, shop))
+```
+
+📌 Ý nghĩa:
+
+* `entries` là danh sách dữ liệu đầu vào, mỗi phần tử có dạng `[shop, movie, price]`.
+* `self.available`: giúp **tra cứu nhanh giá thuê** cho một `(shop, movie)`.
+* `self.movie_shops`: giúp **gom nhóm các shop theo từng movie**, để khi `search(movie)` chỉ cần nhìn vào danh sách của movie đó (không cần duyệt toàn bộ hệ thống).
+
+---
+
+👉 Ví dụ:
+Giả sử `entries = [[0,1,5], [1,1,4], [2,2,7]]`
+
+Sau vòng lặp:
+
+* `self.available = {(0,1):5, (1,1):4, (2,2):7}`
+* `self.movie_shops = {1:[(5,0),(4,1)], 2:[(7,2)]}`
+
+Bạn có muốn mình vẽ thêm **sơ đồ trực quan** để thấy rõ cách dữ liệu được lưu không?
+
+
+        # Sort shops by price for each movie initially
+        for movie in self.movie_shops:
+            self.movie_shops[movie].sort()
+
+    def search(self, movie: int) -> List[int]:
+        result = []
+        for price, shop in self.movie_shops.get(movie, []):
+            if (shop, movie) not in self.rented:
+                result.append(shop)
+            if len(result) == 5:
+                break
+        return result
+
+    def rent(self, shop: int, movie: int) -> None:
+        self.rented.add((shop, movie))
+
+    def drop(self, shop: int, movie: int) -> None:
+        self.rented.discard((shop, movie))
+	Hay, mình giải thích chi tiết nhé 👇
+
+```python
+def drop(self, shop: int, movie: int) -> None:
+    self.rented.discard((shop, movie))
+```
+
+### 1️⃣ Ý nghĩa đoạn code
+
+* `drop` nghĩa là khách hàng **trả lại phim** (kết thúc việc thuê).
+* Trong class này:
+
+  * `self.rented` là một `set` chứa các bộ phim đang được thuê, mỗi phần tử có dạng `(shop, movie)`.
+* Khi gọi `drop(shop, movie)`, ta muốn **xóa (shop, movie) khỏi tập `self.rented`**.
+
+👉 Dùng `discard` để xóa.
+
+---
+
+### 2️⃣ `.discard` là gì?
+
+* `.discard` là **hàm có sẵn của kiểu `set` trong Python** (không phải tự định nghĩa).
+* Công dụng: Xóa một phần tử trong `set`.
+* **Điểm khác biệt** với `.remove`:
+
+  * `.discard(x)` sẽ **không báo lỗi** nếu `x` không tồn tại trong `set`.
+  * `.remove(x)` sẽ **báo lỗi KeyError** nếu `x` không tồn tại.
+
+---
+
+### 3️⃣ Ví dụ minh họa
+
+```python
+s = {1, 2, 3}
+
+s.discard(2)   # xóa 2, s = {1, 3}
+s.discard(5)   # không có 5, nhưng cũng KHÔNG báo lỗi → s = {1, 3}
+
+s.remove(1)    # xóa 1, s = {3}
+s.remove(10)   # LỖI: KeyError vì 10 không có trong set
+```
+
+---
+
+✅ Vậy trong code này, dùng `.discard((shop, movie))` là **an toàn hơn `.remove`**, vì có thể xảy ra tình huống bạn gọi `drop` nhưng `(shop, movie)` chưa nằm trong `self.rented`.
+
+---
+
+Bạn có muốn mình viết lại đoạn này thành **phiên bản dùng `.remove`** và chỉ ra khi nào nó sẽ gây lỗi không?
+
+
+    def report(self) -> List[List[int]]:
+        rented_list = []
+        for shop, movie in self.rented:
+            price = self.available[(shop, movie)]
+            rented_list.append((price, shop, movie))
+
+        rented_list.sort()
+        return [[shop, movie] for price, shop, movie in rented_list[:5]]
+	
+	Ok, mình giải thích chi tiết đoạn code `report` nhé 👇
+
+---
+
+### 1️⃣ Code gốc
+
+```python
+def report(self) -> List[List[int]]:
+    rented_list = []
+    for shop, movie in self.rented:
+        price = self.available[(shop, movie)]
+        rented_list.append((price, shop, movie))
+
+    rented_list.sort()
+    return [[shop, movie] for price, shop, movie in rented_list[:5]]
+```
+
+---
+
+### 2️⃣ Ý nghĩa từng bước
+
+1. **Tạo danh sách tạm thời để chứa phim đang thuê**
+
+   ```python
+   rented_list = []
+   ```
+
+   Đây sẽ là list chứa các bộ 3 `(price, shop, movie)`.
+
+2. **Duyệt qua tất cả các phim đang thuê**
+
+   ```python
+   for shop, movie in self.rented:
+       price = self.available[(shop, movie)]
+       rented_list.append((price, shop, movie))
+   ```
+
+   * `self.rented` là `set` chứa các bộ phim đã thuê dạng `(shop, movie)`.
+   * Với mỗi `(shop, movie)`, lấy giá `price` từ `self.available[(shop, movie)]`.
+   * Thêm bộ `(price, shop, movie)` vào `rented_list`.
+     → Lý do đưa `price` lên đầu: để dễ **sắp xếp theo giá trước tiên**.
+
+3. **Sắp xếp danh sách phim đã thuê**
+
+   ```python
+   rented_list.sort()
+   ```
+
+   * Python mặc định sắp xếp tuple theo **thứ tự từ trái qua phải**.
+   * Nghĩa là `(price, shop, movie)` sẽ được sắp theo:
+
+     1. Giá **tăng dần**
+     2. Nếu giá bằng nhau → shop **tăng dần**
+     3. Nếu shop cũng bằng nhau → movie **tăng dần**
+
+4. **Lấy ra tối đa 5 kết quả đầu tiên**
+
+   ```python
+   return [[shop, movie] for price, shop, movie in rented_list[:5]]
+   ```
+
+   * `rented_list[:5]` nghĩa là **lấy từ đầu đến 5 phần tử đầu tiên** (nếu có ít hơn 5 thì lấy hết).
+   * Sau đó chỉ trả về `[shop, movie]` (không cần giá vì đề chỉ yêu cầu shop + movie).
+
+---
+
+### 3️⃣ Ví dụ minh họa
+
+Giả sử:
+
+```python
+self.rented = {(0, 1), (1, 2), (2, 1)}
+self.available = {(0,1): 5, (1,2): 7, (2,1): 5}
+```
+
+Thì:
+
+* `rented_list` sau vòng for =
+
+  ```
+  [(5, 0, 1), (7, 1, 2), (5, 2, 1)]
+  ```
+* Sau khi `.sort()` =
+
+  ```
+  [(5, 0, 1), (5, 2, 1), (7, 1, 2)]
+  ```
+* `rented_list[:5]` = giữ nguyên (vì có 3 phần tử thôi).
+* Kết quả trả về =
+
+  ```
+  [[0, 1], [2, 1], [1, 2]]
+  ```
+
+---
+
+👉 Vậy `[:5]` có nghĩa là **giới hạn kết quả tối đa 5 bản ghi đầu tiên**, đúng yêu cầu đề bài: *“trả về tối đa 5 phim đang thuê theo thứ tự ưu tiên”*.
+
+---
+
+Bạn có muốn mình viết lại `report` sao cho **không cần sort toàn bộ list** (chỉ lấy top 5 thôi → dùng heap cho nhanh hơn) không?

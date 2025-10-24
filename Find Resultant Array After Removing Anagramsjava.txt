@@ -1,0 +1,233 @@
+Find Resultant Array After Removing Anagrams
+import java.util.AbstractList;
+
+class Solution {
+        List<String> res;
+
+        public List<String> removeAnagrams(String[] words) {
+                return new AbstractList<String>() {
+                        @Override
+                        public int size() {
+                                init(); 
+                                return res.size(); 
+                        }
+                        @Override 
+                        public String get(int index) {
+                                init(); 
+                                return res.get(index); 
+                        }
+                        // @Override 
+                        protected void init() {
+                                if (res != null)
+                                        return; 
+                                res = new ArrayList<String>(); 
+                                res.add(words[0]); 
+
+                                String cur = metaDo(words[0]); 
+                                for (int J = 1; J < words.length; J += 1) {
+                                        final String s0 = metaDo(words[J]); 
+                                        if (!s0.equals(cur)) {
+                                                res.add(words[J]); cur = s0; 
+                                        }
+                                }
+                        }
+                }; 
+        }
+        private static String metaDo(String s) {
+                char[] chars = s.toCharArray(); 
+                Arrays.sort(chars);    
+                return String.valueOf(chars); 
+        }
+}
+Rất hay — đoạn code Java này là một cách **viết ngắn nhưng khá “tricky”** để giải bài *2273. Find Resultant Array After Removing Anagrams* (tức là loại bỏ các từ **liền kề** là **anagram** của nhau).
+
+Giờ mình sẽ **giải thích từng phần, dòng nào làm gì, và thuật toán hoạt động ra sao** 👇
+
+---
+
+## 🧩 Ý tưởng tổng quát
+
+> Ta duyệt qua danh sách `words[]`, và chỉ thêm từ hiện tại vào kết quả nếu nó **không phải là anagram của từ liền trước đó**.
+
+---
+
+## 🧠 Giải thích chi tiết code
+
+```java
+public List<String> removeAnagrams(String[] words) {
+    return new AbstractList<String>() {
+```
+
+* Trả về một **`AbstractList` ẩn danh** — tức là tạo ra một lớp con của `AbstractList` ngay trong lời gọi hàm.
+* `AbstractList` là lớp trừu tượng trong Java giúp định nghĩa nhanh một `List` mà chỉ cần override hai hàm:
+
+  * `size()`
+  * `get(index)`
+
+---
+
+### ⚙️ Hai hàm chính của `AbstractList`
+
+```java
+@Override
+public int size() {
+    init();            // gọi hàm khởi tạo (chỉ làm 1 lần)
+    return res.size(); // trả về kích thước danh sách kết quả
+}
+
+@Override 
+public String get(int index) {
+    init();            // đảm bảo danh sách đã được khởi tạo
+    return res.get(index);
+}
+```
+
+→ Hai hàm này sẽ truy cập danh sách `res` (kết quả cuối cùng), nhưng **trước khi dùng thì gọi `init()`** để đảm bảo danh sách đã được tính toán.
+
+---
+
+### 🧮 Hàm `init()`: phần “trái tim” của thuật toán
+
+```java
+protected void init() {
+    if (res != null)
+        return; // Nếu đã khởi tạo rồi thì bỏ qua (chỉ chạy 1 lần)
+    
+    res = new ArrayList<String>();
+    res.add(words[0]); // Luôn thêm từ đầu tiên vào kết quả
+
+    String cur = metaDo(words[0]); // metaDo() = sắp xếp ký tự của từ
+    for (int J = 1; J < words.length; J += 1) {
+        final String s0 = metaDo(words[J]);
+        if (!s0.equals(cur)) { // nếu không phải anagram của từ trước đó
+            res.add(words[J]); // thêm vào kết quả
+            cur = s0;          // cập nhật "mẫu chữ cái" hiện tại
+        }
+    }
+}
+```
+
+➡️ Logic hoạt động:
+
+1. Lấy từ đầu tiên cho vào kết quả (`res`).
+2. Với mỗi từ `words[J]` sau đó:
+
+   * Gọi `metaDo(words[J])` → sắp xếp ký tự (để tạo “chữ ký” cho anagram).
+   * So sánh với `cur` (chữ ký của từ trước đó).
+   * Nếu khác → không phải anagram → thêm vào danh sách kết quả.
+   * Nếu giống → là anagram → bỏ qua.
+
+---
+
+### 🧩 Hàm `metaDo()`
+
+```java
+private static String metaDo(String s) {
+    char[] chars = s.toCharArray(); 
+    Arrays.sort(chars); // Sắp xếp ký tự theo thứ tự ASCII
+    return String.valueOf(chars); 
+}
+```
+
+➡️ Ví dụ:
+
+* `"abba"` → `['a', 'b', 'b', 'a']` → `"aabb"`
+* `"baba"` → `['a', 'a', 'b', 'b']` → `"aabb"`
+
+→ Hai chuỗi này có “mẫu” giống nhau `"aabb"` → là anagram.
+
+---
+
+## 📊 Ví dụ minh họa
+
+**Input:**
+
+```java
+words = ["abba", "baba", "bbaa", "cd", "cd"]
+```
+
+**Diễn giải từng bước:**
+
+| Bước | word   | metaDo(word) | cur trước đó | So sánh | Hành động                                   |
+| ---- | ------ | ------------ | ------------ | ------- | ------------------------------------------- |
+| 1    | "abba" | "aabb"       | (rỗng)       | —       | thêm vào `res = ["abba"]`, cur = "aabb"     |
+| 2    | "baba" | "aabb"       | "aabb"       | bằng    | bỏ qua                                      |
+| 3    | "bbaa" | "aabb"       | "aabb"       | bằng    | bỏ qua                                      |
+| 4    | "cd"   | "cd"         | "aabb"       | khác    | thêm vào `res = ["abba", "cd"]`, cur = "cd" |
+| 5    | "cd"   | "cd"         | "cd"         | bằng    | bỏ qua                                      |
+
+✅ **Kết quả cuối cùng:**
+
+```
+["abba", "cd"]
+```
+
+---
+
+## 🧩 Tóm tắt ý tưởng
+
+* Duyệt qua từng từ trong `words[]`
+* So sánh từ hiện tại với từ trước đó sau khi **sắp xếp ký tự**
+* Nếu khác → thêm vào danh sách kết quả
+* Nếu giống → bỏ qua
+
+---
+
+## 🕒 Độ phức tạp
+
+* **Thời gian:** `O(n * k log k)`
+  (vì phải sort mỗi từ có độ dài `k`)
+* **Không gian:** `O(n * k)` để lưu kết quả và chuỗi tạm thời.
+
+---
+
+👉 Nói đơn giản:
+
+> `metaDo()` biến mỗi từ thành “chữ ký anagram”.
+> `init()` duyệt qua và chỉ giữ lại **từ đầu tiên trong nhóm anagram liền kề**.
+> Cả class dùng `AbstractList` để trì hoãn tính toán cho tới khi thật sự cần.
+
+---
+
+Bạn có muốn mình thêm **hàm `main` với `Scanner` để nhập mảng `words` và in kết quả** cho đoạn code này không?
+Hàm `metaDo(String s)` có nhiệm vụ **chuyển một từ thành "dạng chuẩn"** để dễ so sánh xem hai từ có phải là **anagram** của nhau hay không.
+Giải thích chi tiết từng dòng:
+
+```java
+private static String metaDo(String s) {
+    // 1️⃣ Chuyển chuỗi s thành mảng ký tự
+    char[] chars = s.toCharArray();
+    
+    // 2️⃣ Sắp xếp các ký tự trong mảng theo thứ tự bảng chữ cái (ASCII)
+    Arrays.sort(chars);
+    
+    // 3️⃣ Tạo lại chuỗi từ mảng ký tự đã sắp xếp và trả về
+    return String.valueOf(chars);
+}
+```
+
+### 🧠 Giải thích thuật toán:
+
+* **Ý tưởng:**
+  Hai từ là *anagram* của nhau nếu sau khi sắp xếp các ký tự theo thứ tự bảng chữ cái, chúng giống hệt nhau.
+  → Vì vậy, ta chỉ cần sắp xếp ký tự của từng từ rồi so sánh kết quả.
+
+### 💡 Ví dụ:
+
+Giả sử:
+
+```java
+s = "listen"
+```
+
+* `s.toCharArray()` → `['l', 'i', 's', 't', 'e', 'n']`
+* `Arrays.sort(chars)` → `['e', 'i', 'l', 'n', 's', 't']`
+* `String.valueOf(chars)` → `"eilnst"`
+
+Nếu `s = "silent"` → cũng ra `"eilnst"`
+→ `"listen"` và `"silent"` là **anagram** của nhau.
+
+---
+
+✅ **Tóm lại:**
+Hàm `metaDo` giúp biến mỗi từ thành một “dấu vân tay” duy nhất để dễ dàng kiểm tra xem hai từ có phải anagram không.

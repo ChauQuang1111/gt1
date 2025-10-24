@@ -1,0 +1,764 @@
+Maximize the Number of Partitions After Operations
+class Solution:
+    def maxPartitionsAfterOperations(self, s: str, k: int) -> int:
+        n = len(s)
+        set_bits = [1 << (ord(letter) - ord("a")) for letter in s]
+
+        def make_prefix(set_bits: List[int]):
+            prefix = [0]
+            prefix_mask = [0]
+            mask = 0
+            groups = 0
+            for current_index_set_bits in set_bits:
+                mask |= current_index_set_bits
+                if mask.bit_count() > k:
+                    groups += 1
+                    mask = current_index_set_bits
+                prefix.append(groups)
+                prefix_mask.append(mask)
+            return prefix, prefix_mask
+
+        prefix, prefix_mask = make_prefix(set_bits)
+        suffix, suffix_mask = make_prefix(set_bits[::-1])
+
+        max_partitions_after_operations = 0
+        for index in range(n):
+            candidate = prefix[index] + suffix[-(index + 2)]
+            mask = prefix_mask[index] | suffix_mask[-(index + 2)]
+            if min(mask.bit_count() + 1, 26) <= k:
+                candidate += 1
+            elif (
+                prefix_mask[index].bit_count()
+                == suffix_mask[-(index + 2)].bit_count()
+                == k
+                and mask.bit_count() < 26
+            ):
+                candidate += 3
+            else:
+                candidate += 2
+            max_partitions_after_operations = max(
+                max_partitions_after_operations, candidate
+            )
+        return max_partitions_after_operations
+		
+		
+Rất hay 👍 — dòng này là **trọng tâm** của bài, mình giải thích kỹ nhé:
+
+---
+
+## 🔍 Dòng code:
+
+```python
+set_bits = [1 << (ord(letter) - ord("a")) for letter in s]
+```
+
+---
+
+## 🎯 Mục đích:
+
+→ Biến **chuỗi ký tự `s`** thành **một danh sách số nguyên**,
+trong đó mỗi số biểu diễn **ký tự duy nhất** dưới dạng **bitmask**.
+
+---
+
+## 🧠 Giải thích từng phần:
+
+| Thành phần                      | Ý nghĩa                                                                                        |
+| ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `ord(letter)`                   | Lấy mã ASCII của ký tự, ví dụ `ord('a') = 97`, `ord('b') = 98`                                 |
+| `ord(letter) - ord('a')`        | Đưa ký tự về vị trí từ `0` đến `25` (vì có 26 chữ cái)                                         |
+| `1 << (ord(letter) - ord('a'))` | Dịch bit sang trái, tạo **bitmask** có đúng 1 bit được bật tại vị trí tương ứng với chữ cái đó |
+| `[ ... for letter in s]`        | Tạo danh sách bitmask cho toàn bộ chuỗi                                                        |
+
+---
+
+## 💡 Ví dụ minh họa
+
+Giả sử:
+
+```python
+s = "abc"
+```
+
+Ta có:
+
+| letter | ord(letter) - ord('a') | 1 << (vị trí) | binary dạng bitmask | giá trị thập phân |
+| ------ | ---------------------- | ------------- | ------------------- | ----------------- |
+| `'a'`  | 0                      | 1 << 0        | `000...0001`        | 1                 |
+| `'b'`  | 1                      | 1 << 1        | `000...0010`        | 2                 |
+| `'c'`  | 2                      | 1 << 2        | `000...0100`        | 4                 |
+
+👉 Kết quả:
+
+```python
+set_bits = [1, 2, 4]
+```
+
+---
+
+## 🧩 Ý nghĩa trong bài toán
+
+Mỗi phần tử trong `set_bits` là **bitmask đại diện cho ký tự đó**.
+Nhờ vậy, khi ta **gộp các bitmask bằng phép OR (`|`)**,
+ta sẽ biết được **những chữ cái nào đang có trong một đoạn**.
+
+Ví dụ:
+
+```python
+mask = set_bits[0] | set_bits[1] | set_bits[2]
+```
+
+→ `mask = 1 | 2 | 4 = 7` → dạng nhị phân `000...0111`
+→ có 3 bit bật → đoạn này chứa **3 chữ cái khác nhau (a, b, c)**.
+
+---
+
+## ✅ Tóm lại:
+
+```python
+set_bits = [1 << (ord(letter) - ord("a")) for letter in s]
+```
+
+👉 Chuyển mỗi ký tự trong chuỗi `s` thành **bitmask**
+→ dùng để đếm **số lượng ký tự khác nhau trong một đoạn** nhanh chóng bằng:
+
+```python
+mask.bit_count()
+```
+
+---
+
+Bạn có muốn mình minh họa thêm ví dụ với chuỗi có ký tự lặp, như `"aba"` (để thấy cách bitmask tránh đếm trùng ký tự) không?
+Rất hay 👏 — đây là **hàm quan trọng nhất** trong thuật toán.
+Ta cùng **giải thích chi tiết từng dòng code** để hiểu rõ mục đích và ý nghĩa nhé.
+
+---
+
+## 🧩 Mục đích của hàm `make_prefix`
+
+Hàm này giúp **chia chuỗi (hoặc dãy bitmask)** thành **các nhóm (partition)** sao cho:
+👉 Mỗi nhóm **có số ký tự khác nhau ≤ k**.
+
+---
+
+## 💻 Code + Chú thích từng dòng:
+
+```python
+def make_prefix(set_bits: List[int]):
+    prefix = [0]             # Danh sách lưu số nhóm (partitions) tính đến mỗi vị trí
+    prefix_mask = [0]        # Danh sách lưu bitmask của nhóm hiện tại
+    mask = 0                 # Biến mask biểu diễn tập ký tự trong nhóm hiện tại
+    groups = 0               # Biến đếm số nhóm đã hoàn thành
+```
+
+---
+
+### 🔁 Vòng lặp chính:
+
+```python
+    for current_index_set_bits in set_bits:
+        mask |= current_index_set_bits
+```
+
+👉 Gộp ký tự hiện tại vào nhóm đang xét (`mask`)
+→ phép `|` (bitwise OR) giúp ta biết tất cả các ký tự khác nhau có trong nhóm.
+
+Ví dụ:
+
+* Nếu `mask = 0011` (có a,b)
+* `current_index_set_bits = 0100` (chữ c)
+* `mask |= current_index_set_bits → mask = 0111` (a,b,c)
+
+---
+
+### ⚠️ Kiểm tra khi nhóm có quá nhiều ký tự:
+
+```python
+        if mask.bit_count() > k:
+            groups += 1                 # Đã đầy → kết thúc nhóm cũ
+            mask = current_index_set_bits  # Bắt đầu nhóm mới chỉ với ký tự hiện tại
+```
+
+👉 `mask.bit_count()` = số lượng bit bật (tức là số ký tự khác nhau trong nhóm).
+Nếu vượt quá `k`, ta phải:
+
+* Tăng số nhóm (`groups += 1`)
+* Reset lại nhóm mới (`mask = current ký tự`)
+
+---
+
+### 📊 Lưu kết quả cho từng vị trí:
+
+```python
+        prefix.append(groups)
+        prefix_mask.append(mask)
+```
+
+* `prefix[i]`: tổng số nhóm **đã hoàn thành** tính đến vị trí i
+* `prefix_mask[i]`: bitmask của **nhóm đang xử lý hiện tại**
+
+---
+
+### 🔙 Trả về kết quả:
+
+```python
+    return prefix, prefix_mask
+```
+
+* `prefix`: giúp biết tại vị trí i ta đã có bao nhiêu nhóm
+* `prefix_mask`: biết nhóm hiện tại đang chứa ký tự nào
+
+---
+
+## 📘 Ví dụ minh họa
+
+Giả sử:
+
+```python
+s = "abcab"
+k = 2
+set_bits = [1, 2, 4, 1, 2]
+```
+
+Chạy hàm `make_prefix(set_bits)`:
+
+| i | current bit | mask (binary) | bit_count | groups | prefix | prefix_mask |
+|---|--------------|---------------|------------|---------|-------------|
+| 0 | 0001 (a) | 0001 | 1 | 0 | [0,0] | [0,0001] |
+| 1 | 0010 (b) | 0011 | 2 | 0 | [0,0,0] | [0,0001,0011] |
+| 2 | 0100 (c) | 0111 | 3 ❌ > k=2 → reset | 1 | [0,0,0,1] | [0,0001,0011,0100] |
+| 3 | 0001 (a) | 0101 | 2 | 1 | [0,0,0,1,1] | [0,0001,0011,0100,0101] |
+| 4 | 0010 (b) | 0111 | 3 ❌ > k=2 → reset | 2 | [0,0,0,1,1,2] | [0,0001,0011,0100,0101,0010] |
+
+→ Kết quả:
+
+```python
+prefix = [0,0,0,1,1,2]
+prefix_mask = [0,1,3,4,5,2]
+```
+
+---
+
+## ✅ Tóm lại:
+
+Hàm `make_prefix` giúp:
+
+1. **Chia chuỗi** thành các đoạn có ≤ `k` ký tự khác nhau.
+2. Ghi lại **số nhóm hoàn thành** tại mỗi vị trí (`prefix`).
+3. Ghi lại **bitmask nhóm hiện tại** tại mỗi vị trí (`prefix_mask`).
+
+---
+
+Bạn có muốn mình vẽ **hình minh họa trực quan (dạng sơ đồ nhóm)** để thấy rõ cách chia các “partition” không?
+Tuyệt vời 😎 — cùng xem **sơ đồ minh họa trực quan** cho hàm `make_prefix` nhé.
+Giả sử ta có ví dụ đơn giản:
+
+---
+
+## 🔤 Input
+
+```
+s = "abcab"
+k = 2
+```
+
+→ `set_bits = [a=1, b=2, c=4, a=1, b=2]`
+
+---
+
+## 🎯 Mục tiêu
+
+Chia chuỗi thành **nhiều nhóm nhất có thể**,
+mỗi nhóm chứa **tối đa 2 ký tự khác nhau (k = 2)**.
+
+---
+
+## 🧠 Quá trình chia nhóm (vẽ trực quan)
+
+| Vị trí | Ký tự | Nhóm hiện tại (mask) | Số ký tự khác nhau | Hành động       |
+| :----- | :---- | :------------------- | :----------------- | :-------------- |
+| 0      | a     | {a}                  | 1                  | ✅ OK            |
+| 1      | b     | {a, b}               | 2                  | ✅ OK            |
+| 2      | c     | {a, b, c}            | 3 ❌ > k            | 🚫 Tạo nhóm mới |
+| 3      | a     | {c, a}               | 2                  | ✅ OK            |
+| 4      | b     | {c, a, b}            | 3 ❌ > k            | 🚫 Tạo nhóm mới |
+
+---
+
+## 📦 Kết quả nhóm được chia:
+
+```
+Nhóm 1: [a, b]
+Nhóm 2: [c, a]
+Nhóm 3: [b]
+```
+
+---
+
+## 📈 Diễn biến các biến trong code
+
+| Index | current_index_set_bits | mask trước | mask sau OR | mask.bit_count() | groups | prefix[i] | prefix_mask[i] |
+| ----- | ---------------------- | ---------- | ----------- | ---------------- | ------ | --------- | -------------- |
+| 0     | 0001 (a)               | 0000       | 0001        | 1                | 0      | 0         | 0001           |
+| 1     | 0010 (b)               | 0001       | 0011        | 2                | 0      | 0         | 0011           |
+| 2     | 0100 (c)               | 0011       | 0111        | 3 ❌              | 1      | 1         | 0100           |
+| 3     | 0001 (a)               | 0100       | 0101        | 2                | 1      | 1         | 0101           |
+| 4     | 0010 (b)               | 0101       | 0111        | 3 ❌              | 2      | 2         | 0010           |
+
+---
+
+## 🧾 Kết quả trả về
+
+```python
+prefix = [0, 0, 1, 1, 2]        # Số nhóm hoàn thành tại mỗi vị trí
+prefix_mask = [1, 3, 4, 5, 2]   # Bitmask của nhóm hiện tại
+```
+
+---
+
+## 💡 Ý nghĩa:
+
+* `prefix[i]` = số nhóm hoàn chỉnh trước vị trí `i`.
+* `prefix_mask[i]` = bitmask ký tự của nhóm hiện tại (chưa kết thúc).
+
+---
+
+📊 Tóm lại:
+Hàm `make_prefix` giúp **đếm số nhóm từ trái sang phải** (hoặc từ phải sang trái nếu đảo mảng).
+Thuật toán chính sẽ dùng `prefix` (từ trái) và `suffix` (từ phải) để **thử thay đổi một ký tự** và xem ta có thể chia được nhiều nhóm hơn không.
+
+---
+
+Bạn có muốn mình tiếp tục vẽ **hình minh họa suffix (duyệt từ phải sang trái)** để thấy cách 2 mảng prefix/suffix phối hợp ra kết quả cuối cùng không?
+Rất hay 👍 — đây là **một trong những dòng quan trọng nhất** của toàn bài!
+Mình sẽ giải thích kỹ hai dòng này, vì nó chính là nền tảng để thuật toán tìm ra đáp án tối ưu 💡
+
+---
+
+## 🧩 Hai dòng code bạn hỏi:
+
+```python
+prefix, prefix_mask = make_prefix(set_bits)
+suffix, suffix_mask = make_prefix(set_bits[::-1])
+```
+
+---
+
+## 🎯 Mục đích
+
+Thuật toán cần biết:
+
+* Nếu **duyệt từ trái sang phải**, ta chia được bao nhiêu nhóm (`prefix`)
+* Nếu **duyệt từ phải sang trái**, ta chia được bao nhiêu nhóm (`suffix`)
+
+💡 **Tại sao cần cả hai?**
+Vì ta sẽ **thử thay đổi một ký tự ở giữa chuỗi** để **tối đa hóa số nhóm** sau khi thay đổi.
+Muốn làm được vậy, ta cần biết:
+
+* Bên **trái** ký tự đó có bao nhiêu nhóm.
+* Bên **phải** ký tự đó có bao nhiêu nhóm.
+
+---
+
+## 🧠 Giải thích từng dòng chi tiết
+
+### 🟩 1️⃣ `prefix, prefix_mask = make_prefix(set_bits)`
+
+* Gọi hàm `make_prefix` (đã giải thích ở trên)
+* Duyệt **từ trái → phải**
+* Trả về:
+
+  * `prefix[i]`: số nhóm **hoàn thành** trước vị trí i
+  * `prefix_mask[i]`: bitmask **ký tự đang có** trong nhóm hiện tại
+
+👉 Giúp ta biết **cấu trúc nhóm ở bên trái mỗi vị trí**.
+
+---
+
+### 🟨 2️⃣ `suffix, suffix_mask = make_prefix(set_bits[::-1])`
+
+* `set_bits[::-1]` là **đảo ngược chuỗi bitmask**,
+  tức là ta **duyệt từ phải → trái**.
+* Hàm `make_prefix()` được tái sử dụng
+  (vì cách chia nhóm từ phải sang trái logic y hệt bên trái sang phải).
+
+Kết quả:
+
+* `suffix[i]`: số nhóm hoàn thành khi **duyệt từ phải sang trái**
+* `suffix_mask[i]`: bitmask của nhóm hiện tại (bắt đầu từ phải)
+
+---
+
+## 📘 Ví dụ minh họa
+
+Giả sử:
+
+```
+s = "abcab"
+k = 2
+set_bits = [1, 2, 4, 1, 2]
+```
+
+---
+
+### ✅ prefix (từ trái qua phải)
+
+| i | chữ | nhóm  | prefix[i] | prefix_mask[i] |
+| - | --- | ----- | --------- | -------------- |
+| 0 | a   | {a}   | 0         | 1              |
+| 1 | b   | {a,b} | 0         | 3              |
+| 2 | c   | {c}   | 1         | 4              |
+| 3 | a   | {c,a} | 1         | 5              |
+| 4 | b   | {b}   | 2         | 2              |
+
+➡️ `prefix = [0, 0, 1, 1, 2]`
+➡️ `prefix_mask = [1, 3, 4, 5, 2]`
+
+---
+
+### ✅ suffix (từ phải qua trái)
+
+| i (ngược) | chữ | nhóm  | suffix[i] | suffix_mask[i] |
+| --------- | --- | ----- | --------- | -------------- |
+| 4         | b   | {b}   | 0         | 2              |
+| 3         | a   | {a,b} | 0         | 3              |
+| 2         | c   | {c}   | 1         | 4              |
+| 1         | b   | {b,c} | 1         | 6              |
+| 0         | a   | {a}   | 2         | 1              |
+
+➡️ `suffix = [2, 1, 1, 0, 0]`
+➡️ `suffix_mask = [1, 6, 4, 3, 2]`
+
+*(số thứ tự đảo ngược khi dùng `[::-1]`, nên trong code về sau có chỉ số `-(index+2)` để điều chỉnh)*
+
+---
+
+## 🔗 Tổng kết ý nghĩa hai dòng:
+
+| Biến                    | Hướng duyệt | Mục đích                                       |
+| ----------------------- | ----------- | ---------------------------------------------- |
+| `prefix`, `prefix_mask` | trái → phải | Số nhóm + ký tự hiện tại trước vị trí thay đổi |
+| `suffix`, `suffix_mask` | phải → trái | Số nhóm + ký tự hiện tại sau vị trí thay đổi   |
+
+→ Hai mảng này sẽ được dùng để **kết hợp** lại trong vòng lặp:
+
+```python
+for index in range(n):
+    candidate = prefix[index] + suffix[-(index + 2)]
+    ...
+```
+
+→ để xem nếu **thay đổi ký tự tại vị trí `index`**,
+ta có thể tạo **nhiều nhóm (partition)** hơn bao nhiêu.
+
+---
+
+Bạn có muốn mình giải thích tiếp phần vòng `for index in range(n): ...`
+(đoạn ghép `prefix` + `suffix` để tính kết quả cuối cùng) không?
+Rất hay — đây chính là **phần cuối cùng của lời giải Python** cho bài **LeetCode 3003 – Maximize the Number of Partitions After Operations**.
+Giờ ta sẽ **giải thích chi tiết từng dòng**, kèm **mục đích** để bạn hiểu toàn bộ logic. 👇
+
+---
+
+## 🧩 Mục tiêu của bài toán
+
+Cho chuỗi `s` gồm các ký tự thường `'a'–'z'`, và số `k`.
+Một **partition hợp lệ** là đoạn con có **số ký tự khác nhau ≤ k**.
+Bạn được **thay đổi 1 ký tự trong chuỗi**,
+và cần tìm **số lượng partition tối đa** có thể tạo được **sau khi thay đổi**.
+
+---
+
+## 🔍 Giải thích chi tiết đoạn code
+
+### 1️⃣ Duyệt từng vị trí trong chuỗi
+
+```python
+for index in range(n):
+```
+
+→ Mỗi vòng lặp giả sử ta **thay ký tự tại vị trí `index`**.
+
+---
+
+### 2️⃣ Cộng số partition ở hai phía (trước & sau)
+
+```python
+candidate = prefix[index] + suffix[-(index + 2)]
+```
+
+* `prefix[index]`: số partition tính **từ đầu đến trước `index`**.
+* `suffix[-(index + 2)]`: số partition tính **từ sau `index` đến cuối chuỗi**.
+  → `candidate` là **tổng số partition hai phía**, chưa tính phần có thể thêm sau khi thay ký tự.
+
+---
+
+### 3️⃣ Tạo bitmask gộp 2 phía
+
+```python
+mask = prefix_mask[index] | suffix_mask[-(index + 2)]
+```
+
+* `prefix_mask[i]`: tập ký tự xuất hiện bên trái.
+* `suffix_mask[...]`: tập ký tự xuất hiện bên phải.
+* Dấu `|` (bitwise OR) giúp **hợp hai tập** → biết tổng số ký tự khác nhau xuất hiện ở 2 phía.
+
+---
+
+### 4️⃣ Trường hợp 1: Có thể thêm 1 partition mới
+
+```python
+if min(mask.bit_count() + 1, 26) <= k:
+    candidate += 1
+```
+
+Giải thích:
+
+* `mask.bit_count()` = số ký tự khác nhau ở cả 2 phía.
+* `+1`: vì khi thay 1 ký tự mới, có thể thêm **1 ký tự khác**.
+* Nếu tổng ≤ `k`, nghĩa là ta vẫn chưa vượt quá giới hạn → **có thể thêm 1 vùng partition mới**.
+
+---
+
+### 5️⃣ Trường hợp 2: Cả hai phía đều đã đầy đủ `k` ký tự khác nhau
+
+```python
+elif (
+    prefix_mask[index].bit_count()
+    == suffix_mask[-(index + 2)].bit_count()
+    == k
+    and mask.bit_count() < 26
+):
+    candidate += 3
+```
+
+Giải thích:
+
+* Cả bên trái và phải đều “đầy” (có đúng `k` ký tự khác nhau).
+* Nhưng tổng `mask` vẫn chưa đủ 26 ký tự (tức là vẫn còn ký tự chưa xuất hiện).
+  → Khi ta thay ký tự tại `index`, có thể tách ra **3 vùng riêng biệt**:
+
+  * Bên trái (partition cũ)
+  * Vùng thay đổi
+  * Bên phải (partition cũ)
+
+---
+
+### 6️⃣ Trường hợp còn lại: Tạo được 2 partition
+
+```python
+else:
+    candidate += 2
+```
+
+Giải thích:
+Nếu không rơi vào 2 điều kiện trên, thì thay ký tự vẫn giúp **tạo thêm ít nhất 2 vùng hợp lệ** (trước và sau ký tự đó).
+
+---
+
+### 7️⃣ Lấy kết quả tối đa
+
+```python
+max_partitions_after_operations = max(
+    max_partitions_after_operations, candidate
+)
+```
+
+→ Giữ lại **số partition lớn nhất** tìm được qua tất cả các vị trí thử thay đổi.
+
+---
+
+### 8️⃣ Trả kết quả cuối cùng
+
+```python
+return max_partitions_after_operations
+```
+
+→ Trả về **số partition tối đa** có thể đạt được sau khi thay đổi 1 ký tự.
+
+---
+
+## 🧠 Tóm tắt ý tưởng
+
+| Mục tiêu                            | Cách làm                           |
+| ----------------------------------- | ---------------------------------- |
+| Tìm vị trí tốt nhất để thay 1 ký tự | Duyệt toàn bộ `index`              |
+| Biết số vùng trước và sau           | Dùng `prefix` & `suffix`           |
+| Biết tập ký tự ở hai phía           | Dùng `prefix_mask` & `suffix_mask` |
+| Xác định số vùng mới có thể tạo     | So sánh số ký tự khác nhau         |
+| Giữ kết quả tốt nhất                | Dùng `max()`                       |
+
+---
+
+Nếu bạn muốn, mình có thể viết lại đoạn này thành **Java code có chú thích từng dòng**, để dễ liên hệ với bản Java bạn đang làm — bạn muốn mình chuyển sang Java luôn không?
+Rất hay! 👏
+Câu hỏi này chính là **mấu chốt** để hiểu cách code xử lý **mảng đảo ngược (`[::-1]`)** trong bài toán này.
+Giờ ta cùng phân tích rõ ràng tại sao lại là `[-(index + 2)]`, chứ không phải `[-(index + 1)]`.
+
+---
+
+## 🧩 Bối cảnh
+
+Trước đó, ta có dòng:
+
+```python
+suffix, suffix_mask = make_prefix(set_bits[::-1])
+```
+
+👉 Nghĩa là:
+
+* Ta **đảo ngược** chuỗi `set_bits` rồi chạy `make_prefix()` giống như phần prefix.
+* Vì vậy, `suffix` và `suffix_mask` hiện tại **được tính từ phải sang trái** (đảo ngược so với chuỗi gốc).
+
+---
+
+## 🔍 Mục tiêu
+
+Khi duyệt `index` từ **trái sang phải**,
+ta muốn lấy **thông tin từ phía bên phải** tương ứng trong mảng `suffix`.
+Nhưng do `suffix` đang bị đảo ngược,
+ta phải “dịch” chỉ số sao cho nó trỏ đúng vị trí tương ứng bên phải của chuỗi gốc.
+
+---
+
+## 🧮 Cách tính chỉ số
+
+* `suffix` có chiều dài `n + 1` (vì trong `make_prefix`, ta `append` thêm 1 phần tử ban đầu).
+* Ở vòng lặp, `index` chạy từ `0` → `n - 1`.
+
+Ta cần **bỏ qua** ký tự hiện tại (`index`)
+vì ta giả sử sẽ thay đổi ký tự này, nên không dùng suffix bắt đầu **ngay tại nó**,
+mà phải dùng phần **bắt đầu từ ký tự kế tiếp (bên phải)**.
+
+---
+
+## ✅ Giải thích `[-(index + 2)]`
+
+Ví dụ:
+Giả sử `s = "abcd"`, thì `set_bits[::-1]` = `"dcba"`.
+
+| index (gốc) | ký tự gốc | suffix chỉ số cần lấy                 | công thức       | ý nghĩa          |
+| ----------- | --------- | ------------------------------------- | --------------- | ---------------- |
+| 0           | a         | từ sau 'a' (tức là tính phần `"bcd"`) | `-(0+2)` = `-2` | bỏ qua ký tự `a` |
+| 1           | b         | phần `"cd"`                           | `-(1+2)` = `-3` | bỏ qua `"ab"`    |
+| 2           | c         | phần `"d"`                            | `-(2+2)` = `-4` | bỏ `"abc"`       |
+| 3           | d         | phần rỗng                             | `-(3+2)` = `-5` | vượt cuối chuỗi  |
+
+Vì `suffix` được **tính ngược**, nên:
+
+* `suffix[-1]` → phần tử cuối (rỗng)
+* `suffix[-2]` → phần tính từ ký tự ngay sau `index = 0`
+* `suffix[-3]` → phần tính từ ký tự ngay sau `index = 1`
+
+→ Do đó, **`[-(index + 2)]`** chính là cách truy cập **suffix tính từ sau ký tự tại `index`**.
+
+---
+
+## 🧠 Tóm lại
+
+> `suffix[-(index + 2)]` nghĩa là:
+> “Lấy số lượng partition (hoặc mask) của phần chuỗi nằm **sau ký tự tại vị trí `index`**,
+> vì `suffix` đang được lưu **ngược thứ tự**.”
+
+---
+
+Nếu bạn muốn, mình có thể minh họa bằng **hình vẽ chuỗi + mảng suffix/prefix** để thấy rõ index tương ứng — bạn muốn mình minh họa không?
+Câu hỏi rất hay 👍 — đây là **điểm dễ nhầm nhất** trong đoạn code này!
+Giờ ta cùng phân tích thật kỹ để hiểu **vì sao không dùng `[-(index + 1)]` mà phải dùng `[-(index + 2)]`** nhé.
+
+---
+
+## 🧩 Bối cảnh:
+
+Ta có hai mảng được tạo từ hàm `make_prefix`:
+
+```python
+prefix, prefix_mask = make_prefix(set_bits)
+suffix, suffix_mask = make_prefix(set_bits[::-1])
+```
+
+Cả hai đều có **độ dài là n + 1**, vì trong `make_prefix`, ta luôn bắt đầu bằng:
+
+```python
+prefix = [0]
+prefix_mask = [0]
+```
+
+→ Nghĩa là mỗi mảng có **thêm một phần tử ở đầu (index 0)** để biểu diễn “trước khi bắt đầu”.
+
+---
+
+## 🧠 Khi ta dùng prefix:
+
+Ở `prefix`, mỗi `prefix[i]` biểu diễn **số nhóm hoàn chỉnh** trong đoạn `s[0..i-1]`.
+
+Ví dụ:
+
+```
+prefix[0] = 0  (trước khi bắt đầu)
+prefix[1] = số nhóm sau ký tự đầu tiên
+prefix[2] = số nhóm sau ký tự thứ 2
+```
+
+---
+
+## 🔁 Khi ta dùng suffix:
+
+Ta đảo ngược chuỗi trước khi tính:
+
+```python
+suffix, suffix_mask = make_prefix(set_bits[::-1])
+```
+
+→ Vì vậy, `suffix[j]` biểu diễn số nhóm từ **cuối chuỗi ngược về đầu**,
+và `suffix[-1]` tương ứng với “trước khi bắt đầu phần ngược”,
+tức là **sau khi đã đi hết chuỗi gốc**.
+
+---
+
+## 🧮 Giờ xem xét chỉ số thực tế:
+
+Giả sử `n = 5`, và ta đang xét `index = 0` (ký tự đầu tiên trong chuỗi gốc):
+
+| Gốc (prefix)                     | Đảo ngược (suffix)                                                       | Ý nghĩa mong muốn           |
+| -------------------------------- | ------------------------------------------------------------------------ | --------------------------- |
+| index = 0 → ký tự đầu tiên `'a'` | ta muốn lấy **phần suffix bắt đầu từ ký tự thứ 2 trở đi** (tức `"bcde"`) | tức là phần **sau `index`** |
+
+---
+
+## 🧩 Nếu dùng `[-(index + 1)]`:
+
+* Với `index = 0` → `[-1]` → **phần tử cuối cùng** trong suffix
+  → tượng trưng cho **chuỗi rỗng** (đã đi hết chuỗi).
+  ❌ Sai, vì ta muốn **phần sau ký tự đầu tiên**, không phải rỗng!
+
+---
+
+## ✅ Nếu dùng `[-(index + 2)]`:
+
+* Với `index = 0` → `[-2]` → phần tử “thứ hai từ cuối”
+  → tượng trưng cho **phần `"bcde"`** (tức là đúng phần sau ký tự đầu tiên).
+  ✅ Chính xác!
+
+---
+
+## 🔍 Tóm tắt ngắn gọn:
+
+| index | Ký tự hiện tại | Chúng ta cần suffix của | Chỉ số đúng | Nếu dùng -(index+1) | Kết quả |
+| ----- | -------------- | ----------------------- | ----------- | ------------------- | ------- |
+| 0     | s[0]           | s[1:]                   | `[-2]` ✅    | `[-1]` ❌            | sai     |
+| 1     | s[1]           | s[2:]                   | `[-3]` ✅    | `[-2]` ❌            | sai     |
+| 2     | s[2]           | s[3:]                   | `[-4]` ✅    | `[-3]` ❌            | sai     |
+
+---
+
+## 💡 Kết luận:
+
+> `[-(index + 2)]` được dùng thay vì `[-(index + 1)]`
+> vì mảng `suffix` có **thêm một phần tử 0 ở đầu**,
+> nên để trỏ đúng tới phần **bắt đầu sau ký tự hiện tại**,
+> ta phải **dịch sang trái thêm 1** chỉ số.
+
+---
+
+Nếu bạn muốn, mình có thể vẽ sơ đồ **mảng prefix và suffix đối chiếu từng chỉ số** (giống như bảng song song) để bạn nhìn trực quan hơn — bạn có muốn không?

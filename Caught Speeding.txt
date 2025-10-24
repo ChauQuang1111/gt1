@@ -1,0 +1,84 @@
+Ok, mình giải thích đơn giản nha 👍
+
+Đề bài: **Caught Speeding**
+
+* Bạn có một mảng `speeds[]` chứa tốc độ của nhiều xe.
+* Bạn có một số `limit` là giới hạn tốc độ.
+* Nhiệm vụ:
+
+  1. Đếm có bao nhiêu xe chạy **vượt quá** tốc độ (`speed > limit`).
+  2. Tính trung bình phần **vượt quá** giới hạn của những xe đó.
+
+👉 Nếu không có xe nào vượt tốc độ thì kết quả trả về `[0, 0]`.
+
+---
+
+### Ví dụ:
+
+```
+speeds = [60, 70, 80, 50]
+limit = 65
+```
+
+* Xe 1: 60 (không vượt)
+* Xe 2: 70 (vượt 5)
+* Xe 3: 80 (vượt 15)
+* Xe 4: 50 (không vượt)
+
+👉 Có 2 xe vượt.
+👉 Trung bình mức vượt = (5 + 15) / 2 = 10.
+
+Kết quả: `[2, 10]`.
+
+---
+
+### Trường hợp không ai vi phạm:
+
+```
+speeds = [40, 50, 60]
+limit = 65
+```
+
+* Không xe nào vượt.
+  👉 Kết quả `[0, 0]`.
+
+---
+
+Bạn có muốn mình viết luôn code mẫu (Python/Java) để dễ hiểu hơn không?
+import java.util.*;
+
+public class CaughtSpeeding {
+    public static int[] checkSpeeding(int[] speeds, int limit) {
+        int count = 0;
+        int totalOver = 0;
+
+        for (int speed : speeds) {
+            if (speed > limit) {
+                count++;
+                totalOver += (speed - limit);
+            }
+        }
+
+        if (count == 0) {
+            return new int[]{0, 0};
+        }
+
+        int avg = totalOver / count; // trung bình mức vượt
+        return new int[]{count, avg};
+    }
+	
+	
+def caught_speeding(speeds, limit):
+    count = 0
+    total_over = 0
+
+    for speed in speeds:
+        if speed > limit:
+            count += 1
+            total_over += (speed - limit)
+
+    if count == 0:
+        return [0, 0]
+
+    avg_over = total_over // count  # chia lấy trung bình (nguyên)
+    return [count, avg_over]

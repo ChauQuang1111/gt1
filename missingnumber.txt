@@ -1,0 +1,326 @@
+Bạn hỏi **Missing Number** (số bị thiếu) thì thường là dạng bài:
+
+> Cho dãy số từ `1` đến `n`, nhưng bị thiếu mất 1 số. Tìm số bị thiếu đó.
+
+Ví dụ:
+
+```
+nums = [1, 2, 4, 5]
+=> thiếu 3
+```
+
+---
+
+## 🎯 Giải pháp 1: Dùng tổng (Sum Formula)
+
+Tổng của `1 → n` = `n * (n + 1) / 2`.
+Số bị thiếu = (tổng chuẩn) − (tổng mảng thực tế).
+
+---
+
+### 🔹 Java
+
+```java
+public class MissingNumber {
+    public static int findMissing(int[] nums) {
+        int n = nums.length + 1;  // vì mảng bị thiếu 1 số
+        int total = n * (n + 1) / 2;
+        int sum = 0;
+        for (int num : nums) {
+            sum += num;
+        }
+        return total - sum;
+    }
+
+    public static void main(String[] args) {
+        int[] nums = {1, 2, 4, 5};
+        System.out.println(findMissing(nums));  // Output: 3
+    }
+}
+```
+
+---
+
+### 🔹 Python
+
+```python
+def find_missing(nums):
+    n = len(nums) + 1
+    total = n * (n + 1) // 2
+    return total - sum(nums)
+
+# Demo
+nums = [1, 2, 4, 5]
+print(find_missing(nums))  # Output: 3
+```
+
+---
+
+## 🎯 Giải pháp 2: Dùng XOR (nhanh hơn, không lo tràn số)
+
+* XOR từ `1 → n` với tất cả phần tử mảng.
+* Vì số nào xuất hiện 2 lần sẽ triệt tiêu (x ^ x = 0), chỉ còn lại số bị thiếu.
+
+---
+
+### 🔹 Java (XOR)
+
+```java
+public class MissingNumberXOR {
+    public static int findMissing(int[] nums) {
+        int n = nums.length + 1;
+        int xor1 = 0, xor2 = 0;
+
+        // XOR từ 1 đến n
+        for (int i = 1; i <= n; i++) {
+            xor1 ^= i;
+        }
+
+        // XOR tất cả phần tử trong mảng
+        for (int num : nums) {
+            xor2 ^= num;
+        }
+
+        return xor1 ^ xor2;
+    }
+
+    public static void main(String[] args) {
+        int[] nums = {1, 2, 4, 5};
+        System.out.println(findMissing(nums));  // Output: 3
+    }
+}
+```
+
+---
+
+### 🔹 Python (XOR)
+
+```python
+def find_missing(nums):
+    n = len(nums) + 1
+    xor1 = 0
+    xor2 = 0
+
+    for i in range(1, n + 1):
+        xor1 ^= i
+
+    for num in nums:
+        xor2 ^= num
+
+    return xor1 ^ xor2
+
+# Demo
+nums = [1, 2, 4, 5]
+print(find_missing(nums))  # Output: 3
+```
+
+---
+
+👉 Nếu bạn làm **LeetCode 268. Missing Number**, đề hơi khác: cho mảng từ `0 → n` (thiếu 1 số).
+Bạn muốn mình viết luôn code cho **LeetCode version** không (0-based, từ 0 đến n)?
+Ok mình giải thích thật kỹ **XOR** và vì sao nó giúp tìm số bị thiếu nhé 👌
+
+---
+
+## 1. XOR là gì?
+
+Trong toán logic (bitwise):
+
+* `^` = **XOR** (Exclusive OR).
+* Quy tắc:
+
+  ```
+  0 ^ 0 = 0
+  1 ^ 1 = 0
+  0 ^ 1 = 1
+  1 ^ 0 = 1
+  ```
+
+👉 Nói đơn giản: **nếu 2 bit giống nhau → ra 0, khác nhau → ra 1**.
+
+---
+
+## 2. Một số tính chất quan trọng
+
+* `a ^ a = 0`  (một số XOR chính nó thì mất)
+* `a ^ 0 = a`
+* XOR có tính **giao hoán** và **kết hợp**
+  (tức là thứ tự không quan trọng).
+
+---
+
+## 3. Dùng XOR để tìm số bị thiếu
+
+Giả sử ta có dãy 1 → 5 nhưng bị thiếu 3:
+
+```
+nums = [1, 2, 4, 5]
+```
+
+### Bước 1: XOR toàn bộ từ 1 → 5
+
+```
+1 ^ 2 ^ 3 ^ 4 ^ 5 = X
+```
+
+### Bước 2: XOR toàn bộ mảng cho sẵn
+
+```
+1 ^ 2 ^ 4 ^ 5 = Y
+```
+
+### Bước 3: XOR kết quả X và Y
+
+```
+X ^ Y = (1 ^ 2 ^ 3 ^ 4 ^ 5) ^ (1 ^ 2 ^ 4 ^ 5)
+```
+
+👉 Do tính chất **a ^ a = 0**:
+
+* `1 ^ 1 = 0`
+* `2 ^ 2 = 0`
+* `4 ^ 4 = 0`
+* `5 ^ 5 = 0`
+
+Còn lại:
+
+```
+X ^ Y = 3
+```
+
+\==> 3 chính là số bị thiếu 🎉
+
+---
+
+## 4. Demo tay
+
+Ví dụ `nums = [1, 2, 4, 5]`
+
+* XOR 1→5:
+
+```
+1 ^ 2 = 3
+3 ^ 3 = 0
+0 ^ 4 = 4
+4 ^ 5 = 1   => X = 1
+```
+
+* XOR mảng \[1,2,4,5]:
+
+```
+1 ^ 2 = 3
+3 ^ 4 = 7
+7 ^ 5 = 2   => Y = 2
+```
+
+* XOR lại: `X ^ Y = 1 ^ 2 = 3` ✅
+
+---
+
+👉 Tóm gọn: **XOR "xóa" các số xuất hiện đủ 2 lần, chỉ giữ lại số bị thiếu.**
+
+---
+
+Bạn muốn mình làm **bảng theo từng bước bit nhị phân** (kiểu 0101 ^ 0011 ...) để thấy rõ hơn không?
+À 👍 bạn đang hỏi: **XOR có dùng để tìm số lặp lại (xuất hiện nhiều lần) được không?**
+
+Mình phân biệt rõ nhé:
+
+---
+
+## 1. XOR tốt cho **tìm số xuất hiện 1 lần** khi những số khác xuất hiện **2 lần**
+
+Ví dụ:
+
+```
+arr = [2, 3, 5, 2, 3]
+```
+
+Ở đây, chỉ có số **5** xuất hiện 1 lần.
+
+Ta làm:
+
+```
+2 ^ 3 ^ 5 ^ 2 ^ 3
+= (2 ^ 2) ^ (3 ^ 3) ^ 5
+= 0 ^ 0 ^ 5
+= 5
+```
+
+👉 Vậy **XOR dùng rất hiệu quả để tìm phần tử duy nhất** khi các phần tử khác đều xuất hiện 2 lần.
+
+---
+
+## 2. Nếu muốn đếm **số lần lặp lại** (ví dụ: "mỗi số xuất hiện bao nhiêu lần")
+
+→ Thì **XOR không dùng được** ❌.
+
+Trong trường hợp này phải dùng:
+
+* **HashMap / Dictionary** (Java: `HashMap<Integer, Integer>`, Python: `collections.Counter`)
+* Hoặc **sắp xếp rồi đếm**.
+
+---
+
+### 🔹 Java (đếm số lần lặp lại bằng HashMap)
+
+```java
+import java.util.*;
+
+public class CountFrequency {
+    public static void main(String[] args) {
+        int[] arr = {2, 3, 5, 2, 3, 2};
+
+        Map<Integer, Integer> freq = new HashMap<>();
+        for (int num : arr) {
+            freq.put(num, freq.getOrDefault(num, 0) + 1);
+        }
+
+        // In ra kết quả
+        for (Map.Entry<Integer, Integer> entry : freq.entrySet()) {
+            System.out.println(entry.getKey() + " xuất hiện " + entry.getValue() + " lần");
+        }
+    }
+}
+```
+
+👉 Output:
+
+```
+2 xuất hiện 3 lần
+3 xuất hiện 2 lần
+5 xuất hiện 1 lần
+```
+
+---
+
+### 🔹 Python (dùng Counter)
+
+```python
+from collections import Counter
+
+arr = [2, 3, 5, 2, 3, 2]
+freq = Counter(arr)
+
+for num, count in freq.items():
+    print(f"{num} xuất hiện {count} lần")
+```
+
+👉 Output:
+
+```
+2 xuất hiện 3 lần
+3 xuất hiện 2 lần
+5 xuất hiện 1 lần
+```
+
+---
+
+✅ Tóm lại:
+
+* **XOR** chỉ để tìm số xuất hiện 1 lần khi các số khác đều xuất hiện 2 lần.
+* **Muốn đếm số lần lặp lại** → dùng **HashMap (Java)** hoặc **Counter (Python)**.
+
+---
+
+👉 Bạn muốn mình code thử **tìm số bị lặp lại (xuất hiện nhiều hơn 1 lần)** hay **tìm số chỉ xuất hiện 1 lần** bằng Java/Python cho dễ thấy hơn?

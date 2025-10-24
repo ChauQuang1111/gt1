@@ -1,0 +1,160 @@
+Maximum Number of Distinct Elements After Operations
+from typing import List
+
+class Solution:
+    def maxDistinctElements(self, nums: List[int], k: int) -> int:
+        if len(nums) <= (k * 2) + 1:
+            return len(nums)
+        
+        nums.sort()
+        distinct = 0
+        last = float('-inf')
+
+        for num in nums:
+            m = max(last + 1, num - k)
+            if m <= num + k:
+                distinct += 1
+                last = m
+
+        return distinct
+Giải thích chi tiết dòng này 👇
+
+```python
+if len(nums) <= (k * 2) + 1:
+    return len(nums)
+```
+
+---
+
+### 🔹 Ngữ cảnh của bài toán:
+
+Mỗi phần tử `num` trong mảng `nums` có thể được **dịch chuyển trong đoạn** `[num - k, num + k]`.
+→ Tức là, ta có thể “nới” mỗi giá trị lên xuống tối đa `k` đơn vị.
+
+---
+
+### 🔸 Ý tưởng:
+
+Giả sử ta có `n = len(nums)` phần tử.
+Nếu phạm vi dịch chuyển của từng phần tử **đủ rộng để tất cả giá trị có thể khác nhau**,
+thì **tối đa số phần tử khác nhau chính là toàn bộ `n`**.
+
+---
+
+### 🔸 Tại sao điều kiện là `n <= (2*k + 1)`?
+
+* Mỗi phần tử có thể bao phủ **một đoạn dài `(2*k + 1)` giá trị** (từ `num - k` đến `num + k`).
+* Nếu tổng số phần tử `n` **nhỏ hơn hoặc bằng độ dài đoạn này**,
+  thì ta **hoàn toàn có thể chọn tất cả giá trị khác nhau**,
+  vì đoạn bao phủ đó đủ “rộng” để chứa hết `n` giá trị phân biệt.
+
+---
+
+### 🔹 Ví dụ minh họa:
+
+Giả sử:
+
+```python
+nums = [1, 2, 3]
+k = 2
+```
+
+Ta có:
+`(2*k + 1) = 5`, và `len(nums) = 3 ≤ 5`
+→ Có thể chọn tất cả 3 phần tử khác nhau vì mỗi phần tử có thể di chuyển trong đoạn 5 giá trị.
+→ Kết quả tối đa chính là `len(nums)`.
+
+---
+
+### 🔸 Ngược lại:
+
+Nếu `len(nums)` lớn hơn `(2*k + 1)`,
+→ Các đoạn `[num - k, num + k]` sẽ **chồng lấn quá nhiều**,
+→ Không thể chọn tất cả phần tử khác nhau được nữa,
+→ Lúc này cần dùng vòng lặp để tính toán cụ thể.
+
+---
+
+### ✅ Kết luận:
+
+> `if len(nums) <= (k * 2) + 1:`
+> có nghĩa là:
+> “Nếu tổng số phần tử nhỏ hơn hoặc bằng độ rộng dịch chuyển cho phép,
+> thì ta có thể làm cho tất cả phần tử trở nên khác nhau.”
+
+
+Giải thích chi tiết hai dòng này 👇
+
+---
+
+### 🔹 Ngữ cảnh:
+
+Ta muốn chọn **một số nguyên `m`** trong đoạn `[num - k, num + k]` sao cho:
+
+* `m` khác với các giá trị đã chọn trước đó,
+* và ta muốn **tối đa hóa số lượng phần tử khác nhau** có thể chọn.
+
+---
+
+### 🔸 Dòng 1:
+
+```python
+m = max(last + 1, num - k)
+```
+
+* `last` là giá trị cuối cùng đã chọn ở vòng trước.
+* Để không trùng, ta cần chọn `m > last` → giá trị nhỏ nhất có thể là `last + 1`.
+* Tuy nhiên, `m` cũng **phải nằm trong đoạn hợp lệ** `[num - k, num + k]`.
+* Vì vậy, ta chọn điểm bắt đầu của đoạn đó, tức là `num - k`.
+
+👉 Dòng này có nghĩa là:
+
+> “Chọn `m` là giá trị nhỏ nhất **vừa lớn hơn `last`** vừa **nằm trong đoạn hợp lệ** `[num - k, num + k]`.”
+
+---
+
+### 🔸 Dòng 2:
+
+```python
+if m <= num + k:
+```
+
+* Sau khi chọn `m`, ta cần đảm bảo rằng `m` vẫn **nằm trong đoạn hợp lệ** `[num - k, num + k]`.
+* Nếu đúng (`m <= num + k`), thì `m` là một lựa chọn hợp lệ.
+
+---
+
+### 🔸 Dòng 3–4:
+
+```python
+distinct += 1
+last = m
+```
+
+* Nếu `m` hợp lệ, ta đã chọn thêm được **1 phần tử khác biệt** → tăng `distinct`.
+* Cập nhật `last = m` để lần sau chọn giá trị **lớn hơn `m`**, tránh trùng lặp.
+
+---
+
+### 🔹 Ví dụ minh họa:
+
+Giả sử:
+
+```python
+nums = [1, 3, 6]
+k = 2
+```
+
+| num | khoảng hợp lệ `[num-k, num+k]` | last | m = max(last+1, num-k) | m ≤ num+k? | distinct | last |
+| --- | ------------------------------ | ---- | ---------------------- | ---------- | -------- | ---- |
+| 1   | [−1, 3]                        | −∞   | −1                     | ✅          | 1        | −1   |
+| 3   | [1, 5]                         | −1   | 1                      | ✅          | 2        | 1    |
+| 6   | [4, 8]                         | 1    | 4                      | ✅          | 3        | 4    |
+
+→ Kết quả cuối: `distinct = 3`.
+
+---
+
+Tóm lại:
+
+> Hai dòng đó giúp ta chọn giá trị nhỏ nhất hợp lệ và đảm bảo tất cả các giá trị đã chọn đều **khác nhau và nằm trong phạm vi cho phép**.

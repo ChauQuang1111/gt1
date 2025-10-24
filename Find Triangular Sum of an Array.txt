@@ -1,0 +1,636 @@
+2221. Find Triangular Sum of an Array
+import java.util.*;
+
+class Solution {
+    // Precompute C(a,b) mod 5 for a,b in [0..4]
+    private static final int[][] C5 = buildC5();
+
+    public int triangularSum(int[] nums) {
+        int n = nums.length;
+        int N = n - 1;
+        int ans = 0;
+        for (int i = 0; i < n; i++) {
+            int c2 = combMod2(N, i);         // 0 or 1
+            int c5 = combMod5(N, i);         // 0..4
+            int c10 = crt10(c2, c5);         // 0..9
+            ans = (ans + c10 * nums[i]) % 10;
+        }
+        return ans;
+    }
+
+    // C(N,i) mod 2: odd iff no carries in i + (N - i)
+    private static int combMod2(int N, int i) {
+        return ((i & (N - i)) == 0) ? 1 : 0;
+    }
+
+    // Lucas mod 5
+    private static int combMod5(int N, int i) {
+        int res = 1;
+        int n = N, k = i;
+        while (n > 0 || k > 0) {
+            int nd = n % 5, kd = k % 5;
+            if (kd > nd) return 0;
+            res = (res * C5[nd][kd]) % 5;
+            n /= 5; k /= 5;
+        }
+        return res;
+    }
+
+    // Combine residues r ≡ r2 (mod 2), r ≡ r5 (mod 5) to r (mod 10)
+    private static int crt10(int r2, int r5) {
+        int r = r5;                 // r in {0,1,2,3,4}
+        if ((r & 1) != r2) r += 5;  // pick r or r+5 to match parity
+        return r;                   // 0..9
+    }
+
+    private static int[][] buildC5() {
+        int[][] c = new int[5][5];
+        for (int a = 0; a < 5; a++) {
+            c[a][0] = c[a][a] = 1;
+            for (int b = 1; b < a; b++) c[a][b] = (c[a-1][b-1] + c[a-1][b]) % 5;
+        }
+        return c;
+    }
+
+    // Reference O(n^2) check (does not modify caller input)
+    static int triangularSumSlow(int[] nums) {
+        int[] a = Arrays.copyOf(nums, nums.length);
+        for (int len = a.length; len > 1; len--) {
+            for (int j = 0; j < len - 1; j++) a[j] = (a[j] + a[j+1]) % 10;
+        }
+        return a[0];
+    }
+}
+
+Đoạn code bạn đưa là một **hàm tính tổng tam giác (triangular sum)** của một mảng `nums`, nhưng không tính theo cách thông thường (lặp giảm dần mảng), mà dùng **toán học số học modulo 10** kết hợp với **khái niệm tổ hợp và định lý Trung Quốc (CRT)**. Mình sẽ giải thích từng phần:
+
+---
+
+### 1️⃣ Ý tưởng tổng quát
+
+* **Triangular sum** của mảng `nums` là số cuối cùng bạn nhận được nếu bạn liên tục tính **tổng hai phần tử liên tiếp** theo modulo 10 cho tới khi còn 1 phần tử. Ví dụ:
+
+```
+nums = [1,2,3,4,5]
+
+Bước 1: [ (1+2)%10, (2+3)%10, (3+4)%10, (4+5)%10 ] = [3,5,7,9]
+Bước 2: [ (3+5)%10, (5+7)%10, (7+9)%10 ] = [8,2,6]
+Bước 3: [ (8+2)%10, (2+6)%10 ] = [0,8]
+Bước 4: [ (0+8)%10 ] = 8  ← Kết quả
+```
+
+* Hàm này tính **trực tiếp giá trị cuối cùng modulo 10** mà không cần làm nhiều vòng lặp.
+
+---
+
+### 2️⃣ Các biến trong code
+
+```java
+int n = nums.length;
+int N = n - 1;
+int ans = 0;
+```
+
+* `n` là độ dài mảng.
+* `N = n - 1` là số cấp của tổ hợp trong công thức.
+* `ans` là biến lưu kết quả cuối cùng.
+
+---
+
+### 3️⃣ Vòng lặp
+
+```java
+for (int i = 0; i < n; i++) {
+    int c2 = combMod2(N, i);   // 0 or 1
+    int c5 = combMod5(N, i);   // 0..4
+    int c10 = crt10(c2, c5);   // 0..9
+    ans = (ans + c10 * nums[i]) % 10;
+}
+```
+
+Giải thích từng dòng:
+
+#### a) `combMod2(N, i)` và `combMod5(N, i)`
+
+* Đây là **tổ hợp `C(N, i)` tính modulo 2 và modulo 5**:
+
+  * `combMod2(N, i)` → kết quả là `C(N,i) % 2` (chỉ có 0 hoặc 1)
+  * `combMod5(N, i)` → kết quả là `C(N,i) % 5` (0..4)
+* Lý do: `10 = 2 * 5`, tính modulo 2 và modulo 5 sẽ giúp áp dụng CRT.
+
+#### b) `crt10(c2, c5)`
+
+* Đây là **ứng dụng Định lý Trung Quốc (Chinese Remainder Theorem)**:
+
+  * `c2` là `C(N,i) % 2`
+  * `c5` là `C(N,i) % 5`
+  * `crt10(c2, c5)` sẽ tìm `C(N,i) % 10` dựa vào hai số này.
+* Kết quả là một số từ 0..9, chính là **hệ số nhân modulo 10** của `nums[i]` trong tổng tam giác.
+
+#### c) `ans = (ans + c10 * nums[i]) % 10`
+
+* Tổng cuối cùng bằng **tổng của từng phần tử nhân với hệ số tổ hợp modulo 10**.
+* Đây chính là cách rút gọn **tổng tam giác** mà không cần lặp giảm mảng.
+
+---
+
+### 4️⃣ Tóm tắt công thức
+
+Công thức tính trực tiếp:
+[
+\text{TriangularSum(nums)} = \sum_{i=0}^{n-1} nums[i] \cdot C(n-1,i) \mod 10
+]
+
+* `C(n-1, i)` là hệ số tổ hợp, tính modulo 10 qua **mod 2 và mod 5 rồi kết hợp CRT**.
+* Điều này giúp tránh **overflow** và rút gọn tính toán.
+
+---
+
+Nếu muốn, mình có thể vẽ **một ví dụ chi tiết step-by-step** với `nums = [1,2,3,4,5]` để minh họa từng `c2`, `c5`, `c10` và kết quả cuối cùng.
+
+Bạn có muốn mình làm không?
+Ok, đoạn code này là một **cách nhanh để tính `C(N, i) % 2`** mà không cần dùng đến giai thừa hay phép chia modulo. Mình giải thích chi tiết:
+
+---
+
+### 1️⃣ Hàm
+
+```java
+private static int combMod2(int N, int i) {
+    return ((i & (N - i)) == 0) ? 1 : 0;
+}
+```
+
+* **Input**:
+
+  * `N` và `i` (tương ứng với tổ hợp `C(N, i)`)
+* **Output**:
+
+  * `1` nếu `C(N, i)` **lẻ** (mod 2 = 1)
+  * `0` nếu `C(N, i)` **chẵn** (mod 2 = 0)
+
+---
+
+### 2️⃣ Nguyên lý toán học
+
+Có một định lý thú vị (Lucas’s theorem modulo 2):
+
+> `C(N, i)` lẻ **khi và chỉ khi** không có vị trí nào trong hệ nhị phân mà `i` và `N-i` đều có bit 1 cùng lúc.
+
+* Nghĩa là: **không có “carry” khi cộng `i + (N-i)` trong nhị phân**.
+
+Ví dụ:
+
+```
+N = 5 (101b)
+i = 2 (010b)
+N-i = 3 (011b)
+i & (N-i) = 010 & 011 = 010 != 0 → C(5,2) chẵn → 0 mod 2
+```
+
+```
+N = 5 (101b)
+i = 1 (001b)
+N-i = 4 (100b)
+i & (N-i) = 001 & 100 = 000 → C(5,1) lẻ → 1 mod 2
+```
+
+---
+
+### 3️⃣ Cách hoạt động của code
+
+```java
+return ((i & (N - i)) == 0) ? 1 : 0;
+```
+
+* `i & (N-i)` kiểm tra xem có **bit nào trùng nhau** giữa `i` và `N-i` không.
+* Nếu **không trùng bit nào** → trả về 1 (C(N,i) lẻ)
+* Nếu **có trùng** → trả về 0 (C(N,i) chẵn)
+
+---
+
+💡 **Ý nghĩa:**
+
+* Đây là một trick rất nhanh để tính modulo 2 của tổ hợp, **không cần tính giai thừa**.
+* Đặc biệt hữu ích khi N lớn, tránh overflow.
+
+---
+
+Nếu bạn muốn, mình có thể vẽ **ví dụ cụ thể với N=5** và các i=0..5 để minh họa rõ ràng kết quả `combMod2(N, i)` cho từng i. Bạn có muốn mình làm không?
+À, đây là phần quan trọng để hiểu **tại sao dùng `N-i` trong `i & (N-i)`**. Mình giải thích chi tiết:
+
+---
+
+### 1️⃣ Xuất phát từ định lý Lucas modulo 2
+
+* Định lý nói rằng:
+
+> `C(N, i)` **lẻ** (mod 2 = 1) ⇔ trong hệ nhị phân, tại **mọi vị trí bit**, không có cả `i` và `N-i` đều có 1.
+
+* Nói cách khác: **C(N, i) mod 2 = 1 nếu `i` và `N-i` không “gây carry” khi cộng nhị phân**.
+
+---
+
+### 2️⃣ Vì sao là `i & (N-i)`?
+
+* Khi tính `i + (N-i) = N`, nếu có bit nào cả `i` và `N-i` đều là 1 → **carry xảy ra** ở vị trí đó.
+* XOR không đủ, nhưng AND `i & (N-i)` sẽ **báo nếu có bit trùng nhau**, tức là **carry xảy ra**.
+* Nếu `i & (N-i) == 0` → không carry → `C(N, i)` lẻ (mod 2 = 1)
+
+💡 Nói đơn giản:
+
+* `i` là số chọn
+* `N-i` là phần còn lại của N chưa chọn
+* Nếu có **bit trùng nhau** giữa số chọn và số còn lại → sẽ tạo carry → tổ hợp chẵn
+* Nếu không trùng bit → không carry → tổ hợp lẻ
+
+---
+
+### 3️⃣ Ví dụ
+
+```
+N = 5 (101b)
+
+i = 2 (010b)
+N-i = 3 (011b)
+i & (N-i) = 010 & 011 = 010 ≠ 0 → C(5,2) chẵn
+
+i = 1 (001b)
+N-i = 4 (100b)
+i & (N-i) = 001 & 100 = 000 → C(5,1) lẻ
+```
+
+---
+
+✅ **Tóm tắt:**
+
+* `N-i` là phần **không chọn**, `i` là phần **được chọn**
+* AND giữa `i` và `N-i` kiểm tra **carry trong cộng nhị phân**
+* Không carry → C(N,i) lẻ
+* Có carry → C(N,i) chẵn
+
+---
+
+Nếu muốn, mình có thể vẽ **một bảng từ i = 0..5 cho N=5** để trực quan thấy tất cả kết quả `combMod2`. Bạn có muốn mình làm không?
+Ok, đoạn code này là **cách tính `C(N, i) % 5` theo định lý Lucas**, tương tự như `combMod2` nhưng áp dụng modulo 5. Mình giải thích chi tiết:
+
+---
+
+### 1️⃣ Hàm
+
+```java
+private static int combMod5(int N, int i) {
+    int res = 1;
+    int n = N, k = i;
+    while (n > 0 || k > 0) {
+        int nd = n % 5, kd = k % 5;
+        if (kd > nd) return 0;
+        res = (res * C5[nd][kd]) % 5;
+        n /= 5; k /= 5;
+    }
+    return res;
+}
+```
+
+* `N` và `i` là số tổ hợp `C(N,i)`
+* `C5` là một bảng 2 chiều lưu các giá trị `C(n,k) % 5` nhỏ (n,k < 5), ví dụ:
+
+```
+C5 = [[1,0,0,0,0],
+      [1,1,0,0,0],
+      [1,2,1,0,0],
+      [1,3,3,1,0],
+      [1,4,1,4,1]]   // C(n,k) mod 5 cho n,k=0..4
+```
+
+* `res` là kết quả cuối cùng modulo 5
+
+---
+
+### 2️⃣ Nguyên lý toán học (Lucas theorem modulo p)
+
+**Định lý Lucas:**
+
+> Với p nguyên tố, viết `N` và `i` theo cơ số p:
+>
+> ```
+> N = N_m N_{m-1} ... N_0 (cơ số p)
+> i = i_m i_{m-1} ... i_0 (cơ số p)
+> ```
+>
+> Thì:
+>
+> ```
+> C(N, i) mod p = Π_{j=0..m} C(N_j, i_j) mod p
+> ```
+>
+> Nếu có `i_j > N_j` → C(N_j, i_j) = 0 → cả kết quả = 0
+
+---
+
+### 3️⃣ Cách hoạt động của code
+
+1. **Phân tách N và i theo cơ số 5**
+
+```java
+int nd = n % 5, kd = k % 5;
+```
+
+* `nd` là chữ số cuối của `N` cơ số 5
+* `kd` là chữ số cuối của `i` cơ số 5
+
+2. **Kiểm tra i_j > N_j**
+
+```java
+if (kd > nd) return 0;
+```
+
+* Nếu chữ số của i lớn hơn chữ số của N ở cùng vị trí → kết quả modulo 5 = 0
+
+3. **Nhân giá trị tổ hợp modulo 5**
+
+```java
+res = (res * C5[nd][kd]) % 5;
+```
+
+* Lấy `C(nd, kd) mod 5` từ bảng `C5` và nhân dồn vào kết quả
+
+4. **Dịch N và i sang chữ số kế tiếp**
+
+```java
+n /= 5; k /= 5;
+```
+
+* Giống như chia cơ số 5 → xét chữ số tiếp theo
+
+5. **Trả kết quả cuối cùng**
+
+```java
+return res;
+```
+
+---
+
+### 4️⃣ Ví dụ minh họa
+
+```
+N = 7, i = 3, mod 5
+
+N base5: 7 = 1*5 + 2 → [1,2]
+i base5: 3 = 0*5 + 3 → [0,3]
+
+- j=0: nd=2, kd=3 → kd>nd → return 0
+→ C(7,3) ≡ 0 (mod 5)
+```
+
+Nếu `i` nhỏ hơn hoặc bằng `N` ở mọi chữ số cơ số 5 → nhân các C5[nd][kd] → kết quả modulo 5.
+
+---
+
+✅ **Tóm tắt:**
+
+* `combMod5` dùng **định lý Lucas modulo 5** để tính nhanh `C(N,i) mod 5`
+* Tránh tính giai thừa lớn → tránh overflow
+* Tách N,i theo cơ số 5, nhân dồn các tổ hợp nhỏ modulo 5
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ một bảng đầy đủ ví dụ với N=10, i=4 để tính combMod5** cho trực quan hơn. Bạn có muốn mình làm không?
+Ok, đoạn code này là **ứng dụng đơn giản của Định lý Trung Quốc (CRT) để tính modulo 10** từ modulo 2 và modulo 5. Mình giải thích chi tiết:
+
+---
+
+### 1️⃣ Hàm
+
+```java
+private static int crt10(int r2, int r5) {
+    int r = r5;                 // r in {0,1,2,3,4}
+    if ((r & 1) != r2) r += 5;  // pick r or r+5 to match parity
+    return r;                   // 0..9
+}
+```
+
+* **Input:**
+
+  * `r2` = `C(N,i) % 2` → 0 hoặc 1
+  * `r5` = `C(N,i) % 5` → 0..4
+* **Output:**
+
+  * `C(N,i) % 10` → 0..9
+
+---
+
+### 2️⃣ Nguyên lý toán học
+
+* 10 = 2 × 5
+* CRT nói rằng nếu biết một số modulo 2 và modulo 5, **có duy nhất một số modulo 10** thỏa mãn cả hai điều kiện.
+
+Formally:
+
+```
+r ≡ r2 (mod 2)
+r ≡ r5 (mod 5)
+```
+
+* `r5` ban đầu là 0..4 → modulo 5
+* Chúng ta cần chọn `r` trong 0..9 sao cho **cùng parity** với r2
+
+---
+
+### 3️⃣ Cách hoạt động của code
+
+1. **Bắt đầu với r = r5**
+
+```java
+int r = r5;  // r trong 0..4
+```
+
+* Đây là số modulo 5
+
+2. **Điều chỉnh theo modulo 2**
+
+```java
+if ((r & 1) != r2) r += 5;
+```
+
+* `(r & 1)` là **bit cuối của r**, tức là `r % 2`
+* Nếu bit cuối không khớp `r2` → cộng thêm 5 để r chuyển sang số tương thích modulo 2
+* Vì 5 ≡ 1 (mod 2), nên `r + 5` đổi parity mà vẫn giữ modulo 5 đúng
+
+3. **Trả về r**
+
+```java
+return r; // 0..9
+```
+
+* Kết quả chính là `C(N,i) % 10`
+
+---
+
+### 4️⃣ Ví dụ
+
+#### Ví dụ 1:
+
+```
+r2 = 1 (lẻ), r5 = 2
+r = r5 = 2
+r % 2 = 0 ≠ r2 → r += 5 → r = 7
+→ 7 ≡ 1 (mod 2) và 7 ≡ 2 (mod 5)
+```
+
+#### Ví dụ 2:
+
+```
+r2 = 0 (chẵn), r5 = 3
+r = 3
+r % 2 = 1 ≠ 0 → r += 5 → r = 8
+→ 8 ≡ 0 (mod 2) và 8 ≡ 3 (mod 5)
+```
+
+---
+
+✅ **Tóm tắt:**
+
+* `crt10` là **CRT nhanh modulo 10**
+* `r5` giữ modulo 5, cộng 5 nếu cần để khớp modulo 2
+* Trả về kết quả 0..9
+
+---
+
+Đoạn code này là **cách “chậm” (slow) để tính triangular sum**, giống như cách tính trực tiếp mà chúng ta làm bằng tay. Mình giải thích từng phần:
+
+---
+
+### 1️⃣ Hàm
+
+```java
+static int triangularSumSlow(int[] nums) {
+    int[] a = Arrays.copyOf(nums, nums.length);
+```
+
+* Tạo **bản sao của mảng `nums`** để không thay đổi mảng gốc
+* `a` sẽ được cập nhật dần từng bước
+
+---
+
+### 2️⃣ Vòng lặp tính triangular sum
+
+```java
+for (int len = a.length; len > 1; len--) {
+    for (int j = 0; j < len - 1; j++) 
+        a[j] = (a[j] + a[j+1]) % 10;
+}
+```
+
+* `len` là độ dài hiện tại của mảng còn lại
+* Với mỗi bước, ta **tính tổng hai phần tử liên tiếp modulo 10**:
+  [
+  a[j] = (a[j] + a[j+1]) % 10
+  ]
+* Sau vòng lặp trong cùng, **mảng `a` sẽ giảm 1 phần tử “ảo”** vì chúng ta chỉ dùng các `a[j]` từ 0 đến `len-2`
+
+---
+
+### 3️⃣ Trả kết quả cuối cùng
+
+```java
+return a[0];
+```
+
+* Khi còn 1 phần tử duy nhất → đó chính là **triangular sum**
+
+---
+
+### 4️⃣ Ví dụ
+
+```
+nums = [1, 2, 3, 4, 5]
+
+Bước 1: [3,5,7,9]      (1+2, 2+3, 3+4, 4+5) mod 10
+Bước 2: [8,2,6]        (3+5, 5+7, 7+9) mod 10
+Bước 3: [0,8]          (8+2, 2+6) mod 10
+Bước 4: [8]            (0+8) mod 10 → kết quả
+```
+
+Kết quả cuối cùng: **8**
+
+---
+
+### 5️⃣ So sánh với cách nhanh
+
+* `triangularSumSlow` dùng **vòng lặp trực tiếp**, thời gian O(n²)
+* `triangularSum` (phiên bản nhanh) dùng **toán học + CRT** → thời gian O(n)
+
+---
+
+Nếu muốn, mình có thể vẽ **so sánh trực quan giữa cách slow (vòng lặp) và cách nhanh (mod 10 + Lucas + CRT)** để bạn dễ hiểu hơn.
+
+Bạn có muốn mình làm không?
+Chắc chắn! Dòng này là **cốt lõi trong phép tính triangular sum**. Mình giải thích chi tiết:
+
+---
+
+### 1️⃣ Dòng code
+
+```java
+a[j] = (a[j] + a[j+1]) % 10;
+```
+
+* `a[j]` → phần tử hiện tại trong mảng
+* `a[j+1]` → phần tử liền kề bên phải
+* `(a[j] + a[j+1]) % 10` → **tổng hai phần tử modulo 10**
+
+---
+
+### 2️⃣ Ý nghĩa toán học
+
+* Khi tính **triangular sum**, bạn cần liên tục **ghép hai số liền kề bằng tổng modulo 10**.
+* Giả sử mảng `a = [x0, x1, x2, ..., xn]`
+
+  * Sau bước này:
+    [
+    a[0] = (x0 + x1) % 10
+    a[1] = (x1 + x2) % 10
+    a[2] = (x2 + x3) % 10
+    ...
+    ]
+* Kết quả **tạo ra “dòng tiếp theo”** trong tam giác:
+
+```
+Bước đầu: a = [1,2,3,4,5]
+Sau bước 1: a[0]=3, a[1]=5, a[2]=7, a[3]=9
+→ a = [3,5,7,9,...]
+```
+
+---
+
+### 3️⃣ Tại sao `% 10`?
+
+* Đề bài yêu cầu **tính tổng modulo 10**
+* Nếu không `% 10`, số sẽ tăng dần → kết quả cuối cùng sẽ không đúng với yêu cầu
+
+---
+
+### 4️⃣ Tổng quát
+
+* Đây là **công thức lặp lại** để thu nhỏ mảng:
+
+  * Mỗi phần tử mới = tổng hai phần tử liền kề cũ modulo 10
+* Là bước lặp cơ bản tạo ra **tam giác của các tổng liên tiếp** (giống tam giác Pascal nhưng modulo 10)
+
+---
+
+💡 **Ví dụ minh họa:**
+
+```
+a = [1,2,3,4,5]
+a[0] = (1+2)%10 = 3
+a[1] = (2+3)%10 = 5
+a[2] = (3+4)%10 = 7
+a[3] = (4+5)%10 = 9
+→ a = [3,5,7,9,...]
+```
+
+---
+
+Nếu muốn, mình có thể vẽ **hình tam giác trực quan từng bước** để thấy công thức `(a[j]+a[j+1])%10` hoạt động thế nào. Bạn có muốn mình vẽ không?

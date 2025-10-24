@@ -1,0 +1,231 @@
+Maximum Frequency of an Element After Performing Operations II
+class Solution:
+    def maxFrequency(self, nums: List[int], k: int, numOperations: int) -> int:
+        nums.sort()
+        n = len(nums)
+        res = 0
+        left = 0
+        right = 0
+        i = 0 
+        while i < n:
+            x = nums[i]
+            j = i 
+            cnt_x = 0
+            while j < n and nums[j] == x:
+                cnt_x += 1
+                j += 1
+            while left < n and nums[left] < x - k:
+                left += 1
+            while right < n and nums[right] <= x + k:   
+                right += 1
+            res = max(res, min(right - left, cnt_x + numOperations))
+            i = j
+        if res >= numOperations:
+            return res 
+        res_no_x = 0
+        left = 0
+        for right, x in enumerate(nums):
+            while nums[left] < x - k * 2:
+                left += 1
+            res_no_x = max(res_no_x, right - left + 1)
+        res_no_x = min(res_no_x, numOperations)
+        return max(res, res_no_x)
+Ok! Mình sẽ giải thích **chi tiết từng dòng** đoạn Python này, tương đương với **Case 1** trong thuật toán “Maximum Frequency After Operations II” 👇
+
+---
+
+### 📍 Mục tiêu đoạn code
+
+* Ta muốn tìm **số lượng lớn nhất các phần tử bằng nhau** sau khi có thể:
+
+  * Tăng/giảm mỗi phần tử tối đa `k`
+  * Thực hiện tối đa `numOperations` lần chỉnh sửa
+
+* `nums` đã được **sắp xếp** trước khi vào vòng này.
+
+---
+
+### 🔍 Giải thích từng dòng
+
+```python
+while i < n:
+```
+
+* Lặp qua toàn bộ mảng `nums` bằng chỉ số `i`.
+
+---
+
+```python
+x = nums[i]
+j = i
+cnt_x = 0
+```
+
+* `x` = giá trị hiện tại cần xét
+* `j` = con trỏ phụ để đếm các số bằng `x`
+* `cnt_x` = số lượng phần tử bằng `x` trong mảng
+
+---
+
+```python
+while j < n and nums[j] == x:
+    cnt_x += 1
+    j += 1
+```
+
+* Đếm số phần tử **bằng giá trị `x`** liên tiếp trong mảng (vì mảng đã sắp xếp, các số bằng nhau nằm liền nhau).
+* Sau vòng lặp: `cnt_x` = số lần `x` xuất hiện
+* `j` = chỉ số của phần tử khác `x` tiếp theo
+
+---
+
+```python
+while left < n and nums[left] < x - k:
+    left += 1
+```
+
+* Dịch con trỏ trái (`left`) sang phải để **loại bỏ các phần tử quá nhỏ** (nhỏ hơn `x - k`)
+* Vì những phần tử này **không thể tăng lên để bằng `x`** trong phạm vi ±k.
+
+---
+
+```python
+while right < n and nums[right] <= x + k:   
+    right += 1
+```
+
+* Dịch con trỏ phải (`right`) sang phải để **bao gồm tất cả các phần tử ≤ x + k**
+* Các phần tử này **có thể giảm xuống hoặc giữ nguyên để bằng `x`**.
+
+---
+
+```python
+res = max(res, min(right - left, cnt_x + numOperations))
+```
+
+* `right - left` = tổng số phần tử **nằm trong khoảng `[x - k, x + k]`** → có thể biến đổi thành `x`
+* `cnt_x + numOperations` = số phần tử **ban đầu bằng `x` + số phép biến đổi tối đa**
+* `min(right - left, cnt_x + numOperations)` → số lượng **thực tế có thể đạt được**, không vượt quá số phần tử trong khoảng
+* `res = max(res, ...)` → cập nhật kết quả lớn nhất
+
+---
+
+```python
+i = j
+```
+
+* Dịch `i` sang phần tử **khác `x`** để xét giá trị tiếp theo trong mảng
+
+---
+
+### 🧠 Tóm tắt
+
+1. Đếm số phần tử giống `x` (`cnt_x`).
+2. Dùng hai con trỏ `left`/`right` để tìm khoảng các phần tử có thể biến đổi về `x` trong ±k.
+3. Tính số lượng lớn nhất có thể đạt được (`min(right-left, cnt_x + numOperations)`).
+4. Cập nhật kết quả `res`.
+5. Lặp tiếp với giá trị khác.
+
+---
+
+Nếu muốn, mình có thể **vẽ sơ đồ minh họa hai con trỏ `left` và `right` trên mảng số** để trực quan hóa cách “gộp các phần tử thành x” luôn, nhìn là hiểu ngay.
+
+Bạn có muốn mình vẽ không?
+Ok, đoạn này là **Case 2** trong thuật toán Python: xử lý khi giá trị mục tiêu **không tồn tại trong mảng**. Mình giải thích từng dòng chi tiết để bạn hiểu nhé 👇
+
+---
+
+### 📍 Ý tưởng tổng quát
+
+* Case 1: tính số phần tử bằng giá trị đã có trong mảng.
+
+* Case 2: tính số phần tử có thể **“hội tụ” về cùng một giá trị trung gian** mà giá trị đó **không có sẵn trong mảng**, nhờ phép biến đổi ±k cho mỗi phần tử.
+
+* `numOperations` = số phép biến đổi tối đa.
+
+---
+
+### 🔍 Giải thích từng dòng
+
+```python
+if res >= numOperations:
+    return res
+```
+
+* Nếu tần suất lớn nhất từ Case 1 (`res`) đã **bằng hoặc vượt số phép biến đổi**,
+  thì **không cần xét Case 2 nữa** → trả kết quả ngay.
+
+---
+
+```python
+res_no_x = 0
+left = 0
+```
+
+* `res_no_x` = tần suất lớn nhất tìm được trong Case 2
+* `left` = con trỏ trái dùng để duyệt mảng
+
+---
+
+```python
+for right, x in enumerate(nums):
+```
+
+* `right` = con trỏ phải
+* `x = nums[right]` = giá trị hiện tại
+* Duyệt toàn bộ mảng `nums` (mảng đã sắp xếp)
+
+---
+
+```python
+while nums[left] < x - k * 2:
+    left += 1
+```
+
+* Kiểm tra khoảng `[nums[left], nums[right]]` có thể **hội tụ về cùng một giá trị trung gian** không
+* Điều kiện: `nums[right] - nums[left] ≤ 2*k`
+  → Nếu `nums[left] < x - 2*k`, dịch `left` sang phải
+* Ý nghĩa: chỉ giữ lại những số mà khoảng cách với `x` ≤ 2k để có thể biến thành cùng một giá trị.
+
+---
+
+```python
+res_no_x = max(res_no_x, right - left + 1)
+```
+
+* Cập nhật số lượng phần tử lớn nhất có thể hội tụ về một giá trị **không có sẵn trong mảng**
+* `(right - left + 1)` = số phần tử trong khoảng `[left, right]`
+
+---
+
+```python
+res_no_x = min(res_no_x, numOperations)
+```
+
+* Không thể dùng quá `numOperations` phép biến đổi
+* Vì vậy giới hạn tần suất bằng `numOperations`.
+
+---
+
+```python
+return max(res, res_no_x)
+```
+
+* Kết quả cuối cùng là **tần suất lớn nhất** giữa:
+
+  * Case 1: giá trị có sẵn trong mảng (`res`)
+  * Case 2: giá trị không có sẵn trong mảng (`res_no_x`)
+
+---
+
+### 🧠 Tóm tắt ý tưởng Case 2
+
+1. Dùng **two pointers** (`left` và `right`) để tìm đoạn các số **có thể hội tụ về cùng một giá trị trung gian**.
+2. Điều kiện hội tụ: `nums[right] - nums[left] ≤ 2*k`
+3. Cập nhật số lượng phần tử lớn nhất (`res_no_x`) và giới hạn bằng `numOperations`.
+4. So sánh với kết quả Case 1, trả về tần suất lớn nhất.
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ hình minh họa đoạn `[left, right]` hội tụ về cùng một giá trị trung gian** để dễ hình dung trực quan.
+Bạn có muốn mình vẽ không?

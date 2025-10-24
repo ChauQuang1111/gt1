@@ -1,0 +1,197 @@
+Avoid Flood in The City
+class Solution:
+    def avoidFlood(self, rains: List[int]) -> List[int]:
+        h   = {}
+        q   = deque([])
+        res = []
+        for i, x in enumerate(rains):
+            if x:
+                if x in h:
+                    for j in q:
+                        if j > h[x]:
+                            res[j] = x
+                            q.remove(j)
+                            break
+                    else:
+                        return []
+                res.append(-1)
+                h[x] = i
+            else:
+                res.append(1)
+                q.append(i)
+        return res
+
+
+
+Rồi 👍 mình sẽ giải thích **rất chi tiết từng dòng** đoạn code này để bạn hiểu toàn bộ cách nó hoạt động — đây là phần **trọng tâm** của thuật toán bài *1488. Avoid Flood in The City*.
+
+---
+
+## 🚀 Mục tiêu
+
+* Input: mảng `rains`, trong đó
+
+  * `rains[i] > 0` nghĩa là **ngày i mưa ở hồ rains[i]**
+  * `rains[i] == 0` nghĩa là **ngày i trời khô, có thể hút nước một hồ tùy chọn**
+
+* Output: mảng `res`, cùng độ dài:
+
+  * `res[i] = -1` nếu hôm đó mưa
+  * `res[i] = lake` nếu hôm đó hút hồ `lake`
+  * Nếu không thể tránh ngập → trả về `[]`
+
+---
+
+## 💡 Giải thích từng dòng code
+
+```python
+res = []
+```
+
+👉 Mảng kết quả cuối cùng, chứa -1 (ngày mưa) hoặc hồ được hút.
+
+---
+
+```python
+for i, x in enumerate(rains):
+```
+
+👉 Duyệt qua từng ngày `i`, giá trị `x` là hồ được mưa vào hôm đó (hoặc 0 nếu trời khô).
+
+---
+
+```python
+    if x:
+```
+
+👉 Nếu **x > 0** nghĩa là hôm nay **có mưa ở hồ x**.
+
+---
+
+```python
+        if x in h:
+```
+
+👉 Nếu hồ `x` đã từng bị mưa **trước đây**, tức là nó **đang đầy nước**,
+mà hôm nay lại mưa tiếp → **có nguy cơ ngập**.
+→ ta cần tìm **ngày khô trước đó** (trong `q`) để hút hồ này trước ngày hôm nay.
+
+---
+
+```python
+            for j in q:
+                if j > h[x]:
+                    res[j] = x
+                    q.remove(j)
+                    break
+```
+
+👉 Vòng lặp này **tìm một ngày khô j** sao cho:
+
+* `j > h[x]` nghĩa là **ngày khô xảy ra sau lần hồ x bị đầy lần trước**
+  (ta chỉ có thể hút nước **sau khi hồ đầy**)
+
+Nếu tìm được:
+
+* `res[j] = x` → dùng ngày `j` để hút hồ `x`
+* `q.remove(j)` → bỏ ngày đó ra khỏi danh sách vì đã dùng
+* `break` → dừng tìm (chỉ cần hút một lần là đủ)
+
+---
+
+```python
+            else:
+                return []
+```
+
+👉 Nếu vòng `for` kết thúc mà **không tìm thấy ngày khô nào phù hợp**,
+nghĩa là hồ `x` bị mưa lần hai mà **chưa kịp hút** → **ngập nước**
+→ trả về `[]` (nghĩa là không có cách nào tránh được ngập).
+
+---
+
+```python
+        res.append(-1)
+```
+
+👉 Hôm nay là ngày mưa → đánh dấu là `-1`.
+
+---
+
+```python
+        h[x] = i
+```
+
+👉 Ghi nhớ hồ `x` bị đầy vào **ngày i**, để lần sau nếu mưa lại, biết phải hút trước đó.
+(hàm ý: `h` là dictionary: `hồ -> ngày bị đầy`)
+
+---
+
+```python
+    else:
+```
+
+👉 Nếu **x == 0**, nghĩa là **hôm nay trời khô**.
+
+---
+
+```python
+        res.append(1)
+```
+
+👉 Mặc định gán giá trị `1` cho hôm nay (tức là tạm thời chưa biết hút hồ nào).
+
+Sau đó, nếu sau này cần hút một hồ cụ thể (như hồ `2` chẳng hạn),
+thuật toán sẽ **cập nhật lại giá trị này thành `res[j] = 2`**.
+
+---
+
+```python
+        q.append(i)
+```
+
+👉 Lưu lại **chỉ số ngày khô `i`** vào hàng đợi `q`,
+để sau có thể chọn ngày này dùng để hút hồ nào đó khi cần.
+
+---
+
+```python
+return res
+```
+
+👉 Sau khi xử lý xong tất cả các ngày, trả về mảng kết quả.
+
+---
+
+## 🧩 Ví dụ minh họa
+
+**Input**
+
+```python
+rains = [1, 2, 0, 1, 2]
+```
+
+| Ngày | rains[i] | Giải thích hành động                                   | h (hồ bị đầy) | q (ngày khô) | res                              |
+| ---- | -------- | ------------------------------------------------------ | ------------- | ------------ | -------------------------------- |
+| 0    | 1        | mưa hồ 1 → đầy                                         | {1:0}         | []           | [-1]                             |
+| 1    | 2        | mưa hồ 2 → đầy                                         | {1:0, 2:1}    | []           | [-1,-1]                          |
+| 2    | 0        | ngày khô                                               | {1:0, 2:1}    | [2]          | [-1,-1,1]                        |
+| 3    | 1        | hồ 1 đã đầy từ ngày 0 → tìm ngày khô > 0 → dùng ngày 2 | {1:3, 2:1}    | []           | [-1,-1,1,-1] → cập nhật res[2]=1 |
+| 4    | 2        | hồ 2 đã đầy từ ngày 1 → **không còn ngày khô** → ngập  |               |              | []                               |
+
+---
+
+## ✅ Tổng kết
+
+| Biến       | Ý nghĩa                                      |
+| ---------- | -------------------------------------------- |
+| `h`        | dict, lưu ngày mà mỗi hồ bị đầy              |
+| `q`        | danh sách các ngày khô còn lại               |
+| `res`      | kết quả cuối cùng                            |
+| `x in h`   | hồ đã đầy rồi, nếu mưa lại phải hút trước đó |
+| `j > h[x]` | ngày khô phải nằm **sau** ngày hồ đầy        |
+
+---
+
+Bạn có muốn mình viết lại **phiên bản tối ưu hơn (O(n log n))** của cùng code này bằng cách dùng `bisect` thay cho `for j in q:` không?
+Nó sẽ nhanh hơn rất nhiều cho input lớn (10⁵ phần tử).

@@ -1,0 +1,326 @@
+traingle
+class Solution {
+    int m;
+    Integer[][] dp;
+    public int minimumTotal(List<List<Integer>> tran) {
+        m = tran.size();
+        dp = new Integer[m][m];
+       
+        return helper(tran,0,0);
+    }
+    int helper(List<List<Integer>> tran,int row, int col){
+        if(row==m){
+            return 0;
+        }
+        if(dp[row][col]!=null){
+            return dp[row][col];
+        }
+        int left = helper(tran,row+1,col);
+        int right = helper(tran,row+1,col+1);
+        return dp[row][col]=tran.get(row).get(col) + Math.min(left,right);
+    }
+}
+Rồi 👍 mình giải thích chi tiết đoạn Java này và vì sao có `dp[m][m]` và gọi `helper(0,0)` nhé 👇
+
+---
+
+## 1. Ý tưởng thuật toán (Top-down + Memoization)
+
+Bài toán: tìm đường đi từ đỉnh tam giác xuống đáy sao cho tổng nhỏ nhất.
+
+Ta có 2 cách chính:
+
+* **Bottom-up** (như Python code trước: duyệt từ đáy lên)
+* **Top-down + Memoization** (Java code bạn đưa: duyệt từ trên xuống, lưu kết quả tránh tính lại).
+
+Ở đây là **Top-down**:
+
+* Bắt đầu từ đỉnh `helper(0,0)` (hàng 0, cột 0).
+* Tại một ô `(row, col)`, có 2 lựa chọn:
+
+  * đi xuống dưới `(row+1, col)`
+  * đi chéo phải `(row+1, col+1)`
+* Kết quả tại `(row, col)` = `giá trị ô hiện tại + min(kết quả 2 nhánh)`
+* Dùng mảng `dp` để nhớ kết quả đã tính, tránh đệ quy trùng lặp.
+
+---
+
+## 2. Vì sao `dp = new Integer[m][m]`?
+
+* `m = tran.size()` = số hàng của tam giác.
+* Mỗi hàng tối đa có `m` phần tử (hàng cuối).
+* Nên ta khai báo `dp[m][m]` để đủ chứa mọi vị trí `(row, col)` trong tam giác.
+* `dp[row][col]` sẽ lưu **tổng nhỏ nhất từ ô `(row,col)` xuống đáy**.
+* Ban đầu gán `null` → chưa tính.
+
+---
+
+## 3. Vì sao gọi `helper(0,0)`?
+
+* `(0,0)` chính là **ô đỉnh của tam giác**.
+* Bài toán yêu cầu bắt đầu từ đỉnh, nên ta gọi `helper(tran, 0, 0)`.
+* Hàm `helper` sẽ đệ quy xuống đến đáy, tính dần dần và lưu kết quả vào `dp`.
+
+---
+
+## 4. Quy trình hoạt động
+
+Ví dụ tam giác:
+
+```
+   2
+  3 4
+ 6 5 7
+4 1 8 3
+```
+
+* Gọi `helper(0,0)`:
+
+  * Tính từ `2` → gọi `helper(1,0)` và `helper(1,1)`
+* `helper(1,0)` (ô `3`):
+
+  * Gọi `helper(2,0)` (`6`) và `helper(2,1)` (`5`)
+* … tiếp tục cho đến đáy.
+* Khi tới đáy, `helper(row==m)` trả về `0` (điều kiện dừng).
+* Từ dưới lên, kết quả được tính dần và lưu vào `dp`.
+
+Cuối cùng, `helper(0,0)` trả về tổng nhỏ nhất từ đỉnh xuống đáy.
+
+---
+
+✅ **Tóm lại:**
+
+* `dp[m][m]` là mảng nhớ kết quả, đảm bảo đủ chỗ cho mọi ô `(row,col)` trong tam giác.
+* `helper(0,0)` là lời gọi ban đầu từ đỉnh tam giác, nơi bắt đầu mọi đường đi.
+
+---
+
+Bạn có muốn mình viết lại thuật toán này bằng **Bottom-up (không cần đệ quy, chỉ dùng 1 mảng `dp`)** để so sánh trực tiếp với phiên bản Top-down không?
+Ok 👍 mình giải thích chi tiết hàm `helper` này từng dòng để bạn hiểu rõ cách nó hoạt động nhé 👇
+
+---
+
+### Code:
+
+```java
+int helper(List<List<Integer>> tran,int row, int col){
+    if(row==m){
+        return 0;
+    }
+    if(dp[row][col]!=null){
+        return dp[row][col];
+    }
+    int left = helper(tran,row+1,col);
+    int right = helper(tran,row+1,col+1);
+    return dp[row][col]=tran.get(row).get(col) + Math.min(left,right);
+}
+```
+
+---
+
+### 1. Điều kiện dừng
+
+```java
+if(row==m){
+    return 0;
+}
+```
+
+* Khi `row == m` tức là ta đã đi **quá hàng cuối cùng** → không còn số nào nữa → trả về `0`.
+* Đây là **điều kiện dừng đệ quy**.
+
+---
+
+### 2. Kiểm tra đã tính trước chưa
+
+```java
+if(dp[row][col]!=null){
+    return dp[row][col];
+}
+```
+
+* Nếu kết quả tại `(row, col)` đã tính rồi thì trả về ngay.
+* Tránh tính lại nhiều lần cùng một vị trí (**memoization**).
+
+---
+
+### 3. Đệ quy xuống 2 nhánh
+
+```java
+int left = helper(tran,row+1,col);
+int right = helper(tran,row+1,col+1);
+```
+
+* Từ một ô `(row, col)` trong tam giác, ta có 2 lựa chọn:
+
+  * `row+1, col` → đi thẳng xuống dưới.
+  * `row+1, col+1` → đi chéo xuống phải.
+* `left` = tổng nhỏ nhất nếu đi xuống dưới.
+* `right` = tổng nhỏ nhất nếu đi chéo phải.
+
+---
+
+### 4. Tính giá trị hiện tại + chọn nhánh tốt nhất
+
+```java
+return dp[row][col] = tran.get(row).get(col) + Math.min(left, right);
+```
+
+* Lấy giá trị hiện tại `tran.get(row).get(col)` (số ở ô `(row, col)`).
+* Cộng với **đường đi nhỏ nhất trong 2 nhánh** (`Math.min(left, right)`).
+* Lưu vào `dp[row][col]` để lần sau không cần tính lại.
+* Trả về kết quả.
+
+---
+
+### 🔑 Ý nghĩa tổng quát
+
+* `helper(row, col)` trả về **tổng nhỏ nhất từ ô `(row,col)` xuống đáy**.
+* Đỉnh tam giác là `(0,0)`, nên lời gọi ban đầu `helper(0,0)` cho ta kết quả cuối cùng.
+
+---
+
+### Ví dụ với tam giác
+
+```
+   2
+  3 4
+ 6 5 7
+4 1 8 3
+```
+
+* `helper(0,0)` (ô `2`) → gọi `helper(1,0)` và `helper(1,1)`.
+* `helper(1,0)` (ô `3`) → gọi `helper(2,0)` và `helper(2,1)`.
+* … tiếp tục tới đáy.
+* Từ đáy tính ngược lên, cộng dần và chọn nhánh nhỏ nhất.
+
+Kết quả cuối cùng: `11`.
+
+---
+
+👉 Bạn có muốn mình vẽ **sơ đồ cây đệ quy** của `helper(0,0)` (từ `2 → 3,4 → 6,5,7 …`) để thấy rõ từng nhánh tính toán không?
+Ok mình sẽ giải thích chi tiết 2 dòng này bằng ví dụ nhé 👇
+
+Giả sử tam giác `tran` như sau:
+
+```
+   [2]
+  [3,4]
+ [6,5,7]
+[4,1,8,3]
+```
+
+Hàm `helper(tran, row, col)` nghĩa là: **đang đứng tại ô `(row, col)`**, tìm đường xuống **có tổng nhỏ nhất**.
+
+---
+
+### Khi gọi:
+
+```java
+int left = helper(tran, row+1, col);
+int right = helper(tran, row+1, col+1);
+```
+
+* `left` = nếu mình đi xuống **thẳng hàng** (cùng cột).
+* `right` = nếu mình đi xuống **chéo phải** (cột +1).
+
+---
+
+### Ví dụ cụ thể:
+
+Bắt đầu từ **ô (0,0) = 2**.
+
+1. Gọi:
+
+   ```java
+   left = helper(tran, 1, 0);   // đi xuống lấy số 3
+   right = helper(tran, 1, 1);  // đi xuống lấy số 4
+   ```
+
+2. Tại `helper(tran, 1, 0)` (ô số 3):
+
+   * `left = helper(2,0) = 6`
+   * `right = helper(2,1) = 5`
+     ⇒ kết quả của ô 3 = `3 + min(6,5) = 3+5=8`.
+
+3. Tại `helper(tran, 1, 1)` (ô số 4):
+
+   * `left = helper(2,1) = 5`
+   * `right = helper(2,2) = 7`
+     ⇒ kết quả của ô 4 = `4 + min(5,7) = 4+5=9`.
+
+4. Quay lại `helper(0,0)`:
+
+   * `left = 8`
+   * `right = 9`
+     ⇒ kết quả = `2 + min(8,9) = 10`.
+
+---
+
+👉 Tóm lại:
+Hai dòng này chính là **chia nhánh**:
+
+* đi xuống dưới cùng cột (`left`),
+* hoặc đi xuống dưới +1 cột (`right`),
+  rồi chọn đường nào **nhỏ hơn** để tính tiếp.
+
+---
+
+Bạn có muốn mình vẽ sơ đồ cây đệ quy từ ví dụ này để dễ hình dung hơn không?
+Rất hay 👍. Mình sẽ viết **đầy đủ cú pháp** để bạn thấy `tran` luôn được truyền vào, không bị mất.
+
+Ví dụ với tam giác này:
+
+```
+   2
+  3 4
+ 6 5 7
+4 1 8 3
+```
+
+### Code gọi:
+
+```java
+return helper(tran, 0, 0);
+```
+
+### Quá trình đệ quy (ghi đầy đủ `tran, row, col`):
+
+1. Bắt đầu:
+   `helper(tran, 0, 0)`  → ô có giá trị `2`.
+
+2. Tính `left`:
+
+   ```java
+   left = helper(tran, 1, 0); // đi xuống 3
+   ```
+
+3. Trong `helper(tran, 1, 0)`:
+
+   * Tính tiếp `left = helper(tran, 2, 0); // đi xuống 6`
+   * Tính `right = helper(tran, 2, 1); // đi xuống 5`
+
+4. Trong `helper(tran, 1, 1)` (khi quay lại từ bước đầu với `right`):
+
+   * Tính `left = helper(tran, 2, 1); // 5`
+   * Tính `right = helper(tran, 2, 2); // 7`
+
+---
+
+### Cách hiểu dễ:
+
+* **Luôn luôn đầy đủ cú pháp:** `helper(tran, row, col)`
+* Khi ta viết ngắn gọn `helper(2, 0)` nghĩa là đang nói tắt cho `helper(tran, 2, 0)`.
+
+---
+
+👉 Nếu muốn rõ ràng, bạn có thể viết chú thích trong code như vầy:
+
+```java
+int left = helper(tran, row+1, col);     // xuống dòng dưới, cùng cột
+int right = helper(tran, row+1, col+1);  // xuống dòng dưới, sang cột kế tiếp
+```
+
+---
+
+Bạn có muốn mình vẽ **cây đệ quy đầy đủ tham số** cho tam giác này để bạn nhìn thấy mỗi bước gọi không?

@@ -1,0 +1,993 @@
+Word Search
+class Solution:
+    def exist(self, board: List[List[str]], word: str) -> bool:
+        ROWS, COLS = len(board), len(board[0])
+
+        count = Counter(sum(board, []))
+        for c, countWord in Counter(word).items():
+            if count[c] < countWord:
+                return False
+                
+        if count[word[0]] > count[word[-1]]:
+             word = word[::-1]
+             
+        def dfs(r, c, i):
+            if i == len(word):
+                return True
+            if (r < 0 or c < 0 or r >= ROWS or c >= COLS or
+                word[i] != board[r][c] or board[r][c] == '#'):
+                return False
+
+            board[r][c] = '#'
+            res = (dfs(r + 1, c, i + 1) or
+                   dfs(r - 1, c, i + 1) or
+                   dfs(r, c + 1, i + 1) or
+                   dfs(r, c - 1, i + 1))
+            board[r][c] = word[i]
+            return res
+
+        for r in range(ROWS):
+            for c in range(COLS):
+                if dfs(r, c, 0):
+                    return True
+        return False
+
+Đoạn code này là phần **kiểm tra khả năng tồn tại của từ và tối ưu DFS** trong bài Word Search. Mình giải thích chi tiết từng dòng:
+
+```python
+ROWS, COLS = len(board), len(board[0])
+```
+
+* `ROWS` và `COLS` lưu số hàng và số cột của bảng `board`.
+* Dùng để dễ dàng duyệt board và kiểm tra giới hạn khi DFS.
+
+```python
+count = Counter(sum(board, []))
+```
+
+* `sum(board, [])` dùng để **flatten board** từ 2D thành 1D list. Ví dụ:
+
+```python
+board = [['A','B'],['C','D']]
+sum(board, []) -> ['A','B','C','D']
+```
+
+* `Counter(...)` đếm tần suất xuất hiện của từng ký tự trên board. Ví dụ:
+
+```python
+Counter(['A','B','C','D']) -> {'A':1, 'B':1, 'C':1, 'D':1}
+```
+
+```python
+for c, countWord in Counter(word).items():
+    if count[c] < countWord:
+        return False
+```
+
+* `Counter(word)` đếm tần suất ký tự cần trong từ `word`.
+* Duyệt từng ký tự `c` trong `word` và so sánh với board:
+
+  * Nếu số ký tự trên board (`count[c]`) < số ký tự cần (`countWord`) → chắc chắn **không thể tìm được từ** → trả về `False` ngay.
+* Đây là **bước kiểm tra khả thi** trước khi DFS để tiết kiệm thời gian.
+
+```python
+if count[word[0]] > count[word[-1]]:
+     word = word[::-1]
+```
+
+* Đây là **heuristic tối ưu DFS**:
+
+  * Nếu ký tự đầu tiên (`word[0]`) xuất hiện nhiều hơn ký tự cuối (`word[-1]`) trên board, thì **đảo từ** (`word[::-1]`) để DFS bắt đầu từ ký tự ít xuất hiện hơn.
+  * Lý do: bắt đầu từ ký tự hiếm hơn giúp **cắt nhánh DFS sớm hơn**, giảm số lần duyệt board.
+
+---
+
+**Tóm tắt:**
+
+1. Flatten board và đếm tần suất ký tự.
+2. Kiểm tra xem board có đủ ký tự cho từ không, nếu không → trả về `False`.
+3. Đảo từ nếu ký tự cuối ít xuất hiện hơn ký tự đầu → tối ưu DFS.
+
+---
+
+Nếu bạn muốn, mình có thể vẽ **một ví dụ board + word** minh họa bước này để dễ hình dung. Bạn có muốn mình làm không?
+OK, để minh họa, mình lấy ví dụ cụ thể:
+
+**Board:**
+
+```
+A B C E
+S F C S
+A D E E
+```
+
+**Word cần tìm:** `"SEE"`
+
+---
+
+**Bước 1: Flatten board và đếm ký tự**
+
+```python
+sum(board, []) -> ['A','B','C','E','S','F','C','S','A','D','E','E']
+count = Counter(...) -> {'A':2, 'B':1, 'C':2, 'E':3, 'S':2, 'F':1, 'D':1}
+```
+
+**Đếm ký tự trong word:**
+
+```python
+Counter("SEE") -> {'S':1, 'E':2}
+```
+
+So sánh với board:
+
+* `'S'` trên board = 2 ≥ 1 ✅
+* `'E'` trên board = 3 ≥ 2 ✅
+
+→ Board có đủ ký tự, tiếp tục DFS.
+
+---
+
+**Bước 2: Xác định hướng DFS**
+
+* Ký tự đầu word: `'S'` xuất hiện 2 lần
+* Ký tự cuối word: `'E'` xuất hiện 3 lần
+
+```python
+if count[word[0]] > count[word[-1]]:
+    word = word[::-1]
+```
+
+* `'S'` (2) ≤ `'E'` (3), điều kiện **không thỏa**, không đảo từ → DFS bình thường.
+
+**Nếu word là `"EES"`:**
+
+* `'E'` đầu = 3, `'S'` cuối = 2
+* `'E'` đầu > `'S'` cuối → đảo từ → word = `"SEE"`
+* Lúc này DFS sẽ bắt đầu từ `'S'` hiếm hơn, giảm số nhánh DFS cần duyệt.
+
+---
+
+**Ý nghĩa:**
+
+* **Flatten board + Counter:** kiểm tra khả năng tồn tại từ trước khi DFS → tiết kiệm thời gian.
+* **Đảo từ theo tần suất ký tự:** tối ưu DFS, bắt đầu từ ký tự hiếm → cắt nhánh sớm hơn.
+
+---
+
+Nếu bạn muốn, mình có thể vẽ **hình DFS minh họa bước đi trên board** với `"SEE"` để thấy hiệu quả của heuristic này.
+
+Bạn có muốn mình vẽ không?
+Đây là phần **DFS (Depth-First Search)** dùng để kiểm tra xem một từ có thể được tạo ra trên board hay không. Mình giải thích từng dòng:
+
+---
+
+```python
+def dfs(r, c, i):
+```
+
+* `r`, `c`: tọa độ hiện tại trên board (hàng, cột).
+* `i`: chỉ số ký tự hiện tại trong `word` mà chúng ta đang cố khớp.
+
+---
+
+```python
+if i == len(word):
+    return True
+```
+
+* Nếu `i` đã bằng độ dài từ → đã kiểm tra hết tất cả ký tự → tìm thấy word trên board → trả về `True`.
+
+---
+
+```python
+if (r < 0 or c < 0 or r >= ROWS or c >= COLS or
+    word[i] != board[r][c] or board[r][c] == '#'):
+    return False
+```
+
+* Điều kiện **dừng đệ quy sớm**:
+
+  1. `r < 0 or c < 0 or r >= ROWS or c >= COLS`: ra ngoài biên board → không hợp lệ.
+  2. `word[i] != board[r][c]`: ký tự trên board không khớp ký tự word hiện tại.
+  3. `board[r][c] == '#'`: ô này đã được sử dụng → không được dùng lại.
+
+---
+
+```python
+board[r][c] = '#'
+```
+
+* **Đánh dấu ô này đã dùng** để tránh đi lại trong cùng đường đi DFS (backtracking).
+
+---
+
+```python
+res = (dfs(r + 1, c, i + 1) or
+       dfs(r - 1, c, i + 1) or
+       dfs(r, c + 1, i + 1) or
+       dfs(r, c - 1, i + 1))
+```
+
+* **Đi sang 4 hướng xung quanh**: xuống, lên, phải, trái.
+* Mỗi hướng đều tăng `i + 1` để kiểm tra ký tự tiếp theo của word.
+* Dùng `or` vì chỉ cần 1 hướng thành công → trả `True`.
+
+---
+
+```python
+board[r][c] = word[i]
+```
+
+* **Khôi phục ô đã đánh dấu** → để DFS các nhánh khác không bị ảnh hưởng (backtracking).
+
+---
+
+```python
+return res
+```
+
+* Trả về kết quả tìm được từ 4 hướng DFS.
+
+---
+
+**Tóm tắt thuật toán:**
+
+1. DFS kiểm tra từng ký tự của word theo 4 hướng từ ô hiện tại.
+2. Nếu ô không hợp lệ hoặc ký tự không khớp → dừng DFS.
+3. Nếu toàn bộ word đã kiểm tra → trả về `True`.
+4. Sử dụng `#` để đánh dấu và restore để backtracking.
+
+---
+
+Nếu muốn, mình có thể **vẽ một ví dụ minh họa DFS đi tìm word `"SEE"` trên board 3x4** để bạn hình dung cách hoạt động.
+
+Bạn có muốn mình vẽ không?
+Tuyệt! Hãy minh họa DFS tìm word `"SEE"` trên board 3x4 sau:
+
+**Board:**
+
+```
+[['A','B','C','E'],
+ ['S','F','C','S'],
+ ['A','D','E','E']]
+```
+
+**Word cần tìm:** `"SEE"`
+
+---
+
+### Bước 1: Bắt đầu DFS từ các ô có ký tự `'S'`:
+
+* Ô `(1,0)` = `'S'` → khớp ký tự đầu tiên `'S'`.
+* Đánh dấu `(1,0)` = `'#'`.
+
+---
+
+### Bước 2: DFS cho ký tự tiếp theo `'E'` (i=1):
+
+* Kiểm tra 4 hướng từ `(1,0)`:
+
+1. **Down → `(2,0)` = `'A'` → không khớp → bỏ**
+2. **Up → `(0,0)` = `'A'` → không khớp → bỏ**
+3. **Right → `(1,1)` = `'F'` → không khớp → bỏ**
+4. **Left → `(1,-1)` → ra ngoài → bỏ**
+
+* Không tìm được `'E'` từ `(1,0)` → quay lại (backtrack).
+* Khôi phục `(1,0)` = `'S'`.
+
+---
+
+### Bước 3: Thử ô `'S'` khác:
+
+* Ô `(1,3)` = `'S'` → khớp ký tự đầu tiên `'S'`.
+* Đánh dấu `(1,3)` = `'#'`.
+
+---
+
+### Bước 4: DFS cho ký tự tiếp theo `'E'` (i=1):
+
+* Kiểm tra 4 hướng từ `(1,3)`:
+
+1. **Down → `(2,3)` = `'E'` → khớp**
+
+   * Đánh dấu `(2,3)` = `'#'`.
+2. DFS ký tự tiếp theo `'E'` (i=2):
+
+   * Kiểm tra 4 hướng từ `(2,3)`:
+
+     1. **Down → `(3,3)` → ra ngoài → bỏ**
+     2. **Up → `(1,3)` = `'#'` → đã dùng → bỏ**
+     3. **Right → `(2,4)` → ra ngoài → bỏ**
+     4. **Left → `(2,2)` = `'E'` → khớp**
+
+   * DFS ký tự tiếp theo (i=3) → `i == len(word)` → **tìm thấy word**
+
+---
+
+### Kết quả:
+
+* Word `"SEE"` tồn tại trên board → DFS trả về `True`.
+
+---
+
+**Mô tả trực quan của đường đi `'SEE'`:**
+
+```
+[['A','B','C','E'],
+ ['S','F','C','#'],
+ ['A','D','E','E']]
+```
+
+* Đường đi: `(1,3)` → `(2,3)` → `(2,2)`
+
+---
+
+Nếu muốn, mình có thể **vẽ sơ đồ 4 hướng DFS với đánh dấu `#` cho từng bước** để nhìn trực quan hơn.
+
+Bạn có muốn mình vẽ không?
+Tuyệt! Mình sẽ vẽ sơ đồ **DFS tìm `"SEE"` trên board 3x4** theo từng bước, đánh dấu `#` khi ô đã dùng:
+
+**Board ban đầu:**
+
+```
+[['A','B','C','E'],
+ ['S','F','C','S'],
+ ['A','D','E','E']]
+```
+
+**Word cần tìm:** `"SEE"`
+
+---
+
+### Bước 1: Bắt đầu DFS từ `'S'` đầu tiên tại `(1,0)`
+
+```
+[['A','B','C','E'],
+ ['#','F','C','S'],
+ ['A','D','E','E']]
+```
+
+* Ký tự `'S'` đầu tiên khớp → đánh dấu `'#'`.
+* Tiếp tục tìm `'E'` từ 4 hướng → không tìm thấy → **backtrack**:
+
+```
+[['A','B','C','E'],
+ ['S','F','C','S'],
+ ['A','D','E','E']]
+```
+
+---
+
+### Bước 2: DFS từ `'S'` thứ hai tại `(1,3)`
+
+```
+[['A','B','C','E'],
+ ['S','F','C','#'],
+ ['A','D','E','E']]
+```
+
+* `'S'` thứ hai khớp → đánh dấu `'#'`.
+* Tiếp tục tìm `'E'` (i=1) từ 4 hướng:
+
+1. **Down → `(2,3)` = `'E'` → khớp**
+
+```
+[['A','B','C','E'],
+ ['S','F','C','#'],
+ ['A','D','E','#']]
+```
+
+* Tiếp tục tìm `'E'` (i=2) từ `(2,3)`:
+
+1. **Left → `(2,2)` = `'E'` → khớp**
+
+```
+[['A','B','C','E'],
+ ['S','F','C','#'],
+ ['A','D','#','#']]
+```
+
+* Ký tự thứ 3 khớp → **i == len(word)** → tìm thấy word
+
+---
+
+### Kết quả cuối cùng:
+
+* Word `"SEE"` tồn tại, đường đi:
+
+```
+(1,3) → (2,3) → (2,2)
+```
+
+* DFS trả về `True`.
+
+---
+
+✅ **Chú ý thuật toán DFS:**
+
+1. Đánh dấu ô đã dùng bằng `'#'` để tránh dùng lại cùng một ô.
+2. Thử 4 hướng (up, down, left, right).
+3. Quay lại (backtrack) nếu không tìm được ký tự tiếp theo.
+4. Khi `i == len(word)` → đã tìm thấy toàn bộ word.
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ mảng với mũi tên minh họa hướng di chuyển DFS** để nhìn trực quan hơn từng bước.
+
+Bạn có muốn mình làm không?
+Tuyệt! Mình sẽ vẽ sơ đồ **board với mũi tên thể hiện hướng đi DFS** khi tìm word `"SEE"`:
+
+**Board ban đầu:**
+
+```
+[['A','B','C','E'],
+ ['S','F','C','S'],
+ ['A','D','E','E']]
+```
+
+**Word cần tìm:** `"SEE"`
+
+---
+
+### DFS tìm từ `'S'` tại `(1,3)`
+
+Bước 1: `'S'` đầu → đánh dấu `'#'`:
+
+```
+[['A','B','C','E'],
+ ['S','F','C','#'],
+ ['A','D','E','E']]
+```
+
+Bước 2: Tìm `'E'` tiếp theo từ `(1,3)`:
+
+* Down `(2,3)` = `'E'` → chọn → đánh dấu `'#'`:
+
+```
+[['A','B','C','E'],
+ ['S','F','C','#'],
+ ['A','D','E','#']]
+```
+
+Bước 3: Tìm `'E'` tiếp theo từ `(2,3)`:
+
+* Left `(2,2)` = `'E'` → chọn → đánh dấu `'#'`:
+
+```
+[['A','B','C','E'],
+ ['S','F','C','#'],
+ ['A','D','#','#']]
+```
+
+* Đã đủ 3 ký tự → **DFS trả về True**.
+
+---
+
+### Hướng đi DFS minh họa bằng mũi tên
+
+```
+(1,3) S → (2,3) E → (2,2) E
+```
+
+```
+[['A','B','C','E'],
+ ['S','F','C','S→'],
+ ['A','D','←E','#']]
+```
+
+* `→` nghĩa là đi sang phải (từ `(1,3)` xuống `(2,3)`).
+* `←` nghĩa là đi sang trái (từ `(2,3)` đến `(2,2)`).
+* `#` là ô đã đánh dấu (đã dùng).
+
+---
+
+### Ý nghĩa
+
+* DFS thử từng hướng từ ký tự hiện tại.
+* Nếu gặp `'#'` hoặc out-of-bound hoặc ký tự khác → quay lại.
+* Khi toàn bộ ký tự khớp → trả về True.
+
+---
+
+Nếu muốn, mình có thể **vẽ sơ đồ toàn bộ quá trình DFS với tất cả nhánh bị backtrack** để thấy cách DFS thử các hướng trước khi tìm được word.
+
+Bạn có muốn mình làm không?
+Đoạn này là **vòng lặp chính trong thuật toán Word Search** dùng DFS. Mình giải thích chi tiết:
+
+```python
+for r in range(ROWS):
+    for c in range(COLS):
+        if dfs(r, c, 0):
+            return True
+return False
+```
+
+---
+
+### Ý nghĩa từng dòng
+
+1. **`for r in range(ROWS)`**
+   Duyệt tất cả các hàng của bảng `board`.
+
+2. **`for c in range(COLS)`**
+   Duyệt tất cả các cột của bảng `board`.
+
+   → Như vậy, `(r, c)` sẽ duyệt từng ô của ma trận 2D.
+
+3. **`if dfs(r, c, 0):`**
+
+   * Gọi hàm DFS từ ô `(r, c)` để tìm `word` bắt đầu từ ký tự thứ `0`.
+   * Nếu DFS trả về `True`, nghĩa là từ ô này có thể đi theo các hướng sao cho khớp toàn bộ `word`.
+
+4. **`return True`**
+
+   * Nếu tìm thấy `word` ở bất kỳ ô nào → trả về True ngay, kết thúc hàm.
+
+5. **`return False`**
+
+   * Nếu duyệt hết tất cả ô mà không tìm thấy `word` → trả về False.
+
+---
+
+### Thuật toán tổng quan
+
+1. Duyệt toàn bộ bảng 2D.
+2. Tại mỗi ô `(r,c)`, bắt đầu DFS thử tất cả hướng (trái, phải, lên, xuống) để nối thành `word`.
+3. Nếu một hướng nào đó thành công → trả về True.
+4. Nếu tất cả ô đều thử mà không thành công → trả về False.
+
+---
+
+Ví dụ:
+
+```text
+Board:
+A B C E
+S F C S
+A D E E
+
+Word: SEE
+```
+
+* DFS bắt đầu từ `(1,3)` → đi xuống `(2,3)` → đi sang trái `(2,2)` → toàn bộ word tìm được → return True.
+* Nếu thử từ `(0,0)` → không thành công → tiếp tục ô `(0,1)`...
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ minh họa toàn bộ luồng DFS trên ma trận** để bạn hình dung cách tìm từng ô.
+
+Bạn có muốn mình làm không?
+Ok! Mình sẽ minh họa cách thuật toán DFS trong Word Search hoạt động trên ma trận. Giả sử ma trận và từ cần tìm như sau:
+
+```
+Board:
+A B C E
+S F C S
+A D E E
+
+Word: SEE
+```
+
+---
+
+### Bước 1: Duyệt từng ô
+
+Thuật toán sẽ duyệt tất cả các ô `(r,c)`:
+
+```
+(0,0) -> A
+(0,1) -> B
+(0,2) -> C
+(0,3) -> E
+(1,0) -> S
+(1,1) -> F
+(1,2) -> C
+(1,3) -> S
+(2,0) -> A
+(2,1) -> D
+(2,2) -> E
+(2,3) -> E
+```
+
+DFS bắt đầu từ các ô có chữ cái trùng ký tự đầu tiên của `word` (`'S'`).
+
+---
+
+### Bước 2: Bắt đầu DFS từ `(1,0)` → chữ `'S'`
+
+* Word: `'S' 'E' 'E'`
+* Ký tự thứ 0: `'S'` trùng `(1,0)` → đánh dấu `(1,0)` là đã dùng (`'#'`)
+* Thử các hướng:
+
+  1. **Down** `(2,0)` → `'A'` ≠ `'E'` → fail
+  2. **Up** `(0,0)` → `'A'` ≠ `'E'` → fail
+  3. **Right** `(1,1)` → `'F'` ≠ `'E'` → fail
+  4. **Left** `(1,-1)` → out of bounds → fail
+
+→ Không tìm được từ từ `(1,0)`.
+
+---
+
+### Bước 3: DFS từ `(1,3)` → chữ `'S'`
+
+* Ký tự 0: `'S'` trùng `(1,3)` → đánh dấu `(1,3)`
+
+* DFS các hướng:
+
+  1. **Down** `(2,3)` → `'E'` trùng ký tự thứ 1 `'E'` → đánh dấu `(2,3)`
+  2. **Down** `(3,3)` → out of bounds → fail
+  3. **Up** `(1,3)` → đã đánh dấu → fail
+  4. **Right** `(2,4)` → out of bounds → fail
+  5. **Left** `(2,2)` → `'E'` trùng ký tự thứ 2 `'E'` → đánh dấu `(2,2)`
+
+* Tất cả ký tự đã khớp → DFS trả về `True`.
+
+---
+
+### Bước 4: Trả về kết quả
+
+* Vì DFS trả về `True` từ `(1,3)`, vòng lặp chính sẽ return `True`.
+* Thuật toán kết thúc, `word` tồn tại trên bảng.
+
+---
+
+### Ghi chú
+
+* Ký tự được đánh dấu là `'#'` trong khi DFS đang chạy để **tránh dùng lại ô đã dùng**.
+* Sau khi thử xong một hướng, ô được **khôi phục lại** (`board[r][c] = word[i]`) để thử hướng khác.
+* DFS kiểm tra 4 hướng: **trên, dưới, trái, phải**.
+
+---
+
+Nếu muốn, mình có thể vẽ **sơ đồ bảng với đường đi DFS từng bước** để bạn nhìn trực quan hơn.
+
+Bạn có muốn mình vẽ không?
+Ok! Mình sẽ vẽ sơ đồ trực quan để minh họa DFS trong **Word Search** với ví dụ:
+
+**Board:**
+
+```
+A B C E
+S F C S
+A D E E
+```
+
+**Word:** `"SEE"`
+
+---
+
+### Bước 1: DFS bắt đầu từ `(1,0)` → `'S'`
+
+```
+# = đã đánh dấu
+Step 0: bắt đầu từ (1,0)
+Board tạm thời:
+A B C E
+# F C S
+A D E E
+```
+
+Các hướng thử: Down `(2,0)` → `'A'` fail, Up `(0,0)` → `'A'` fail, Right `(1,1)` → `'F'` fail, Left `(1,-1)` → out of bounds → fail.
+
+→ Không tìm được từ `(1,0)`.
+
+---
+
+### Bước 2: DFS bắt đầu từ `(1,3)` → `'S'`
+
+```
+Step 0: đánh dấu (1,3)
+A B C E
+S F C #
+A D E E
+```
+
+* DFS Down `(2,3)` → `'E'` trùng ký tự thứ 1 `'E'` → đánh dấu
+
+```
+A B C E
+S F C #
+A D E #
+```
+
+* DFS tiếp tục Down `(3,3)` → out of bounds → fail
+* DFS Up `(1,3)` → đã đánh dấu → fail
+* DFS Right `(2,4)` → out of bounds → fail
+* DFS Left `(2,2)` → `'E'` trùng ký tự thứ 2 `'E'` → đánh dấu
+
+```
+A B C E
+S F C #
+A D # #
+```
+
+* Tất cả ký tự đã khớp → DFS trả về `True`.
+
+---
+
+### Kết quả
+
+* Vì DFS trả về `True` từ `(1,3)`, thuật toán kết thúc.
+* **Word `"SEE"` tồn tại trên bảng.**
+
+---
+
+### Chú ý
+
+1. Mỗi ô được đánh dấu tạm thời là `'#'` khi đang duyệt để **tránh dùng lại ô đó** trong cùng một đường đi.
+2. Sau khi thử xong các hướng, ô được **khôi phục lại ký tự cũ** để các đường đi khác vẫn có thể dùng.
+3. DFS thử tất cả các hướng: **trên, dưới, trái, phải**.
+
+---
+
+Nếu bạn muốn, mình có thể vẽ **bản đồ từng bước với mũi tên chỉ đường đi DFS** để trực quan hơn, như một bản đồ hành trình.
+
+Bạn có muốn mình làm không?
+Ok! Mình sẽ vẽ sơ đồ trực quan để minh họa DFS trong **Word Search** với ví dụ:
+
+**Board:**
+
+```
+A B C E
+S F C S
+A D E E
+```
+
+**Word:** `"SEE"`
+
+---
+
+### Bước 1: DFS bắt đầu từ `(1,0)` → `'S'`
+
+```
+# = đã đánh dấu
+Step 0: bắt đầu từ (1,0)
+Board tạm thời:
+A B C E
+# F C S
+A D E E
+```
+
+Các hướng thử: Down `(2,0)` → `'A'` fail, Up `(0,0)` → `'A'` fail, Right `(1,1)` → `'F'` fail, Left `(1,-1)` → out of bounds → fail.
+
+→ Không tìm được từ `(1,0)`.
+
+---
+
+### Bước 2: DFS bắt đầu từ `(1,3)` → `'S'`
+
+```
+Step 0: đánh dấu (1,3)
+A B C E
+S F C #
+A D E E
+```
+
+* DFS Down `(2,3)` → `'E'` trùng ký tự thứ 1 `'E'` → đánh dấu
+
+```
+A B C E
+S F C #
+A D E #
+```
+
+* DFS tiếp tục Down `(3,3)` → out of bounds → fail
+* DFS Up `(1,3)` → đã đánh dấu → fail
+* DFS Right `(2,4)` → out of bounds → fail
+* DFS Left `(2,2)` → `'E'` trùng ký tự thứ 2 `'E'` → đánh dấu
+
+```
+A B C E
+S F C #
+A D # #
+```
+
+* Tất cả ký tự đã khớp → DFS trả về `True`.
+
+---
+
+### Kết quả
+
+* Vì DFS trả về `True` từ `(1,3)`, thuật toán kết thúc.
+* **Word `"SEE"` tồn tại trên bảng.**
+
+---
+
+### Chú ý
+
+1. Mỗi ô được đánh dấu tạm thời là `'#'` khi đang duyệt để **tránh dùng lại ô đó** trong cùng một đường đi.
+2. Sau khi thử xong các hướng, ô được **khôi phục lại ký tự cũ** để các đường đi khác vẫn có thể dùng.
+3. DFS thử tất cả các hướng: **trên, dưới, trái, phải**.
+
+---
+
+Nếu bạn muốn, mình có thể vẽ **bản đồ từng bước với mũi tên chỉ đường đi DFS** để trực quan hơn, như một bản đồ hành trình.
+
+Bạn có muốn mình làm không?
+Ok! Mình sẽ vẽ sơ đồ trực quan để minh họa DFS trong **Word Search** với ví dụ:
+
+**Board:**
+
+```
+A B C E
+S F C S
+A D E E
+```
+
+**Word:** `"SEE"`
+
+---
+
+### Bước 1: DFS bắt đầu từ `(1,0)` → `'S'`
+
+```
+# = đã đánh dấu
+Step 0: bắt đầu từ (1,0)
+Board tạm thời:
+A B C E
+# F C S
+A D E E
+```
+
+Các hướng thử: Down `(2,0)` → `'A'` fail, Up `(0,0)` → `'A'` fail, Right `(1,1)` → `'F'` fail, Left `(1,-1)` → out of bounds → fail.
+
+→ Không tìm được từ `(1,0)`.
+
+---
+
+### Bước 2: DFS bắt đầu từ `(1,3)` → `'S'`
+
+```
+Step 0: đánh dấu (1,3)
+A B C E
+S F C #
+A D E E
+```
+
+* DFS Down `(2,3)` → `'E'` trùng ký tự thứ 1 `'E'` → đánh dấu
+
+```
+A B C E
+S F C #
+A D E #
+```
+
+* DFS tiếp tục Down `(3,3)` → out of bounds → fail
+* DFS Up `(1,3)` → đã đánh dấu → fail
+* DFS Right `(2,4)` → out of bounds → fail
+* DFS Left `(2,2)` → `'E'` trùng ký tự thứ 2 `'E'` → đánh dấu
+
+```
+A B C E
+S F C #
+A D # #
+```
+
+* Tất cả ký tự đã khớp → DFS trả về `True`.
+
+---
+
+### Kết quả
+
+* Vì DFS trả về `True` từ `(1,3)`, thuật toán kết thúc.
+* **Word `"SEE"` tồn tại trên bảng.**
+
+---
+
+### Chú ý
+
+1. Mỗi ô được đánh dấu tạm thời là `'#'` khi đang duyệt để **tránh dùng lại ô đó** trong cùng một đường đi.
+2. Sau khi thử xong các hướng, ô được **khôi phục lại ký tự cũ** để các đường đi khác vẫn có thể dùng.
+3. DFS thử tất cả các hướng: **trên, dưới, trái, phải**.
+
+---
+
+Nếu bạn muốn, mình có thể vẽ **bản đồ từng bước với mũi tên chỉ đường đi DFS** để trực quan hơn, như một bản đồ hành trình.
+
+Bạn có muốn mình làm không?
+Tuyệt, mình sẽ minh họa **DFS trong Word Search** từng bước bằng bản đồ với mũi tên chỉ đường đi. Dùng ví dụ **board** và **word = "SEE"** như trước:
+
+**Board:**
+
+```
+A B C E
+S F C S
+A D E E
+```
+
+**Word:** `"SEE"`
+
+---
+
+### Bước 0: Chuẩn bị
+
+* `ROWS = 3`, `COLS = 4`
+* Khởi chạy DFS từ mỗi ô, tìm ký tự đầu `'S'`.
+
+---
+
+### Bước 1: Thử từ `(1,0)` → `'S'`
+
+```
+(1,0) = S
+Start DFS here
+```
+
+Các hướng thử:
+
+* Down → `(2,0) = A` ❌
+* Up → `(0,0) = A` ❌
+* Right → `(1,1) = F` ❌
+* Left → `(1,-1)` ❌
+
+→ Không tìm thấy `"SEE"` từ `(1,0)`.
+
+---
+
+### Bước 2: Thử từ `(1,3)` → `'S'` (ký tự đầu)
+
+```
+A  B  C  E
+S  F  C  S  <- Start here
+A  D  E  E
+```
+
+* Đánh dấu `(1,3)` tạm thời với `'#'`:
+
+```
+A  B  C  E
+S  F  C  #  
+A  D  E  E
+```
+
+* DFS bước tiếp theo tìm `'E'`:
+
+1. **Down → `(2,3) = E`** ✔
+
+```
+A  B  C  E
+S  F  C  #
+A  D  E  #  <- Matched 'E'
+```
+
+2. DFS bước tiếp theo tìm `'E'` tiếp theo:
+
+* Down `(3,3)` ❌ out of bounds
+* Up `(1,3)` ❌ already '#'
+* Right `(2,4)` ❌ out of bounds
+* Left `(2,2) = E` ✔
+
+```
+A  B  C  E
+S  F  C  #
+A  D  #  #  <- Matched second 'E'
+```
+
+* DFS nhận thấy **tất cả ký tự đã khớp** → trả về `True`
+
+---
+
+### Bản đồ đường đi DFS (ký hiệu `→` chỉ hướng đi)
+
+```
+(1,3) S  → move down
+(2,3) E  → move left
+(2,2) E
+```
+
+**Sequence path:** `(1,3) → (2,3) → (2,2)`
+
+---
+
+### Chú ý thuật toán
+
+1. **Đánh dấu tạm thời** bằng `'#'` để không dùng lại ô trong cùng đường đi.
+2. **Khôi phục** ký tự cũ sau khi thử xong.
+3. DFS thử **bốn hướng**: trên, dưới, trái, phải.
+4. Nếu tìm thấy toàn bộ ký tự, DFS trả về `True`.
+
+---
+
+Nếu bạn muốn, mình có thể vẽ **bản đồ với mũi tên thật trực quan như ma trận**, nhìn là thấy ngay đường đi DFS.
+
+Bạn có muốn mình làm bản đồ trực quan kiểu đó không?

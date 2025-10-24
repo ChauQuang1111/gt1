@@ -1,0 +1,556 @@
+1625. Lexicographically Smallest String After Applying Operations
+import java.util.*;
+
+class Solution {
+    public String findLexSmallestString(String S, int a, int b) {
+        char[] s = S.toCharArray();
+        int n = s.length;
+        char[] t = new char[n];
+        int step = gcd(b, n);
+        int g = gcd(a, 10);
+        String ans = null;
+
+        for (int i = 0; i < n; i += step) {
+            System.arraycopy(s, i, t, 0, n - i);
+            System.arraycopy(s, 0, t, n - i, i);
+
+            modify(t, 1, g);
+            if (step % 2 > 0) {
+                modify(t, 0, g);
+            }
+
+            String str = new String(t);
+            if (ans == null || str.compareTo(ans) < 0) {
+                ans = str;
+            }
+        }
+
+        return ans;
+    }
+
+    private void modify(char[] t, int start, int g) {
+        int ch = t[start] - '0';
+        int inc = ch % g - ch + 10;
+        for (int j = start; j < t.length; j += 2) {
+            t[j] = (char) ('0' + (t[j] - '0' + inc) % 10);
+        }
+    }
+
+    private int gcd(int a, int b) {
+        while (a != 0) {
+            int tmp = a;
+            a = b % a;
+            b = tmp;
+        }
+        return b;
+    }
+}
+Hàm `modify()` là phần **xử lý cộng giá trị `a` cho các vị trí chẵn hoặc lẻ trong chuỗi**, mục tiêu là **tìm ra cách cộng sao cho chuỗi nhỏ nhất về mặt từ điển (lexicographically smallest)**.
+Giải thích từng dòng: 👇
+
+---
+
+### 🧩 Mã:
+
+```java
+private void modify(char[] t, int start, int g) {
+    int ch = t[start] - '0';
+    int inc = ch % g - ch + 10;
+    for (int j = start; j < t.length; j += 2) {
+        t[j] = (char) ('0' + (t[j] - '0' + inc) % 10);
+    }
+}
+```
+
+---
+
+### 🧠 Giải thích chi tiết:
+
+#### 1️⃣ `int ch = t[start] - '0';`
+
+* Lấy **chữ số đầu tiên** (ở vị trí `start`) và chuyển nó từ ký tự `'0'–'9'` sang số nguyên.
+  → Ví dụ: nếu `t[start] = '7'` thì `ch = 7`.
+
+---
+
+#### 2️⃣ `int inc = ch % g - ch + 10;`
+
+* Dòng này tính toán **mức tăng (inc)** cần thêm vào để làm **nhỏ nhất giá trị chữ số tại vị trí `start`**, sau khi thực hiện nhiều phép cộng `a` (theo modulo 10).
+
+🧩 Giải thích:
+
+* `g = gcd(a, 10)` → nghĩa là khi ta cộng `a` nhiều lần, chữ số chỉ có thể nhận **một số hữu hạn giá trị lặp lại** theo chu kỳ `g`.
+* `ch % g` → là giá trị nhỏ nhất mà `ch` có thể đạt được khi cộng nhiều lần `a` modulo 10.
+* `inc = ch % g - ch + 10` → là lượng cần cộng thêm (có thể âm), `+10` để đảm bảo không âm.
+
+Ví dụ:
+
+```
+a = 4 → gcd(a, 10) = 2 → các chữ số có thể thay đổi theo chu kỳ 2
+ch = 5 → ch%g = 1 → để từ 5 về 1 ta cần inc = 1 - 5 + 10 = 6
+```
+
+→ Có nghĩa là ta sẽ cộng thêm `6` (mod 10) để chữ số nhỏ nhất có thể là `1`.
+
+---
+
+#### 3️⃣ Vòng lặp:
+
+```java
+for (int j = start; j < t.length; j += 2) {
+    t[j] = (char) ('0' + (t[j] - '0' + inc) % 10);
+}
+```
+
+* Duyệt qua tất cả **vị trí chẵn hoặc lẻ** (tùy theo `start` là 0 hay 1).
+* Cộng `inc` vào từng chữ số ở các vị trí đó, theo **mod 10** để giữ trong khoảng `[0–9]`.
+* Cập nhật ký tự mới vào mảng `t`.
+
+---
+
+### 🧩 Ví dụ minh họa:
+
+Giả sử:
+
+```
+t = ['5','7','3','4']
+a = 4  → g = gcd(4,10) = 2
+start = 1 (chỉ số lẻ)
+```
+
+* `ch = t[1] - '0' = 7`
+* `inc = 7 % 2 - 7 + 10 = 1 - 7 + 10 = 4`
+
+Sau đó:
+
+```
+j = 1 → t[1] = (7 + 4) % 10 = 1
+j = 3 → t[3] = (4 + 4) % 10 = 8
+```
+
+👉 Kết quả: `t = ['5','1','3','8']` → nhỏ hơn từ điển so với ban đầu `['5','7','3','4']`.
+
+---
+
+### ✅ Tóm lại:
+
+`modify()` tìm cách **cộng một lượng `inc` tối ưu (mod 10)** cho **tất cả các chữ số ở vị trí chẵn/lẻ** sao cho:
+
+* Dãy số nhỏ nhất có thể về mặt từ điển (lexicographically smallest),
+* Dựa trên tính chu kỳ `g = gcd(a,10)` để xác định giá trị nhỏ nhất có thể đạt được.
+Đoạn code này là phần **chính của thuật toán** để tìm ra chuỗi **nhỏ nhất về mặt từ điển (lexicographically smallest)** sau khi thực hiện hai loại thao tác được phép trong bài toán.
+Giải thích từng phần cụ thể như sau 👇
+
+---
+
+### 🧩 Mã:
+
+```java
+char[] s = S.toCharArray();
+int n = s.length;
+char[] t = new char[n];
+int step = gcd(b, n);
+int g = gcd(a, 10);
+String ans = null;
+```
+
+#### Giải thích:
+
+* `s = S.toCharArray()`
+  → Chuyển chuỗi `S` sang mảng ký tự để dễ thao tác.
+* `n = s.length`
+  → Lưu độ dài chuỗi.
+* `t = new char[n]`
+  → Mảng tạm để chứa chuỗi sau khi xoay.
+* `step = gcd(b, n)`
+  → Vì phép xoay `b` ký tự lặp lại theo chu kỳ, nên ta chỉ cần kiểm tra các xoay tại bội số của `gcd(b, n)`.
+  → Nếu `b` và `n` có ước chung lớn, số trạng thái khác nhau sẽ ít hơn.
+* `g = gcd(a, 10)`
+  → Liên quan đến phép cộng modulo 10: khi ta cộng `a` nhiều lần, chu kỳ của chữ số là `10 / gcd(a,10)`.
+* `ans = null`
+  → Lưu kết quả nhỏ nhất tìm được.
+
+---
+
+### 🧩 Vòng lặp chính:
+
+```java
+for (int i = 0; i < n; i += step) {
+    System.arraycopy(s, i, t, 0, n - i);
+    System.arraycopy(s, 0, t, n - i, i);
+
+    modify(t, 1, g);
+    if (step % 2 > 0) {
+        modify(t, 0, g);
+    }
+
+    String str = new String(t);
+    if (ans == null || str.compareTo(ans) < 0) {
+        ans = str;
+    }
+}
+```
+
+#### Giải thích chi tiết:
+
+1️⃣ **Xoay chuỗi**
+
+```java
+System.arraycopy(s, i, t, 0, n - i);
+System.arraycopy(s, 0, t, n - i, i);
+```
+
+→ Đây là thao tác **xoay chuỗi** (rotate string) theo `b` ký tự.
+
+* Khi `i = b`, ta xoay sang phải `b` ký tự.
+* Khi `i = 2b`, ta xoay tiếp...
+* Vì chỉ cần xét theo bước `step = gcd(b, n)`, ta không lặp dư.
+
+Ví dụ:
+`S = "1234", b = 2`
+→ Các chuỗi có thể: `"3412"`, `"1234"`.
+
+---
+
+2️⃣ **Thực hiện phép cộng (`add operation`)**
+
+```java
+modify(t, 1, g);
+if (step % 2 > 0) {
+    modify(t, 0, g);
+}
+```
+
+* `modify(t, 1, g)` → Cộng giá trị `a` cho các **vị trí lẻ** (1, 3, 5,...).
+* Nếu `step` là **số lẻ**, nghĩa là sau một số lần xoay, vị trí lẻ có thể trở thành **chẵn**,
+  → Khi đó ta có thể tác động cả hai nhóm (chẵn và lẻ),
+  nên ta gọi thêm `modify(t, 0, g)` để thử cộng ở vị trí chẵn.
+
+Mục tiêu: Tìm ra **phiên bản của chuỗi nhỏ nhất có thể** sau các phép cộng và xoay hợp lệ.
+
+---
+
+3️⃣ **Cập nhật kết quả nhỏ nhất**
+
+```java
+String str = new String(t);
+if (ans == null || str.compareTo(ans) < 0) {
+    ans = str;
+}
+```
+
+* Tạo chuỗi từ mảng `t`.
+* So sánh từ điển (`compareTo`) để giữ lại chuỗi **nhỏ nhất**.
+  → Nếu `str` nhỏ hơn `ans` theo thứ tự từ điển → cập nhật `ans`.
+
+---
+
+### 🧠 Tổng kết ý tưởng:
+
+1. Xét tất cả các trạng thái xoay chuỗi (theo bước `step = gcd(b, n)`).
+2. Ở mỗi trạng thái, thử cộng `a` cho các vị trí chẵn/lẻ để tạo ra giá trị nhỏ nhất.
+3. So sánh kết quả để chọn chuỗi nhỏ nhất cuối cùng.
+
+---
+
+### 💡 Ví dụ minh họa:
+
+```
+S = "5525", a = 9, b = 2
+```
+
+✅ Các phép xoay có thể tạo ra:
+
+* `"2555"`, `"5525"`
+
+✅ Sau khi cộng `a=9` vào các vị trí lẻ/chẵn:
+
+* `"2050"` (nhỏ nhất)
+
+➡️ Kết quả cuối cùng: `"2050"`
+Rất hay — đây chính là **phần cốt lõi** trong cách tối ưu lời giải của bài **"Lexicographically Smallest String After Applying Operations"** (LeetCode 1625).
+Mình sẽ giải thích thật dễ hiểu từng phần nhé 👇
+
+---
+
+### 🔹 Nhắc lại đề bài (ngắn gọn)
+
+Ta có chuỗi số `s`.
+Ta có thể:
+
+1. **Cộng `a`** vào **các chữ số ở vị trí lẻ (1, 3, 5, …)**, kết quả lấy mod 10.
+2. **Xoay vòng (rotate)** chuỗi sang phải `b` lần.
+
+Ta muốn tìm chuỗi **nhỏ nhất theo thứ tự từ điển (lexicographically smallest)** sau khi thực hiện **nhiều lần hai thao tác trên**.
+
+---
+
+### 🔹 Giải thích đoạn code này:
+
+```java
+modify(t, 1, g);
+if (step % 2 > 0) {
+    modify(t, 0, g);
+}
+```
+
+#### 🧩 Hàm `modify(t, start, g)`
+
+→ Dùng để cộng `a` vào **các vị trí chẵn hoặc lẻ** tùy `start`:
+
+* `start = 1` → cộng vào **vị trí lẻ** (index 1, 3, 5, …)
+* `start = 0` → cộng vào **vị trí chẵn** (index 0, 2, 4, …)
+
+---
+
+### 🔹 Tại sao lại gọi `modify(t, 1, g)` trước?
+
+→ Vì theo đề bài, **chỉ có thể cộng vào vị trí lẻ**.
+Nhưng sau khi xoay chuỗi (rotate), **vị trí lẻ/chẵn có thể bị đảo lộn**.
+
+Ví dụ:
+`s = "1234"`, `b = 1` → rotate sang phải 1 → `"4123"`
+→ Vị trí của từng số thay đổi, và **vị trí lẻ của chuỗi mới không còn giống chuỗi ban đầu**.
+
+Do đó:
+
+* Sau mỗi lần xoay, **cần thử cộng vào các vị trí lẻ (tức `modify(t, 1, g)`),**
+* Nếu sau xoay mà **lẻ và chẵn bị tráo đổi** thì **phải thử thêm cộng vào vị trí chẵn (`modify(t, 0, g)`)**.
+
+---
+
+### 🔹 Vậy tại sao kiểm tra `if (step % 2 > 0)`?
+
+`step = gcd(b, n)` (ước chung lớn nhất giữa `b` và `n`)
+
+* Khi `step % 2 == 0`:
+  Việc xoay `b` lần **không đổi vị trí lẻ/chẵn**, vì độ dài chuỗi chia hết cho 2.
+  → Chỉ cần cộng vào **vị trí lẻ (modify(t, 1, g))** là đủ.
+
+* Khi `step % 2 > 0`:
+  Sau khi xoay, **vị trí lẻ/chẵn có thể bị hoán đổi**.
+  → Ta phải thử **cả hai khả năng**:
+
+  * `modify(t, 1, g)` → cộng vào vị trí lẻ
+  * `modify(t, 0, g)` → cộng vào vị trí chẵn
+
+Mục tiêu là **tìm được chuỗi nhỏ nhất** sau khi thử mọi tổ hợp có thể.
+
+---
+
+### 🔹 Ví dụ minh họa
+
+Giả sử:
+
+```
+s = "5525", a = 9, b = 2
+```
+
+* Sau vài lần xoay, ta thử cộng vào vị trí lẻ và chẵn tùy theo `step % 2`.
+* Nếu `step` là số lẻ → sau vài lần rotate, vị trí lẻ/chẵn tráo nhau, nên cần thử cả hai để không bỏ sót đáp án nhỏ nhất.
+
+---
+
+### ✅ Tóm tắt
+
+| Biểu thức         | Ý nghĩa                  | Khi dùng                                                   |
+| ----------------- | ------------------------ | ---------------------------------------------------------- |
+| `modify(t, 1, g)` | Cộng `a` vào vị trí lẻ   | Luôn dùng                                                  |
+| `modify(t, 0, g)` | Cộng `a` vào vị trí chẵn | Chỉ dùng khi `step % 2 > 0` (khi rotate làm đảo lẻ ↔ chẵn) |
+
+---
+
+Bạn có muốn mình vẽ **hình minh họa rotate và đảo vị trí lẻ/chẵn** để thấy rõ hơn tại sao cần kiểm tra `step % 2 > 0` không?
+Rất chuẩn — ta cùng **mổ xẻ chi tiết từng tham số của `modify(t, 0, g)`** nhé 👇
+
+---
+
+## 🔹 Gọi hàm
+
+```java
+modify(t, 0, g);
+```
+
+Hàm này được định nghĩa là:
+
+```java
+private void modify(char[] t, int start, int g) {
+    int ch = t[start] - '0';
+    int inc = ch % g - ch + 10;
+    for (int j = start; j < t.length; j += 2) {
+        t[j] = (char) ('0' + (t[j] - '0' + inc) % 10);
+    }
+}
+```
+
+---
+
+## 🔹 Giải thích từng tham số
+
+| Tham số | Giá trị ở đây                                       | Ý nghĩa cụ thể                                                                                                                          |
+| ------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `t`     | Mảng ký tự đại diện cho chuỗi hiện tại sau khi xoay | Đây là chuỗi mà ta đang thử cộng `a` vào một số vị trí (chẵn hoặc lẻ) để tìm chuỗi nhỏ nhất                                             |
+| `start` | `0`                                                 | Vị trí bắt đầu cộng — `0` nghĩa là cộng vào **các vị trí chẵn** (index 0, 2, 4, …)                                                      |
+| `g`     | `gcd(a, 10)`                                        | Là **ước chung lớn nhất của a và 10**, dùng để xác định **số lần cộng tối thiểu** để quay lại giá trị ban đầu (vì chỉ có 10 chữ số 0–9) |
+
+---
+
+## 🔹 Phân tích bên trong hàm
+
+### 1️⃣ `int ch = t[start] - '0';`
+
+→ Lấy chữ số đầu tiên ở vị trí `start` (tức là vị trí 0).
+Ví dụ `t = ['5','5','2','5']` → `ch = 5`.
+
+---
+
+### 2️⃣ `int inc = ch % g - ch + 10;`
+
+→ Tính giá trị cần cộng thêm (`inc`) sao cho sau một số lần cộng `a` mod 10, ta đạt được chuỗi nhỏ nhất có thể.
+
+Ý tưởng là:
+
+* Dựa vào `g = gcd(a, 10)` để biết **chu kỳ lặp lại** khi cộng `a` liên tục.
+* `inc` giúp ta **tìm bước nhảy tối ưu** để đến chữ số nhỏ nhất hợp lệ trong chu kỳ đó.
+
+Ví dụ:
+Nếu `a = 4`, `g = gcd(4,10) = 2`
+→ Ta chỉ có thể tạo ra các chữ số có **hiệu số chia hết cho 2** (vì mod 10, cộng 4 nhiều lần chỉ tạo 0, 2, 4, 6, 8).
+
+---
+
+### 3️⃣ Vòng lặp `for (int j = start; j < t.length; j += 2)`
+
+→ Lặp qua **các vị trí chẵn** (`j = 0, 2, 4, …`)
+
+---
+
+### 4️⃣ `t[j] = (char) ('0' + (t[j] - '0' + inc) % 10);`
+
+→ Cộng `inc` (tức là một dạng của `a` mod 10) vào từng chữ số vị trí chẵn, rồi mod 10 để đảm bảo kết quả là 0–9.
+
+---
+
+## 🔹 Tóm lại ý nghĩa `modify(t, 0, g);`
+
+| Tham số | Mục đích                                                                |
+| ------- | ----------------------------------------------------------------------- |
+| `t`     | Chuỗi đang được thử                                                     |
+| `0`     | Cộng vào các vị trí **chẵn**                                            |
+| `g`     | Dùng để tối ưu hóa việc cộng, tránh lặp dư thừa vì chu kỳ số học mod 10 |
+
+👉 Nói ngắn gọn:
+`modify(t, 0, g)` nghĩa là:
+
+> “Thử cộng một giá trị thích hợp (dựa trên `a` và `g`) vào **tất cả các vị trí chẵn** của chuỗi `t`, để tìm xem có thể tạo ra chuỗi nhỏ hơn về thứ tự từ điển hay không.”
+
+---
+
+Bạn có muốn mình minh họa bằng **ví dụ cụ thể với s = "5525", a = 9, b = 2** — để thấy rõ `modify(t, 0, g)` làm thay đổi chuỗi như thế nào không?
+Câu hỏi rất hay 👍 — đây chính là **chìa khóa** để hiểu vì sao bài này dùng `g = gcd(a, 10)` và phải tính **chu kỳ số học mod 10**.
+Giải thích chi tiết dưới đây 👇
+
+---
+
+## 🎯 Mục tiêu của bài
+
+Bài toán cho phép ta:
+
+1. **Cộng `a` vào tất cả các chữ số ở vị trí lẻ** (mod 10)
+   → có thể lặp bao nhiêu lần tùy ý
+2. **Xoay chuỗi phải `b` lần**
+
+Ta cần tìm **chuỗi nhỏ nhất về mặt từ điển (lexicographically smallest)** sau khi áp dụng các phép này.
+
+---
+
+## 🔹 Vấn đề: khi cộng `a`, chữ số chỉ có 0–9
+
+Nghĩa là mọi phép cộng đều diễn ra **theo vòng tròn modulo 10**.
+
+Ví dụ:
+nếu `a = 4`, ta cộng nhiều lần:
+
+```
+0 → 4 → 8 → 2 → 6 → 0  → (lặp lại)
+```
+
+Vậy, chỉ có **5 giá trị duy nhất** có thể đạt được.
+
+---
+
+## 🔹 Khái niệm "chu kỳ số học mod 10"
+
+Chu kỳ ở đây nghĩa là:
+
+> Sau bao nhiêu lần cộng `a`, ta quay lại số ban đầu (mod 10).
+
+Điều này phụ thuộc vào **ước chung lớn nhất (GCD)** giữa `a` và `10`.
+
+Cụ thể:
+
+```
+Số lượng giá trị có thể đạt = 10 / gcd(a, 10)
+```
+
+Ví dụ:
+
+| a | gcd(a, 10) | Chuỗi các giá trị có thể đạt (bắt đầu từ 0) |
+| - | ---------- | ------------------------------------------- |
+| 1 | 1          | 0,1,2,3,4,5,6,7,8,9 → 10 giá trị            |
+| 2 | 2          | 0,2,4,6,8 → 5 giá trị                       |
+| 4 | 2          | 0,4,8,2,6 → 5 giá trị                       |
+| 5 | 5          | 0,5 → 2 giá trị                             |
+| 9 | 1          | 0–9 → đủ 10 giá trị                         |
+
+---
+
+## 🔹 Vì sao phải tính `gcd(a, 10)` trong code?
+
+Trong code có dòng:
+
+```java
+int g = gcd(a, 10);
+```
+
+→ Mục đích:
+Khi ta cộng `a` nhiều lần mod 10, chỉ có **một số lượng giới hạn** giá trị khả thi.
+Do đó ta **không cần thử hết 10 lần**, mà chỉ cần xét theo **chu kỳ ngắn nhất**.
+
+Điều này giúp:
+
+* Giảm thời gian chạy.
+* Tránh lặp các trường hợp trùng nhau.
+* Dễ xác định “giá trị nhỏ nhất có thể đạt được” cho mỗi chữ số.
+
+---
+
+## 🔹 Ví dụ cụ thể
+
+Giả sử `a = 4`, `s = "5525"`
+
+### Các chữ số ở vị trí lẻ: 5, 2
+
+Ta cộng `4` mod 10 nhiều lần:
+
+```
+5 → 9 → 3 → 7 → 1 → 5 (lặp lại)
+```
+
+→ Chỉ có 5 giá trị có thể có (vì `gcd(4,10)=2 → 10/2=5` giá trị hợp lệ).
+
+Vậy ta chỉ cần xét 5 khả năng chứ không cần 10 lần.
+
+---
+
+## 🔹 Kết luận
+
+Ta **phải tính chu kỳ số học mod 10** (`gcd(a,10)`) để:
+
+1. Biết được số lượng giá trị hợp lệ khi cộng `a` nhiều lần.
+2. Giúp thuật toán **bỏ qua các phép cộng dư thừa** (vì sau chu kỳ, kết quả lặp lại).
+3. Từ đó tìm **cách cộng ít nhất** để đạt chữ số nhỏ nhất về mặt từ điển.
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ vòng tròn mod 10** minh họa cho các trường hợp `a = 2, 4, 5, 9` để bạn thấy chu kỳ rõ ràng nhất — bạn muốn xem không?

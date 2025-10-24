@@ -1,0 +1,109 @@
+Fraction to Recurring Decimal - LeetCode
+class Solution:
+    def fractionToDecimal(self, numerator: int, denominator: int) -> str:
+        # Nếu tử số = 0 thì kết quả chắc chắn = "0"
+        if numerator == 0:
+            return "0"
+
+        result = []
+
+        # Kiểm tra dấu
+        if (numerator < 0) ^ (denominator < 0):
+            result.append("-")
+
+        # Lấy trị tuyệt đối để dễ xử lý
+        numerator, denominator = abs(numerator), abs(denominator)
+
+        # Phần nguyên
+        result.append(str(numerator // denominator))
+        remainder = numerator % denominator
+
+        # Nếu chia hết → trả kết quả
+        if remainder == 0:
+            return "".join(result)
+
+        result.append(".")  # có phần thập phân
+
+        # HashMap lưu dư số và vị trí của nó trong result
+        seen = {}
+        while remainder != 0:
+            if remainder in seen:
+                # tìm được chu kỳ → chèn "(" và ")"
+                idx = seen[remainder]
+                result.insert(idx, "(")
+                result.append(")")
+                break
+
+            seen[remainder] = len(result)
+
+            remainder *= 10
+            result.append(str(remainder // denominator))
+            remainder %= denominator
+
+        return "".join(result)
+Ok 👍 mình sẽ đi thật chậm đoạn bạn chưa hiểu. Đây chính là **trái tim của thuật toán** để tìm chu kỳ thập phân.
+
+---
+
+### 🔄 Ý tưởng
+
+* Khi ta chia một số thập phân bằng **chia dài**, nếu tại một bước nào đó **dư số (remainder)** bị lặp lại → thì từ đó trở đi chuỗi số thập phân sẽ lặp lại vô hạn.
+* Ví dụ: `1/3`
+
+  * Bước 1: `1 ÷ 3 = 0`, dư `1`
+  * Nhân `1*10 = 10`, chia `10 ÷ 3 = 3`, dư `1`
+  * Ta lại quay về dư `1` như ban đầu → nghĩa là từ đây chu kỳ bắt đầu lặp lại: `0.(3)`.
+
+---
+
+### 📌 Giải thích từng dòng code
+
+```python
+while remainder != 0:
+```
+
+* Lặp đến khi hết dư (thập phân kết thúc) hoặc gặp lại dư cũ (thập phân vô hạn lặp).
+
+---
+
+```python
+if remainder in seen:
+    # tìm được chu kỳ → chèn "(" và ")"
+    idx = seen[remainder]
+    result.insert(idx, "(")
+    result.append(")")
+    break
+```
+
+* `seen` là một dictionary (hashmap) lưu:
+
+  * `remainder → vị trí trong result`
+* Nếu thấy `remainder` đã xuất hiện trước đó → nghĩa là chu kỳ bắt đầu tại vị trí đó.
+* Ta chèn dấu `"("` vào ngay vị trí đó và `" ) "` ở cuối để đánh dấu phần lặp.
+* Ví dụ: `1/3`
+
+  * `seen[1] = 2` (tại lúc thêm số thập phân đầu tiên vào vị trí 2 của chuỗi `"0."`)
+  * Khi dư `1` lặp lại → ta chèn `"("` trước `3` và `")"` sau → `"0.(3)"`.
+
+---
+
+```python
+seen[remainder] = len(result)
+```
+
+* Nếu dư mới chưa từng gặp → lưu vị trí hiện tại của nó.
+* `len(result)` chính là độ dài chuỗi kết quả tới thời điểm này → vị trí mà chữ số tiếp theo sẽ được thêm.
+
+---
+
+```python
+remainder *= 10
+result.append(str(remainder // denominator))
+remainder %= denominator
+```
+
+* Mô phỏng chia dài:
+
+  1. Nhân dư với 10 để lấy chữ số thập phân tiếp theo.
+  2. Lấy thương `remainder // denominator` → chữ số mới, thêm vào `result`.
+     3

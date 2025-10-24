@@ -1,0 +1,133 @@
+import java.util.Arrays;
+import java.util.List;
+import java.util.Collections;
+import java.util.Comparator;
+
+class Solution {
+    public int numberOfPairs(int[][] points) {
+        // Sắp xếp các điểm:
+        // Tăng dần theo tọa độ x.
+        // Nếu tọa độ x bằng nhau, sắp xếp giảm dần theo tọa độ y.
+        Arrays.sort(points, (a, b) -> {
+            if (a[0] != b[0]) {
+                return a[0] - b[0];
+            } else {
+                return b[1] - a[1];
+            }
+        });
+		Khi sắp xếp, bạn cần một quy tắc rõ ràng để so sánh hai điểm.
+* **Quy tắc chính:** Sắp xếp theo tọa độ x tăng dần. Điều này đảm bảo khi bạn duyệt qua các điểm từ trái sang phải, điểm `i` luôn có tọa độ x nhỏ hơn hoặc bằng điểm `j` (`points[i].x <= points[j].x`).
+* **Quy tắc phụ:** Khi hai điểm có cùng tọa độ x (`a[0] == b[0]`), bạn cần một quy tắc thứ hai để xác định thứ tự của chúng. Việc sắp xếp giảm dần theo tọa độ y (`b[1] - a[1]`) có lý do rất quan trọng.
+
+**Tại sao lại là `b[1] - a[1]` (giảm dần theo y) mà không phải là `b[0] - a[0]`?**
+
+`b[0] - a[0]` chỉ là một cách để so sánh hai tọa độ x. Nhưng vì bạn đã biết `a[0] == b[0]`, nên `b[0] - a[0]` sẽ luôn bằng 0. Sử dụng `b[0] - a[0]` ở đây là vô nghĩa và không giúp sắp xếp các điểm có cùng tọa độ x.
+
+**Ví dụ:**
+Giả sử bạn có ba điểm trên cùng một đường thẳng đứng:
+* `P1 = (2, 5)`
+* `P2 = (2, 3)`
+* `P3 = (2, 1)`
+
+Nếu bạn chỉ sắp xếp theo x, thứ tự của chúng sẽ không xác định. Nhưng với quy tắc phụ:
+* `P1` so với `P2`: `a[1] = 5`, `b[1] = 3`. `b[1] - a[1] = 3 - 5 = -2`. Vì kết quả âm, `a` (P1) đứng trước `b` (P2).
+* `P2` so với `P3`: `a[1] = 3`, `b[1] = 1`. `b[1] - a[1] = 1 - 3 = -2`. Vì kết quả âm, `a` (P2) đứng trước `b` (P3).
+
+Kết quả cuối cùng, thứ tự của các điểm sẽ là `(2, 5)`, `(2, 3)`, `(2, 1)`. Điểm có y cao nhất nằm ở đầu.
+
+**Tại sao việc này lại quan trọng?**
+
+Khi bạn chọn `(2, 5)` làm điểm `i` (đỉnh trên cùng bên trái) và bắt đầu duyệt các điểm `j` tiếp theo, bạn sẽ gặp `(2, 3)`.
+* `i = (2, 5)`, `top = 5`, `bot = -∞`
+* `j = (2, 3)`:
+    * `y1 = 3`.
+    * `y1 <= top` (3 <= 5) -> Đúng.
+    * `y1 > bot` (3 > -∞) -> Đúng.
+* Cả hai điều kiện đều đúng, nên bạn tăng `count` và cập nhật `bot = 3`.
+
+Bây giờ bạn duyệt đến điểm `(2, 1)`.
+* `j = (2, 1)`:
+    * `y1 = 1`.
+    * `y1 <= top` (1 <= 5) -> Đúng.
+    * `y1 > bot` (1 > 3) -> **Sai.**
+
+Vì điều kiện thứ hai sai, `(2, 1)` sẽ không được đếm. Điều này là chính xác, vì điểm `(2, 3)` đã nằm giữa `(2, 5)` và `(2, 1)`. Hình chữ nhật tạo bởi `(2, 5)` và `(2, 1)` sẽ chứa điểm `(2, 3)`, do đó nó không phải là hình chữ nhật rỗng.
+
+Việc sắp xếp giảm dần theo y đảm bảo rằng khi bạn gặp một điểm có cùng tọa độ x, bạn sẽ xử lý điểm có y cao nhất trước. Khi điểm đó được chọn, nó sẽ thiết lập một giới hạn dưới (`bot`) mới, giúp "loại bỏ" tất cả các điểm khác trên cùng một đường thẳng đứng có y nhỏ hơn, vì chúng sẽ không thỏa mãn điều kiện `y1 > bot` nữa. Điều này ngăn chặn việc đếm sai các cặp điểm tạo ra hình chữ nhật không rỗng.
+
+        int count = 0;
+        int n = points.length;
+
+        for (int i = 0; i < n; i++) {
+            // i là điểm A (trên cùng bên trái)
+            int y0 = points[i][1];
+            
+            // Giới hạn dưới của tọa độ y của các điểm B hợp lệ.
+            double bot = Double.NEGATIVE_INFINITY;
+            
+            // Giới hạn trên của tọa độ y của các điểm B hợp lệ.
+            double top = y0;
+			for (int i = 0; i < n; i++): Vòng lặp này duyệt qua từng điểm trong mảng đã sắp xếp. Mỗi điểm points[i] được chọn để làm đỉnh trên cùng bên trái của một hình chữ nhật tiềm năng.
+
+int y0 = points[i][1]: Lưu lại tọa độ y của điểm i vào biến y0. Tọa độ này sẽ đóng vai trò là giới hạn trên của hình chữ nhật.
+
+double bot = Double.NEGATIVE_INFINITY: Biến bot (bottom) là giới hạn dưới của tọa độ y mà các điểm j phải nằm trên. Ban đầu, nó được gán giá trị âm vô cùng để bất kỳ điểm j nào cũng có thể được xem xét. Giá trị này sẽ được cập nhật sau mỗi lần tìm thấy một cặp hợp lệ để đảm bảo không có điểm nào khác nằm giữa i và j.
+
+double top = y0: Biến top (top) là giới hạn trên của tọa độ y, được đặt bằng y0. Một điểm j hợp lệ phải có tọa độ y nhỏ hơn hoặc bằng y0.
+
+            // Duyệt qua các điểm B (j) từ điểm i+1 trở đi.
+            for (int j = i + 1; j < n; j++) {
+                int y1 = points[j][1];
+				for (int j = i + 1; j < n; j++): Vòng lặp này duyệt qua các điểm j đứng sau điểm i. Do mảng đã được sắp xếp tăng dần theo tọa độ x, điều này đảm bảo điểm j luôn nằm ở bên phải hoặc cùng tọa độ x với điểm i. Mỗi điểm j được xem xét để làm đỉnh dưới cùng bên phải của hình chữ nhật.
+
+int y1 = points[j][1]: Lưu lại tọa độ y của điểm j vào biến y1.
+
+if (y1 <= top && y1 > bot): Đây là điều kiện cốt lõi. Nó kiểm tra xem điểm j có thể tạo thành một hình chữ nhật rỗng với điểm i hay không.
+
+y1 <= top: Đảm bảo điểm j nằm dưới hoặc cùng mức với điểm i (vì top bằng y0).
+
+y1 > bot: Đảm bảo không có điểm nào khác đã được tìm thấy trước đó nằm giữa i và j theo chiều y. Nếu y1 nhỏ hơn hoặc bằng bot, điều đó có nghĩa là đã có một điểm k (với k nằm giữa i và j) có tọa độ y lớn hơn hoặc bằng y1 và nhỏ hơn y0. Điều này khiến hình chữ nhật không rỗng, và chúng ta không đếm cặp này.
+
+                // Kiểm tra điều kiện:
+                // 1. y1 <= top: Đảm bảo điểm B nằm dưới hoặc cùng mức với điểm A.
+                // 2. y1 > bot: Đảm bảo không có điểm trung gian nào nằm trên.
+                if (y1 <= top && y1 > bot) {
+                    // Tìm thấy một cặp hợp lệ.
+                    count++;
+                    
+                    // Cập nhật giới hạn dưới mới cho các điểm B sau.
+                    // Sử dụng bot = y1 để loại trừ các điểm có y nhỏ hơn hoặc bằng y1
+                    // và nằm trong hình chữ nhật.
+                    bot = y1;
+                    
+                    // Kiểm tra đặc biệt: Nếu y1 == top (A và B có cùng tọa độ y),
+                    // chúng ta có thể dừng tìm kiếm các điểm B tiếp theo
+                    // vì bất kỳ điểm nào có cùng tọa độ x và y nhỏ hơn y1
+                    // sẽ nằm bên trong hình chữ nhật này.
+                    if (y1 == top) {
+                        break;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+}
+count++: Nếu cả hai điều kiện trên đều đúng, chúng ta đã tìm thấy một cặp điểm (i, j) tạo ra một hình chữ nhật rỗng. Chúng ta tăng biến đếm lên 1.
+
+bot = y1: Đây là bước quan trọng nhất. Sau khi tìm thấy một cặp hợp lệ, chúng ta cập nhật giới hạn dưới (bot) lên giá trị y1 của điểm j vừa tìm thấy. Bất kỳ điểm k nào tiếp theo trong vòng lặp (k > j) nếu có tọa độ y nhỏ hơn hoặc bằng y1 sẽ bị loại trừ bởi điều kiện y1 > bot ở lần lặp tiếp theo. Điều này hiệu quả loại bỏ các điểm nằm trong hình chữ nhật mới được tạo.
+
+if (y1 == top) { break; }: Đây là một tối ưu hóa. Nếu tọa độ y của điểm j bằng với tọa độ y của điểm i (tức là chúng nằm trên cùng một đường thẳng ngang), chúng ta có thể dừng vòng lặp trong ngay lập tức. Vì các điểm có cùng tọa độ x đã được sắp xếp giảm dần theo y, mọi điểm k tiếp theo (k > j) sẽ có tọa độ y nhỏ hơn y1, và do đó sẽ nằm trong hình chữ nhật rỗng được tạo bởi i và j. Do đó, chúng ta không cần phải kiểm tra thêm nữa.
+Bạn hỏi về ý nghĩa của `k > j` trong phần giải thích thuật toán, tôi sẽ làm rõ điểm này.
+
+Trong đoạn code và phần giải thích, `i` và `j` là các chỉ số của vòng lặp:
+* `i` là chỉ số của vòng lặp ngoài, duyệt qua tất cả các điểm để chọn một điểm làm đỉnh trên cùng bên trái.
+* `j` là chỉ số của vòng lặp trong, duyệt qua các điểm còn lại (từ `i+1` trở đi) để tìm một điểm làm đỉnh dưới cùng bên phải.
+
+**`k` là một chỉ số giả định** mà tôi dùng để giải thích. Nó không phải là một biến trong code, mà chỉ là một cách nói để chỉ **bất kỳ điểm nào khác xuất hiện sau điểm `j`**. Cụ thể, `k > j` có nghĩa là:
+
+* **Điểm có chỉ số `k` xuất hiện sau điểm có chỉ số `j` trong mảng đã được sắp xếp.**
+
+Với logic của thuật toán, khi bạn tìm thấy một cặp hợp lệ `(i, j)` và cập nhật `bot = y1`, thì bất kỳ điểm nào khác sau đó (được gọi là `k`) có tọa độ y nhỏ hơn hoặc bằng `y1` đều sẽ bị loại trừ. Điều này đảm bảo rằng không có điểm nào khác nằm trong hình chữ nhật được tạo bởi `(i, j)`.
+
+Tóm lại, `k > j` là cách nói để ám chỉ "các điểm tiếp theo trong vòng lặp", sau khi đã xử lý điểm `j`. Nó giúp giải thích logic của việc cập nhật `bot` và tại sao thuật toán lại hoạt động đúng.

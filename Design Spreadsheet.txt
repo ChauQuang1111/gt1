@@ -1,0 +1,316 @@
+3484. Design Spreadsheet
+static Map<String, Integer> map = new HashMap<>();
+
+    // ------------------ Các hàm xử lý ------------------
+
+    // Gán giá trị cho 1 ô
+    public static void setCell(String cell, int value) {
+        map.put(cell, value);
+    }
+
+    // Reset 1 ô (xóa khỏi map)
+    public static void resetCell(String cell) {
+        map.remove(cell);
+    }
+
+    // Lấy giá trị từ công thức =X+Y (X,Y có thể là số hoặc ô)
+    public static int getValue(String formula) {
+        // Tìm vị trí dấu '+'
+        int io = formula.indexOf('+');
+
+        // Cắt chuỗi: bỏ dấu '=' ở đầu
+        String cell1 = formula.substring(1, io); // vế trái
+        String cell2 = formula.substring(io + 1); // vế phải
+
+        // Xử lý vế trái
+        int val1;
+        if (cell1.charAt(0) > '9') { // Nếu bắt đầu là chữ cái → ô
+            val1 = map.getOrDefault(cell1, 0);
+        } else { // Nếu là số
+            val1 = Integer.parseInt(cell1);
+        }
+
+        // Xử lý vế phải
+        int val2;
+        if (cell2.charAt(0) > '9') { // Nếu là ô
+            val2 = map.getOrDefault(cell2, 0);
+        } else { // Nếu là số
+            val2 = Integer.parseInt(cell2);
+        }
+
+        // Trả về tổng
+        return val1 + val2;
+    }
+}
+Đúng rồi 👍
+
+Trong **Java**, interface `Map<K,V>` có sẵn phương thức `.remove(Object key)` và `.remove(Object key, Object value)`.
+
+---
+
+### 1. Cú pháp cơ bản
+
+```java
+map.remove(key);
+```
+
+* Xóa cặp (key, value) có khóa = `key` ra khỏi map.
+* Trả về **giá trị (value)** đã bị xóa nếu key tồn tại, ngược lại trả về `null`.
+
+👉 Ví dụ:
+
+```java
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Map<String, Integer> map = new HashMap<>();
+        map.put("A", 10);
+        map.put("B", 20);
+
+        System.out.println(map.remove("A")); // 10
+        System.out.println(map);             // {B=20}
+
+        System.out.println(map.remove("C")); // null (vì không có key "C")
+    }
+}
+```
+
+---
+
+### 2. Cú pháp với cả `key` và `value`
+
+```java
+map.remove(key, value);
+```
+
+* Chỉ xóa entry nếu key tồn tại **và** value đúng với giá trị hiện tại trong map.
+* Trả về `true` nếu xóa thành công, `false` nếu không xóa.
+
+👉 Ví dụ:
+
+```java
+Map<String, Integer> map = new HashMap<>();
+map.put("A", 10);
+
+// Xóa thành công vì (key="A", value=10) đúng
+System.out.println(map.remove("A", 10)); // true
+System.out.println(map); // {}
+```
+
+---
+
+👉 Tóm lại:
+
+* `map.remove(key)` → xóa entry theo key.
+* `map.remove(key, value)` → chỉ xóa khi key–value khớp chính xác.
+
+---
+
+Bạn có muốn mình làm thêm bảng **so sánh `put`, `get`, `remove`, `containsKey`** để dễ nhớ mấy hàm cơ bản của `Map` không?
+Ok mình giải thích chi tiết đoạn code này nhé 👇
+
+```java
+int val1;
+if (cell1.charAt(0) > '9') { // Nếu bắt đầu là chữ cái → ô
+    val1 = map.getOrDefault(cell1, 0);
+} else { // Nếu là số
+    val1 = Integer.parseInt(cell1);
+}
+
+// Xử lý vế phải
+int val2;
+if (cell2.charAt(0) > '9') { // Nếu là ô
+    val2 = map.getOrDefault(cell2, 0);
+} else { // Nếu là số
+    val2 = Integer.parseInt(cell2);
+}
+
+// Trả về tổng
+return val1 + val2;
+```
+
+---
+
+### 🔎 Ý tưởng thuật toán
+
+* Ta đang tính giá trị của một **công thức đơn giản dạng `=cell1+cell2`**.
+* Mỗi vế (`cell1`, `cell2`) có thể là:
+
+  1. **Tên ô** (ví dụ `"A1"`, `"B2"`) → phải lấy giá trị từ `map` (map lưu dữ liệu các ô).
+  2. **Số trực tiếp** (ví dụ `"5"`, `"12"`) → thì parse sang `int`.
+
+---
+
+### 🔎 Giải thích từng bước
+
+1. **Xác định xem `cell1` là số hay tên ô**
+
+   ```java
+   if (cell1.charAt(0) > '9')
+   ```
+
+   * `cell1.charAt(0)` lấy ký tự đầu tiên của chuỗi `cell1`.
+   * Nếu ký tự > `'9'` nghĩa là nó không phải chữ số (`'0'..'9'`), tức là **chữ cái** → coi đây là tên ô (ví dụ `"A1"`).
+   * Nếu ký tự ≤ `'9'` → chắc chắn là **số** (ví dụ `"7"`).
+
+   👉 Xử lý:
+
+   * Nếu là tên ô: `val1 = map.getOrDefault(cell1, 0);` → lấy giá trị trong map, nếu không có thì mặc định 0.
+   * Nếu là số: `val1 = Integer.parseInt(cell1);` → chuyển chuỗi thành số nguyên.
+
+2. **Làm tương tự với `cell2`**
+
+   * Kiểm tra ký tự đầu tiên, xác định là ô hay số.
+   * Nếu là ô → lấy trong map.
+   * Nếu là số → parse thành số.
+
+3. **Cộng 2 giá trị lại**
+
+   ```java
+   return val1 + val2;
+   ```
+
+---
+
+### 🔎 Ví dụ minh họa
+
+* Map lưu:
+
+  ```java
+  map = { "A1"=10, "B2"=15 }
+  ```
+
+* Gọi hàm với:
+
+  ```java
+  cell1 = "A1"
+  cell2 = "7"
+  ```
+
+👉 Chạy code:
+
+* `cell1.charAt(0) = 'A'` → `'A' > '9'` → là ô → lấy `map.getOrDefault("A1",0)` = 10.
+* `cell2.charAt(0) = '7'` → `'7' <= '9'` → là số → `Integer.parseInt("7") = 7`.
+* Tổng = `10 + 7 = 17`.
+
+---
+
+✅ Tóm gọn: Thuật toán này phân tích **2 thành phần của công thức** → nếu là **ô** thì lấy từ `map`, nếu là **số** thì parse thành số → rồi cộng lại.
+
+---
+
+Bạn có muốn mình viết lại phiên bản **tổng quát hơn** (không chỉ `cell1+cell2` mà có thể `=A1+B2+7+10` nhiều vế) không?
+À, mình hiểu chỗ bạn thắc mắc rồi 👍
+
+Câu hỏi: **"10" cũng lớn hơn "9" mà sao code lại so `cell1.charAt(0) > '9'` để phân biệt số với chữ?"**
+
+---
+
+### 🔎 Giải thích chi tiết
+
+Trong Java (và hầu hết ngôn ngữ), **chuỗi** được lưu bằng các ký tự (char).
+
+```java
+"10"
+```
+
+thực chất là gồm **2 ký tự**:
+
+* ký tự `'1'`
+* ký tự `'0'`
+
+Khi code viết:
+
+```java
+cell1.charAt(0)
+```
+
+→ nó chỉ lấy **ký tự đầu tiên** trong chuỗi.
+
+---
+
+### 🔎 Bảng mã ASCII (quan trọng)
+
+* `'0'` có mã 48
+* `'1'` có mã 49
+* …
+* `'9'` có mã 57
+* `'A'` có mã 65
+* `'B'` có mã 66
+* …
+
+Nên khi so sánh:
+
+```java
+if (cell1.charAt(0) > '9')
+```
+
+* Nếu ký tự đầu tiên là số (`'0'`..`'9'` → mã ≤ 57) thì **điều kiện sai**.
+* Nếu ký tự đầu tiên là chữ cái (`'A'` = 65 > 57) thì **điều kiện đúng**.
+
+---
+
+### 🔎 Ví dụ cụ thể
+
+1. `cell1 = "10"`
+
+   * `cell1.charAt(0) = '1'`
+   * `'1'` có mã 49
+   * `'9'` có mã 57
+   * `49 > 57` → ❌ sai → đây là số → đi vào `else`.
+
+2. `cell1 = "A1"`
+
+   * `cell1.charAt(0) = 'A'`
+   * `'A'` có mã 65
+   * `'9'` có mã 57
+   * `65 > 57` → ✅ đúng → đây là tên ô → lấy từ `map`.
+
+---
+
+✅ Kết luận: So sánh này **không so sánh cả chuỗi `"10"` với `"9"`** mà chỉ so **ký tự đầu tiên** của chuỗi với `'9'`.
+
+---
+
+Bạn có muốn mình viết thêm 1 đoạn code Java nhỏ để in ra **mã ASCII của ký tự** để bạn thấy rõ `'1'` < `'9'` và `'A'` > `'9'` không?
+Ok, mình cho ví dụ rõ ràng bằng code Java để bạn thấy luôn nhé 👇
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        char c1 = '1';
+        char c9 = '9';
+        char cA = 'A';
+
+        System.out.println("'1' = " + (int)c1); // 49
+        System.out.println("'9' = " + (int)c9); // 57
+        System.out.println("'A' = " + (int)cA); // 65
+
+        // So sánh
+        System.out.println("'1' > '9'? " + (c1 > c9)); // false
+        System.out.println("'A' > '9'? " + (cA > c9)); // true
+    }
+}
+```
+
+---
+
+### 🖨️ Kết quả khi chạy
+
+```
+'1' = 49
+'9' = 57
+'A' = 65
+'1' > '9'? false
+'A' > '9'? true
+```
+
+👉 Nghĩa là:
+
+* `'1'` (49) nhỏ hơn `'9'` (57) → `"10"` bị coi là số.
+* `'A'` (65) lớn hơn `'9'` (57) → `"A1"` bị coi là tên ô.
+
+---
+
+Bạn có muốn mình làm thêm ví dụ với `"B2"`, `"Z9"`, `"100"` để thấy cách check này hoạt động với nhiều ô và số khác nhau không?

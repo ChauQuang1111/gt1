@@ -1,0 +1,390 @@
+minimum score to triangulate
+from typing import List
+
+class Solution:
+    def minScoreTriangulation(self, values: List[int]) -> int:
+        n = len(values)
+        # dp[i][j] = điểm (cost) nhỏ nhất để chia đa giác con từ đỉnh i đến j (bao gồm i và j)
+        dp = [[0] * n for _ in range(n)]
+        
+        # Xét các đoạn con (sub-polygon) có độ dài L = 3,4,...,n
+        # Vì để tạo được một tam giác thì tối thiểu cần 3 đỉnh
+        for L in range(3, n+1):
+            for i in range(n - L + 1):   # i là điểm bắt đầu
+                j = i + L - 1           # j là điểm kết thúc
+                best = float('inf')
+                
+                # Chọn k làm đỉnh ở giữa để tạo tam giác (i, k, j)
+                for k in range(i+1, j):
+                    # Chi phí gồm:
+                    # 1. dp[i][k] = chi phí chia đoạn (i..k)
+                    # 2. dp[k][j] = chi phí chia đoạn (k..j)
+                    # 3. values[i]*values[k]*values[j] = chi phí tạo tam giác (i,k,j)
+                    cost = dp[i][k] + dp[k][j] + values[i] * values[k] * values[j]
+                    
+                    if cost < best:
+                        best = cost
+                        
+                dp[i][j] = best   # Lưu kết quả tối ưu vào dp[i][j]
+        
+        # Kết quả cuối cùng là chi phí chia toàn bộ đa giác (0..n-1)
+        return dp[0][n-1]
+```
+
+---
+
+### Giải thích thuật toán:
+
+* Bài toán yêu cầu: **tìm cách chia một đa giác lồi thành các tam giác sao cho tổng tích (score) nhỏ nhất**.
+
+* **Ý tưởng quy hoạch động (Bottom-Up)**:
+
+  * `dp[i][j]` = chi phí nhỏ nhất để chia đa giác con từ đỉnh `i` đến đỉnh `j`.
+  * Chỉ có ý nghĩa khi đoạn `(i..j)` có ít nhất 3 đỉnh (tức `j - i >= 2`).
+
+* Với mỗi đoạn `(i..j)`:
+
+  * Ta thử chọn một đỉnh trung gian `k` (`i < k < j`) để tạo **tam giác (i, k, j)**.
+  * Khi đó:
+
+    * Chi phí bên trái: `dp[i][k]`
+    * Chi phí bên phải: `dp[k][j]`
+    * Chi phí tam giác mới: `values[i] * values[k] * values[j]`.
+  * Lấy **giá trị nhỏ nhất** trong tất cả các lựa chọn `k`.
+
+* Cuối cùng, `dp[0][n-1]` chính là kết quả cho cả đa giác.
+
+---
+
+👉 Thuật toán này có độ phức tạp **O(n³)** vì:
+
+* 2 vòng lặp chọn `(i, j)`
+* 1 vòng lặp chọn `k` trung gian.
+
+---
+
+Bạn có muốn mình viết thêm **ví dụ chạy chi tiết từng bước với input nhỏ (ví dụ [1,3,1,4,1,5])** để thấy rõ `dp` được điền như thế nào không?
+
+
+Ok mình giải thích kỹ đoạn này nhé 👇
+
+Code:
+
+```python
+for L in range(3, n+1):             # (1)
+    for i in range(n - L + 1):      # (2)
+        j = i + L - 1               # (3)
+        best = float('inf')         # (4)
+```
+
+---
+
+### (1) `for L in range(3, n+1):`
+
+* `L` = độ dài đoạn con (sub-polygon) ta đang xét.
+* Đa giác con phải có ít nhất **3 đỉnh** thì mới tạo được tam giác ⇒ bắt đầu từ `L = 3`.
+* Tối đa là cả đa giác ⇒ `L = n`.
+
+---
+
+### (2) `for i in range(n - L + 1):`
+
+* `i` = đỉnh bắt đầu của đoạn con.
+* Để một đoạn con có độ dài `L`, điểm kết thúc sẽ là `j = i + L - 1`.
+* Ta phải đảm bảo `j < n` (không vượt quá số đỉnh).
+* Do đó `i` chạy từ `0` đến `n - L`.
+
+  * Tức là có **`n - L + 1` đoạn con** có độ dài `L`.
+
+👉 Đây chính là lý do có `n - L + 1`.
+
+---
+
+### (3) `j = i + L - 1`
+
+* Với đoạn con bắt đầu từ `i`, có độ dài `L`,
+  → điểm kết thúc `j` = `i + L - 1`.
+
+Ví dụ: nếu `i = 0, L = 3` → `j = 2`. (đoạn [0..2] có 3 phần tử).
+
+---
+
+### (4) `best = float('inf')`
+
+* Khởi tạo giá trị lớn nhất (vô cùng) để tìm **giá trị nhỏ nhất** trong các cách chia.
+
+---
+
+---
+
+### Ví dụ minh họa
+
+Giả sử `values = [1, 3, 1, 4]`, `n = 4`.
+
+* Với `L = 3`:
+
+  * `n - L + 1 = 2`, tức là có 2 đoạn con độ dài 3:
+
+    * `(i=0, j=2)` → đoạn `[1,3,1]`
+    * `(i=1, j=3)` → đoạn `[3,1,4]`
+
+* Với `L = 4`:
+
+  * `n - L + 1 = 1`, chỉ có 1 đoạn con:
+
+    * `(i=0, j=3)` → đoạn `[1,3,1,4]` (toàn bộ đa giác).
+
+---
+
+👉 Tóm lại:
+
+* Vòng ngoài duyệt độ dài đoạn con từ 3 → n.
+* Vòng trong duyệt tất cả đoạn con có độ dài đó.
+* `j = i + L - 1` xác định điểm kết thúc của đoạn.
+
+---
+
+Bạn có muốn mình **vẽ bảng 2D `dp[i][j]` theo thứ tự lấp đầy (L tăng dần)** để thấy rõ cách thuật toán hoạt động không?
+Ok mình lấy ví dụ cụ thể để bạn thấy rõ tại sao lại là `n - L + 1` nhé 👇
+
+---
+
+### Giả sử `n = 5` (5 đỉnh: `[0,1,2,3,4]`)
+
+#### Nếu `L = 3` (độ dài đoạn con = 3)
+
+* Ta cần các đoạn liên tiếp có **3 phần tử**.
+* Các đoạn có thể là:
+
+  * `[0,1,2]` (i=0, j=2)
+  * `[1,2,3]` (i=1, j=3)
+  * `[2,3,4]` (i=2, j=4)
+
+👉 Có **3 đoạn** tất cả.
+👉 Số đoạn = `n - L + 1 = 5 - 3 + 1 = 3`.
+
+---
+
+#### Nếu `L = 4` (độ dài đoạn con = 4)
+
+* Các đoạn con:
+
+  * `[0,1,2,3]` (i=0, j=3)
+  * `[1,2,3,4]` (i=1, j=4)
+
+👉 Có **2 đoạn**.
+👉 Số đoạn = `5 - 4 + 1 = 2`.
+
+---
+
+#### Nếu `L = 5` (độ dài đoạn con = 5, cả đa giác)
+
+* Chỉ có **1 đoạn**: `[0,1,2,3,4]`.
+  👉 Số đoạn = `5 - 5 + 1 = 1`.
+
+---
+
+✅ Công thức `n - L + 1` chính là **số lượng đoạn con liên tiếp có độ dài L trong mảng n phần tử**.
+
+---
+
+Bạn có muốn mình viết một đoạn code Python nhỏ in ra hết các đoạn con khi chạy `for i in range(n - L + 1)` để thấy rõ hơn không?
+Ừ, cái công thức `n - L + 1` hoàn toàn xuất phát từ **toán học đếm số đoạn con** chứ không phải ngẫu nhiên đâu 👍
+
+---
+
+### Giải thích toán học:
+
+* Bạn có một mảng/đa giác có `n` đỉnh (hoặc phần tử).
+* Muốn chọn ra **đoạn con liên tiếp có độ dài L**.
+
+👉 Một đoạn con liên tiếp được xác định bởi **chỉ số bắt đầu `i`**.
+
+* Nếu `i` là điểm bắt đầu, thì điểm kết thúc sẽ là `j = i + L - 1`.
+
+---
+
+### Điều kiện:
+
+* Đoạn con phải nằm **trọn trong mảng**.
+* Nghĩa là `j ≤ n - 1`
+  ⟹ `i + L - 1 ≤ n - 1`
+  ⟹ `i ≤ n - L`.
+
+Vậy `i` chạy từ `0` đến `n - L`.
+
+👉 Số lượng giá trị `i` có thể chọn = `(n - L) - 0 + 1 = n - L + 1`.
+
+---
+
+### Ví dụ toán học:
+
+* `n = 10` (10 phần tử).
+* Muốn đoạn dài `L = 4`.
+* `i` chạy từ `0` đến `10 - 4 = 6`.
+* Vậy có **7 đoạn con**.
+
+---
+
+✅ Kết luận: `n - L + 1` = **số đoạn con liên tiếp độ dài L có thể lấy từ mảng độ dài n**.
+
+---
+
+Bạn có muốn mình vẽ sơ đồ ví dụ với `n=6, L=3` (kiểu như đánh số vị trí để thấy rõ vì sao có đúng `6-3+1=4` đoạn) không?
+Ok mình giải thích rõ 2 chỗ bạn hỏi nhé 👇
+
+---
+
+### 1. `dp[i][j] = best`
+
+* Trong vòng lặp, ta thử **tất cả k** với công thức:
+  [
+  cost = dp[i][k] + dp[k][j] + values[i] \times values[k] \times values[j]
+  ]
+* Sau khi duyệt hết, biến `best` chứa **chi phí nhỏ nhất** để chia đoạn `(i…j)`.
+* Vì thế gán lại:
+
+  ```python
+  dp[i][j] = best
+  ```
+
+  → nghĩa là: **lưu lại đáp án tối ưu cho đoạn con từ i đến j**.
+
+---
+
+### 2. `return dp[0][n-1]`
+
+* Toàn bộ đa giác có `n` đỉnh, chỉ số từ `0 … n-1`.
+* `dp[0][n-1]` chính là **chi phí tối thiểu** để chia hết cả đa giác.
+* Vì vậy kết quả cuối cùng ta trả về:
+
+  ```python
+  return dp[0][n-1]
+  ```
+
+---
+
+✅ Tóm gọn:
+
+* `dp[i][j] = best` → điền kết quả tối ưu cho đoạn `(i…j)` sau khi xét tất cả khả năng.
+* `return dp[0][n-1]` → lấy kết quả tối ưu cho cả đa giác (toàn bộ dãy).
+
+---
+
+Bạn có muốn mình lấy **một ví dụ cụ thể với 4 hoặc 5 đỉnh** rồi điền thử bảng `dp` để thấy `dp[0][n-1]` xuất hiện thế nào không?
+Hay, câu hỏi này rất chuẩn 👍.
+Mình giải thích rõ:
+
+---
+
+### Ý nghĩa của `dp[i][j]`
+
+* `dp[i][j]` = **chi phí nhỏ nhất để chia đa giác con tạo bởi các đỉnh từ `i` đến `j`**.
+* Nói cách khác: nếu bạn chỉ xét **cung đa giác** từ đỉnh `i` đến đỉnh `j` (bao gồm cả 2 đầu), thì `dp[i][j]` lưu kết quả tối ưu cho phần đó.
+
+---
+
+### Vậy `dp[0][n-1]` là gì?
+
+* Toàn bộ đa giác ban đầu có `n` đỉnh được đánh số `0 … n-1`.
+* Nếu mình xét đoạn từ `0` → `n-1`, tức là đang xét **cả đa giác gốc**.
+* Do đó:
+  [
+  dp[0][n-1] = \text{chi phí tối thiểu để chia tam giác hóa toàn bộ đa giác}
+  ]
+
+---
+
+🔎 Ví dụ:
+Giả sử `values = [1,2,3,4]` (đa giác 4 đỉnh).
+
+* `dp[0][2]` → chi phí để chia đa giác con gồm đỉnh 0,1,2 (tam giác luôn = 0 vì chỉ có 3 đỉnh).
+* `dp[0][3]` → chi phí để chia đa giác 0-1-2-3 (cả đa giác), chính là kết quả cuối cùng.
+
+---
+
+✅ Tóm lại:
+
+* `dp[i][j]`: kết quả tối ưu cho đoạn từ `i` đến `j`.
+* `dp[0][n-1]`: chính là **kết quả toàn cục**, tức đáp án đề bài yêu cầu.
+
+---
+
+Bạn có muốn mình vẽ thử **một đa giác 5 đỉnh** rồi minh họa cách `dp[0][4]` được xây dựng từ các `dp[i][j]` nhỏ hơn không?
+Ok, mình giải thích công thức này từng phần nhé 👇
+
+---
+
+### Công thức:
+
+```python
+cost = dp[i][k] + dp[k][j] + values[i] * values[k] * values[j]
+```
+
+### Ý nghĩa:
+
+Đây là cách **chia đa giác con từ i → j** bằng cách chọn một điểm trung gian `k` để tạo ra **tam giác (i, k, j)**.
+
+---
+
+#### 1. `values[i] * values[k] * values[j]`
+
+* Đây là **diện tích (theo đề bài quy định)** hoặc **chi phí** của tam giác được tạo từ 3 đỉnh `i, k, j`.
+* Trong bài toán này, chi phí của một tam giác = tích 3 giá trị tại 3 đỉnh.
+* Đây là **tam giác cuối cùng mà ta thêm vào** khi chia đa giác `[i..j]`.
+
+---
+
+#### 2. `dp[i][k]`
+
+* Chi phí nhỏ nhất để chia **đa giác con** từ `i → k`.
+* Đây là phần bên trái của `k`.
+
+---
+
+#### 3. `dp[k][j]`
+
+* Chi phí nhỏ nhất để chia **đa giác con** từ `k → j`.
+* Đây là phần bên phải của `k`.
+
+---
+
+#### 4. Kết hợp
+
+Vậy tổng chi phí khi chọn `k` làm điểm chia là:
+[
+\text{Chi phí} = \underbrace{dp[i][k]}*{\text{trái}} + \underbrace{dp[k][j]}*{\text{phải}} + \underbrace{values[i] \cdot values[k] \cdot values[j]}_{\text{tam giác (i,k,j)}}
+]
+
+---
+
+### Ví dụ minh họa (4 đỉnh: `[1,2,3,4]`)
+
+* Đa giác: 0-1-2-3
+* Muốn tính `dp[0][3]` (toàn bộ đa giác).
+
+👉 Chọn `k = 1`:
+
+* Tam giác (0,1,3) có chi phí `values[0]*values[1]*values[3] = 1*2*4 = 8`.
+* `dp[0][1] = 0` (vì chỉ có 2 đỉnh, không tạo được tam giác).
+* `dp[1][3]` là chi phí chia đoạn 1-2-3.
+
+👉 Chọn `k = 2`:
+
+* Tam giác (0,2,3) có chi phí `values[0]*values[2]*values[3] = 1*3*4 = 12`.
+* `dp[0][2]` là chi phí chia đoạn 0-1-2.
+* `dp[2][3] = 0`.
+
+So sánh 2 lựa chọn, chọn chi phí nhỏ hơn → đó là `dp[0][3]`.
+
+---
+
+👉 Tóm lại: công thức này chính là **quy hoạch động chia để trị**:
+
+* Chia đa giác lớn thành 2 đa giác nhỏ hơn qua đỉnh `k`.
+* Cộng thêm chi phí tam giác `(i, k, j)`.
+* Lấy min trên tất cả cách chọn `k`.
+
+---
+
+Bạn có muốn mình vẽ sơ đồ trực quan tam giác (i, k, j) để thấy rõ cách chia không?

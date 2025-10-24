@@ -1,0 +1,910 @@
+Mình giải thích ngắn gọn, rõ ràng nhé:
+
+---
+
+## 1. **TreeSet**
+
+* Thuộc `java.util`.
+* Cấu trúc: dựa trên **TreeMap** (cây đỏ-đen).
+* **Đặc điểm**:
+
+  * Không cho phần tử trùng.
+  * Các phần tử **được sắp xếp tăng dần** (theo `Comparable` hoặc `Comparator`).
+  * Truy cập, thêm, xóa: O(log n).
+* **Duyệt**:
+
+  ```java
+  TreeSet<Integer> ts = new TreeSet<>();
+  ts.add(5);
+  ts.add(2);
+  ts.add(8);
+
+  // for-each
+  for (int x : ts) {
+      System.out.println(x);
+  }
+
+  // Iterator
+  Iterator<Integer> it = ts.iterator();
+  while (it.hasNext()) {
+      System.out.println(it.next());
+  }
+  ```
+
+---
+
+## 2. **HashSet**
+
+* Thuộc `java.util`.
+* Cấu trúc: dựa trên **HashMap**.
+* **Đặc điểm**:
+
+  * Không cho phần tử trùng.
+  * Thứ tự phần tử **không đảm bảo** (không sắp xếp).
+  * Truy cập, thêm, xóa: O(1) trung bình.
+* **Duyệt**:
+
+  ```java
+  HashSet<String> hs = new HashSet<>();
+  hs.add("A");
+  hs.add("B");
+  hs.add("C");
+
+  // for-each
+  for (String s : hs) {
+      System.out.println(s);
+  }
+
+  // Iterator
+  Iterator<String> it = hs.iterator();
+  while (it.hasNext()) {
+      System.out.println(it.next());
+  }
+  ```
+
+---
+
+## 3. **Hashtable**
+
+* Thuộc `java.util`.
+* Cấu trúc: bảng băm (tương tự `HashMap` nhưng **synchronized**, dùng được trong môi trường đa luồng).
+* **Đặc điểm**:
+
+  * Lưu dữ liệu theo cặp **key → value**.
+  * Không cho key `null`, value `null`.
+* **Duyệt**:
+
+  ```java
+  Hashtable<Integer, String> ht = new Hashtable<>();
+  ht.put(1, "One");
+  ht.put(2, "Two");
+  ht.put(3, "Three");
+
+  // for-each keySet
+  for (Integer k : ht.keySet()) {
+      System.out.println(k + " = " + ht.get(k));
+  }
+
+  // for-each entrySet
+  for (Map.Entry<Integer, String> e : ht.entrySet()) {
+      System.out.println(e.getKey() + " = " + e.getValue());
+  }
+
+  // Enumeration
+  Enumeration<Integer> en = ht.keys();
+  while (en.hasMoreElements()) {
+      int k = en.nextElement();
+      System.out.println(k + " = " + ht.get(k));
+  }
+  ```
+
+---
+
+👉 **Tóm tắt khác biệt chính**:
+
+* `TreeSet`: Set có sắp xếp.
+* `HashSet`: Set không sắp xếp, nhanh hơn.
+* `Hashtable`: Map (key → value), cũ, đồng bộ.
+
+---
+
+Bạn có muốn mình vẽ **bảng so sánh TreeSet vs HashSet vs Hashtable** chi tiết (hiệu năng, null, đồng bộ, sắp xếp) để dễ nhớ hơn không?
+Ok 👍 bạn đang muốn biết **các cách dùng vòng lặp (`for`)** trong `TreeSet`, `HashSet`, và `Hashtable`.
+Mình chia ra từng loại nhé:
+
+---
+
+## 1. **TreeSet**
+
+```java
+TreeSet<Integer> ts = new TreeSet<>();
+ts.add(10);
+ts.add(5);
+ts.add(20);
+
+// for-each
+for (Integer x : ts) {
+    System.out.println(x);
+}
+
+// for với Iterator
+for (Iterator<Integer> it = ts.iterator(); it.hasNext(); ) {
+    Integer x = it.next();
+    System.out.println(x);
+}
+
+// for theo chỉ số không có (TreeSet không có index như List)
+```
+
+---
+
+## 2. **HashSet**
+
+```java
+HashSet<String> hs = new HashSet<>();
+hs.add("A");
+hs.add("B");
+hs.add("C");
+
+// for-each
+for (String s : hs) {
+    System.out.println(s);
+}
+
+// for với Iterator
+for (Iterator<String> it = hs.iterator(); it.hasNext(); ) {
+    String s = it.next();
+    System.out.println(s);
+}
+```
+
+---
+
+## 3. **Hashtable**
+
+```java
+Hashtable<Integer, String> ht = new Hashtable<>();
+ht.put(1, "One");
+ht.put(2, "Two");
+ht.put(3, "Three");
+
+// for-each qua keySet
+for (Integer key : ht.keySet()) {
+    System.out.println(key + " = " + ht.get(key));
+}
+
+// for-each qua entrySet (hay dùng nhất)
+for (Map.Entry<Integer, String> e : ht.entrySet()) {
+    System.out.println(e.getKey() + " = " + e.getValue());
+}
+
+// for-each qua values
+for (String val : ht.values()) {
+    System.out.println(val);
+}
+
+// for với Enumeration (cách cũ)
+for (Enumeration<Integer> en = ht.keys(); en.hasMoreElements(); ) {
+    Integer key = en.nextElement();
+    System.out.println(key + " = " + ht.get(key));
+}
+```
+
+---
+
+👉 **Nhận xét**:
+
+* `TreeSet` và `HashSet`: chỉ duyệt được bằng **for-each** hoặc **Iterator/for Iterator**.
+* `Hashtable`: có nhiều kiểu duyệt hơn vì nó lưu key–value (qua `keySet`, `entrySet`, `values`, `Enumeration`).
+
+---
+
+Bạn có muốn mình viết **một chương trình Java nhỏ**, trong đó dùng hết tất cả các loại `for` trên cho cả 3 cấu trúc này để bạn copy chạy thử luôn không?
+À 👍 bạn hỏi tiếp về **`PriorityQueue`** trong Java đúng không?
+Mình giải thích ngắn gọn + các cách dùng `for` trong nó:
+
+---
+
+## **PriorityQueue**
+
+* Thuộc `java.util`.
+* Cấu trúc: **heap** (mặc định là *min-heap*).
+* **Đặc điểm**:
+
+  * Không cho `null`.
+  * Thứ tự phần tử khi duyệt **không sắp xếp** hoàn toàn (chỉ `peek()` hoặc `poll()` mới lấy phần tử ưu tiên nhất).
+  * Thường dùng khi cần hàng đợi ưu tiên (ví dụ: thuật toán Dijkstra, A\*…).
+
+---
+
+## **Ví dụ dùng PriorityQueue**
+
+```java
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        PriorityQueue<Integer> pq = new PriorityQueue<>();
+        pq.add(30);
+        pq.add(10);
+        pq.add(20);
+
+        // 1. for-each
+        for (Integer x : pq) {
+            System.out.println("for-each: " + x);
+        }
+
+        // 2. for với Iterator
+        for (Iterator<Integer> it = pq.iterator(); it.hasNext(); ) {
+            Integer x = it.next();
+            System.out.println("Iterator: " + x);
+        }
+
+        // 3. for lấy phần tử ưu tiên nhất (poll liên tục)
+        while (!pq.isEmpty()) {
+            System.out.println("poll: " + pq.poll());
+        }
+    }
+}
+```
+
+---
+
+## **Kết quả (chú ý):**
+
+* Khi dùng **for-each** hoặc **Iterator**: không đảm bảo thứ tự tăng dần.
+* Khi dùng **poll() trong vòng lặp while**: lấy ra đúng thứ tự ưu tiên (min-heap → từ bé đến lớn).
+
+Ví dụ:
+
+```
+for-each: 10
+for-each: 30
+for-each: 20
+Iterator: 10
+Iterator: 30
+Iterator: 20
+poll: 10
+poll: 20
+poll: 30
+```
+
+---
+
+👉 Tóm lại:
+
+* `PriorityQueue` có thể duyệt bằng **for-each**, **Iterator**, nhưng muốn lấy **theo đúng ưu tiên** thì phải dùng vòng `while (!pq.isEmpty()) { pq.poll(); }`.
+
+---
+
+Bạn có muốn mình viết thêm **so sánh nhanh PriorityQueue với TreeSet** (đều sắp xếp nhưng khác nhau về cách hoạt động) không?
+Chuẩn rồi 👍 `PriorityQueue` trong Java mặc định **là min-heap**.
+Mình giải thích kỹ kèm code:
+
+---
+
+## 🔹 **Min-Heap trong PriorityQueue**
+
+* Khi bạn tạo `PriorityQueue` bình thường:
+
+  ```java
+  PriorityQueue<Integer> pq = new PriorityQueue<>();
+  ```
+
+  → Đây là **min-heap**: phần tử nhỏ nhất luôn nằm ở đầu (có thể lấy bằng `peek()` hoặc `poll()`).
+
+---
+
+## 🔹 Ví dụ Min-Heap
+
+```java
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        PriorityQueue<Integer> pq = new PriorityQueue<>();
+        pq.add(50);
+        pq.add(10);
+        pq.add(30);
+        pq.add(20);
+
+        System.out.println("Peek (nhỏ nhất): " + pq.peek()); // 10
+
+        // Lấy theo thứ tự min-heap
+        while (!pq.isEmpty()) {
+            System.out.println(pq.poll());
+        }
+    }
+}
+```
+
+👉 **Kết quả**:
+
+```
+Peek (nhỏ nhất): 10
+10
+20
+30
+50
+```
+
+---
+
+## 🔹 Nếu muốn **Max-Heap**
+
+Ta cần truyền **Comparator**:
+
+```java
+PriorityQueue<Integer> maxHeap = new PriorityQueue<>(Comparator.reverseOrder());
+maxHeap.add(50);
+maxHeap.add(10);
+maxHeap.add(30);
+
+while (!maxHeap.isEmpty()) {
+    System.out.println(maxHeap.poll());
+}
+```
+
+👉 **Kết quả**:
+
+```
+50
+30
+10
+```
+
+---
+
+## 🔹 Cách duyệt với `for`
+
+⚠️ Quan trọng: Duyệt bằng `for-each` hoặc `iterator` **không đảm bảo theo min-heap**.
+Chỉ dùng `poll()` mới đúng thứ tự ưu tiên.
+
+Ví dụ:
+
+```java
+for (Integer x : pq) {   // KHÔNG sắp xếp
+    System.out.println(x);
+}
+
+while (!pq.isEmpty()) {  // ĐÚNG theo min-heap
+    System.out.println(pq.poll());
+}
+```
+
+---
+
+👉 Tóm lại:
+
+* `PriorityQueue` mặc định là **min-heap**.
+* Dùng `poll()` để lấy ra theo thứ tự **bé → lớn**.
+* Nếu cần **max-heap** → dùng `Comparator.reverseOrder()`.
+
+---
+
+Bạn có muốn mình vẽ **min-heap dạng cây** minh họa cho cái `PriorityQueue` (ví dụ với 50, 10, 30, 20) để dễ hình dung hơn không?
+Ok 👍 mình nói chi tiết về **`TreeSet` trong Java** nhé:
+
+---
+
+## 🔹 **TreeSet là gì?**
+
+* Thuộc `java.util`.
+* Cấu trúc bên trong: **TreeMap** (cây đỏ-đen).
+* Thực chất là một **Set**:
+
+  * Không chứa phần tử trùng.
+  * Các phần tử luôn được **sắp xếp tăng dần** (theo `Comparable` hoặc `Comparator`).
+* Thời gian thêm, xóa, tìm kiếm: **O(log n)**.
+
+---
+
+## 🔹 **Ví dụ cơ bản**
+
+```java
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        TreeSet<Integer> ts = new TreeSet<>();
+
+        ts.add(30);
+        ts.add(10);
+        ts.add(20);
+        ts.add(20); // bị bỏ qua vì trùng
+
+        System.out.println("TreeSet: " + ts); 
+        // [10, 20, 30] -> đã được sắp xếp
+    }
+}
+```
+
+---
+
+## 🔹 **Duyệt TreeSet**
+
+```java
+TreeSet<String> ts = new TreeSet<>();
+ts.add("Banana");
+ts.add("Apple");
+ts.add("Cherry");
+
+// 1. for-each
+for (String s : ts) {
+    System.out.println(s);
+}
+
+// 2. Iterator
+Iterator<String> it = ts.iterator();
+while (it.hasNext()) {
+    System.out.println(it.next());
+}
+
+// 3. descendingIterator (ngược)
+Iterator<String> it2 = ts.descendingIterator();
+while (it2.hasNext()) {
+    System.out.println(it2.next());
+}
+```
+
+👉 Kết quả:
+
+```
+Apple
+Banana
+Cherry
+Cherry
+Banana
+Apple
+```
+
+---
+
+## 🔹 **Một số phương thức hay**
+
+```java
+TreeSet<Integer> ts = new TreeSet<>();
+ts.add(10);
+ts.add(20);
+ts.add(30);
+ts.add(40);
+
+// Lấy phần tử đầu/cuối
+System.out.println(ts.first());   // 10
+System.out.println(ts.last());    // 40
+
+// Tìm lớn nhất nhỏ hơn (lower) / nhỏ nhất lớn hơn (higher)
+System.out.println(ts.lower(25));   // 20
+System.out.println(ts.higher(25));  // 30
+
+// headSet, tailSet, subSet
+System.out.println(ts.headSet(30));        // [10, 20]
+System.out.println(ts.tailSet(20));        // [20, 30, 40]
+System.out.println(ts.subSet(15, 35));     // [20, 30]
+```
+
+---
+
+## 🔹 **TreeSet vs HashSet**
+
+| Thuộc tính         | TreeSet              | HashSet            |
+| ------------------ | -------------------- | ------------------ |
+| Thứ tự             | Có sắp xếp           | Không đảm bảo      |
+| Cấu trúc nội bộ    | TreeMap (cây đỏ-đen) | HashMap (bảng băm) |
+| Thời gian thao tác | O(log n)             | O(1) trung bình    |
+| Cho phép null      | ❌ (không)            | ✅ (1 phần tử null) |
+
+---
+
+👉 Tóm gọn:
+
+* Dùng **TreeSet** khi bạn cần **tập hợp sắp xếp**.
+* Dùng **HashSet** khi bạn chỉ cần tập hợp **nhanh, không quan trọng thứ tự**.
+
+---
+
+Bạn có muốn mình viết **chương trình minh họa đủ các vòng for + phương thức hay** của `TreeSet` trong **một file Java hoàn chỉnh** để bạn copy chạy luôn không?
+Ok 👍 bây giờ mình giải thích về **`TreeMap` trong Java** cho bạn:
+
+---
+
+## 🔹 **TreeMap là gì?**
+
+* Thuộc `java.util`.
+* Cấu trúc bên trong: **cây đỏ-đen** (Red-Black Tree).
+* Là một **Map** (dạng `key → value`).
+* Đặc điểm:
+
+  * Các **key luôn được sắp xếp tăng dần** theo `Comparable` hoặc `Comparator`.
+  * **Không cho phép key null** (nhưng value có thể null).
+  * Thời gian thêm, xóa, tìm kiếm: **O(log n)**.
+
+---
+
+## 🔹 **Ví dụ cơ bản**
+
+```java
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        TreeMap<Integer, String> tm = new TreeMap<>();
+
+        tm.put(3, "Three");
+        tm.put(1, "One");
+        tm.put(2, "Two");
+        tm.put(4, "Four");
+
+        System.out.println("TreeMap: " + tm);
+        // {1=One, 2=Two, 3=Three, 4=Four} -> key tự sắp xếp
+    }
+}
+```
+
+---
+
+## 🔹 **Duyệt TreeMap**
+
+```java
+TreeMap<Integer, String> tm = new TreeMap<>();
+tm.put(3, "Three");
+tm.put(1, "One");
+tm.put(2, "Two");
+
+// 1. for-each qua entrySet
+for (Map.Entry<Integer, String> e : tm.entrySet()) {
+    System.out.println(e.getKey() + " = " + e.getValue());
+}
+
+// 2. for-each qua keySet
+for (Integer k : tm.keySet()) {
+    System.out.println(k + " = " + tm.get(k));
+}
+
+// 3. for-each qua values
+for (String v : tm.values()) {
+    System.out.println(v);
+}
+
+// 4. Iterator
+Iterator<Map.Entry<Integer, String>> it = tm.entrySet().iterator();
+while (it.hasNext()) {
+    Map.Entry<Integer, String> e = it.next();
+    System.out.println(e.getKey() + " = " + e.getValue());
+}
+```
+
+---
+
+## 🔹 **Một số phương thức hay**
+
+```java
+TreeMap<Integer, String> tm = new TreeMap<>();
+tm.put(10, "Ten");
+tm.put(20, "Twenty");
+tm.put(30, "Thirty");
+tm.put(40, "Forty");
+
+// Lấy key đầu/cuối
+System.out.println(tm.firstKey());   // 10
+System.out.println(tm.lastKey());    // 40
+
+// Lấy entry đầu/cuối
+System.out.println(tm.firstEntry()); // 10=Ten
+System.out.println(tm.lastEntry());  // 40=Forty
+
+// Tìm key gần nhất
+System.out.println(tm.lowerKey(25));  // 20 (bé hơn gần nhất)
+System.out.println(tm.higherKey(25)); // 30 (lớn hơn gần nhất)
+
+// Lấy sub map
+System.out.println(tm.headMap(30));     // {10=Ten, 20=Twenty}
+System.out.println(tm.tailMap(20));     // {20=Twenty, 30=Thirty, 40=Forty}
+System.out.println(tm.subMap(15, 35));  // {20=Twenty, 30=Thirty}
+```
+
+---
+
+## 🔹 **TreeMap vs HashMap vs Hashtable**
+
+| Thuộc tính            | TreeMap (cây) | HashMap (băm)  | Hashtable (băm cũ) |
+| --------------------- | ------------- | -------------- | ------------------ |
+| Thứ tự key            | Có (sắp xếp)  | Không          | Không              |
+| Null key              | ❌             | ✅ (1 null key) | ❌                  |
+| Null value            | ✅             | ✅              | ❌                  |
+| Đồng bộ (thread-safe) | ❌             | ❌              | ✅                  |
+| Thời gian thao tác    | O(log n)      | O(1) TB        | O(1) TB            |
+
+---
+
+👉 Tóm gọn:
+
+* Dùng **TreeMap** khi bạn cần **Map có key sắp xếp**.
+* Dùng **HashMap** khi bạn cần **Map nhanh, không quan tâm thứ tự**.
+* Dùng **Hashtable** khi cần **Map đồng bộ (đa luồng), cũ**.
+
+---
+
+Bạn có muốn mình viết **1 chương trình Java đầy đủ** (có `main`) để test **cả TreeSet, HashSet, TreeMap, HashMap, Hashtable** trong cùng 1 file và in kết quả ra để so sánh trực tiếp không?
+À mình hiểu ý bạn rồi 👌. Trong **`TreeMap`** có một cách duyệt rất “đặc biệt” và hay dùng: **duyệt bằng `for-each` trên `entrySet()`**.
+
+---
+
+## 🔹 Vòng `for-each` đặc biệt trong `TreeMap`
+
+```java
+TreeMap<Integer, String> tm = new TreeMap<>();
+tm.put(1, "One");
+tm.put(2, "Two");
+tm.put(3, "Three");
+
+// Vòng for đặc biệt: entrySet
+for (Map.Entry<Integer, String> entry : tm.entrySet()) {
+    System.out.println(entry.getKey() + " => " + entry.getValue());
+}
+```
+
+👉 Ở đây:
+
+* `tm.entrySet()` trả về tập hợp các **cặp (key, value)**.
+* Mỗi vòng lặp bạn nhận luôn được cả **key** và **value** → không cần gọi `tm.get(key)` nữa.
+* Cách này **nhanh và gọn nhất** khi duyệt `TreeMap` (và cả `HashMap`).
+
+---
+
+## 🔹 Ngoài ra còn 2 biến thể khác của vòng for đặc biệt
+
+1. **Duyệt chỉ key**
+
+```java
+for (Integer k : tm.keySet()) {
+    System.out.println(k + " => " + tm.get(k));
+}
+```
+
+2. **Duyệt chỉ value**
+
+```java
+for (String v : tm.values()) {
+    System.out.println(v);
+}
+```
+
+---
+
+👉 Nhưng vòng `for (Map.Entry<K,V> e : map.entrySet())` thường được gọi là **“đặc biệt”** vì nó vừa gọn, vừa hiệu quả nhất.
+
+---
+
+Bạn có muốn mình viết thêm ví dụ **so sánh 3 cách for (entrySet, keySet, values)** để thấy vì sao `entrySet` nhanh hơn không?
+Hay 👌 bạn muốn so sánh tương đương giữa **Java** và **Python** cho các cấu trúc này:
+(`HashSet`, `Hashtable`, `TreeMap`, `TreeSet`, `PriorityQueue`/Min-Heap).
+Trong Python không có class trùng tên, nhưng có các **cấu trúc tương đương**.
+
+---
+
+## 🔹 1. **HashSet**
+
+* **Java**: `HashSet`
+* **Python**: `set`
+
+```python
+# Python set ~ HashSet
+hs = {"A", "B", "C"}
+hs.add("D")
+hs.add("A")  # bỏ qua (không trùng)
+
+for x in hs:
+    print(x)   # thứ tự không đảm bảo
+```
+
+---
+
+## 🔹 2. **Hashtable**
+
+* **Java**: `Hashtable` (cũ, thread-safe)
+* **Python**: `dict` (từ Python 3.7+ giữ insertion order, nhưng cơ bản là bảng băm)
+
+```python
+# Python dict ~ Hashtable
+ht = {1: "One", 2: "Two", 3: "Three"}
+
+for k, v in ht.items():   # giống entrySet()
+    print(k, "=", v)
+
+for k in ht.keys():
+    print(k, "=", ht[k])
+
+for v in ht.values():
+    print(v)
+```
+
+---
+
+## 🔹 3. **TreeMap**
+
+* **Java**: `TreeMap` (key được sắp xếp)
+* **Python**: `dict` không sắp, nhưng có `sortedcontainers` → `SortedDict`
+
+```python
+# pip install sortedcontainers
+from sortedcontainers import SortedDict
+
+tm = SortedDict()
+tm[3] = "Three"
+tm[1] = "One"
+tm[2] = "Two"
+
+for k, v in tm.items():
+    print(k, "=", v)   # key đã được sắp xếp
+```
+
+---
+
+## 🔹 4. **TreeSet**
+
+* **Java**: `TreeSet` (Set sắp xếp)
+* **Python**: `set` không sắp, nhưng có `SortedSet` từ `sortedcontainers`
+
+```python
+from sortedcontainers import SortedSet
+
+ts = SortedSet([30, 10, 20, 20])  # tự sắp
+for x in ts:
+    print(x)   # 10, 20, 30
+```
+
+---
+
+## 🔹 5. **PriorityQueue / Min-Heap**
+
+* **Java**: `PriorityQueue` (mặc định min-heap)
+* **Python**: `heapq` (min-heap)
+
+```python
+import heapq
+
+pq = []
+heapq.heappush(pq, 30)
+heapq.heappush(pq, 10)
+heapq.heappush(pq, 20)
+
+print("peek:", pq[0])  # nhỏ nhất
+
+while pq:
+    print(heapq.heappop(pq))  # 10, 20, 30
+```
+
+---
+
+## 🔹 **So sánh nhanh Java vs Python**
+
+| Java          | Python                        | Sắp xếp? | Cho phép trùng? |
+| ------------- | ----------------------------- | -------- | --------------- |
+| HashSet       | set                           | ❌        | ❌               |
+| Hashtable     | dict                          | ❌        | key duy nhất    |
+| TreeMap       | SortedDict (sortedcontainers) | ✅ (key)  | key duy nhất    |
+| TreeSet       | SortedSet (sortedcontainers)  | ✅        | ❌               |
+| PriorityQueue | heapq                         | ✅ (min)  | ✅               |
+
+---
+
+👉 Tóm gọn:
+
+* Python **built-in** có `set`, `dict`, `heapq`.
+* Muốn giống `TreeMap`/`TreeSet` của Java thì dùng thư viện **`sortedcontainers`** (`SortedDict`, `SortedSet`).
+
+---
+
+Bạn có muốn mình viết **một đoạn Python duy nhất** chạy thử tất cả các cấu trúc này để thấy output khác nhau (giống như mình so sánh trong Java) không?
+Ok 👍 mình liệt kê rõ ràng **các vòng for** trong Python tương ứng với:
+`HashSet`, `Hashtable (dict)`, `TreeMap (SortedDict)`, `TreeSet (SortedSet)`, `PriorityQueue/MinHeap (heapq)`.
+
+---
+
+## 🔹 1. **HashSet** (`set` trong Python)
+
+```python
+hs = {"A", "B", "C"}
+
+# for-each duyệt phần tử
+for x in hs:
+    print(x)
+```
+
+👉 Thứ tự **không đảm bảo** (vì set không sắp xếp).
+
+---
+
+## 🔹 2. **Hashtable** (`dict` trong Python)
+
+```python
+ht = {1: "One", 2: "Two", 3: "Three"}
+
+# for qua key
+for k in ht:
+    print(k, "=", ht[k])
+
+# for qua value
+for v in ht.values():
+    print(v)
+
+# for qua cả key và value (giống entrySet)
+for k, v in ht.items():
+    print(k, "=", v)
+```
+
+---
+
+## 🔹 3. **TreeMap** (`SortedDict` – từ thư viện `sortedcontainers`)
+
+```python
+from sortedcontainers import SortedDict
+
+tm = SortedDict({3: "Three", 1: "One", 2: "Two"})
+
+# for qua key (theo thứ tự tăng dần)
+for k in tm:
+    print(k, "=", tm[k])
+
+# for qua value
+for v in tm.values():
+    print(v)
+
+# for qua entry (key, value)
+for k, v in tm.items():
+    print(k, "=", v)
+```
+
+---
+
+## 🔹 4. **TreeSet** (`SortedSet`)
+
+```python
+from sortedcontainers import SortedSet
+
+ts = SortedSet([30, 10, 20, 20])
+
+# for-each (tự động tăng dần)
+for x in ts:
+    print(x)
+```
+
+---
+
+## 🔹 5. **PriorityQueue / Min-Heap** (`heapq`)
+
+```python
+import heapq
+
+pq = []
+heapq.heappush(pq, 30)
+heapq.heappush(pq, 10)
+heapq.heappush(pq, 20)
+
+# for-each (⚠️ không theo thứ tự min-heap)
+for x in pq:
+    print("for-each:", x)
+
+# for với while poll (đúng theo min-heap)
+while pq:
+    print("poll:", heapq.heappop(pq))
+```
+
+---
+
+## 🔹 📌 Tóm gọn cách dùng `for`
+
+| Cấu trúc         | Vòng for hay dùng nhất             |
+| ---------------- | ---------------------------------- |
+| HashSet (set)    | `for x in set:`                    |
+| Hashtable (dict) | `for k, v in dict.items():`        |
+| TreeMap          | `for k, v in sorted_dict.items():` |
+| TreeSet          | `for x in sorted_set:`             |
+| MinHeap          | `while heap: heappop(heap)`        |
+
+---
+
+👉 Vậy là Python cũng có đầy đủ vòng `for` tương tự Java, chỉ khác cú pháp một chút.
+
+Bạn có muốn mình viết **một đoạn Python duy nhất** chạy thử tất cả các vòng for này (in kết quả so sánh rõ ràng) giống như bài demo Java không?

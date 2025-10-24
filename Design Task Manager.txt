@@ -1,0 +1,298 @@
+Design Task Manager(18/09/2025)
+class TaskManager {
+    int[] priorities = new int[100001];
+    int[] userIds = new int[100001];
+    PriorityQueue<Long> PQ = new PriorityQueue<>((a, b) -> Long.compare(b, a));
+Ok, mình giải thích chi tiết nhé 👇
+
+```java
+public PriorityQueue<Long> PQ = new PriorityQueue<>((a, b) -> Long.compare(b, a));
+```
+
+### 1. `PriorityQueue<Long>`
+
+* Đây là **hàng đợi ưu tiên** trong Java (thuộc `java.util`).
+* Mặc định, `PriorityQueue` là **min-heap** → phần tử nhỏ nhất sẽ được ưu tiên lấy ra trước.
+
+### 2. `(a, b) -> Long.compare(b, a)`
+
+* Đây là một **Comparator** viết bằng **lambda expression**.
+* `Long.compare(b, a)` so sánh **ngược lại** với mặc định:
+
+  * Nếu `a < b` → trả về dương (ngược lại bình thường).
+  * Nếu `a > b` → trả về âm.
+* Nghĩa là: số **lớn hơn** sẽ được ưu tiên trước.
+
+👉 Điều này biến `PriorityQueue` từ **min-heap** (ưu tiên nhỏ nhất) thành **max-heap** (ưu tiên lớn nhất).
+
+### 3. Ý nghĩa tổng thể
+
+Câu lệnh này tạo ra một **priority queue sắp xếp giảm dần**, tức:
+
+* Khi `offer()` các số vào queue → tự động sắp xếp theo thứ tự giảm dần.
+* Khi `poll()` → luôn lấy **giá trị lớn nhất** trước.
+
+### 4. Ví dụ minh họa
+
+```java
+import java.util.PriorityQueue;
+
+public class Main {
+    public static void main(String[] args) {
+        PriorityQueue<Long> PQ = new PriorityQueue<>((a, b) -> Long.compare(b, a));
+
+        PQ.offer(10L);
+        PQ.offer(5L);
+        PQ.offer(20L);
+
+        while (!PQ.isEmpty()) {
+            System.out.println(PQ.poll());
+        }
+    }
+}
+```
+
+👉 Kết quả in ra:
+
+```
+20
+10
+5
+```
+
+---
+
+Bạn có muốn mình vẽ **min-heap vs max-heap** dạng sơ đồ để thấy rõ sự khác biệt không?
+À mình hiểu 👍 bạn đang thắc mắc **tại sao lại viết `Long.compare(b, a)` thay vì `Long.compare(a, b)`**.
+
+---
+
+### 1. Hàm `Long.compare(x, y)`
+
+* Trả về:
+
+  * **< 0** nếu `x < y`
+  * **= 0** nếu `x == y`
+  * **> 0** nếu `x > y`
+
+Ví dụ:
+
+```java
+Long.compare(3L, 5L)  // -1
+Long.compare(5L, 3L)  // +1
+Long.compare(7L, 7L)  // 0
+```
+
+---
+
+### 2. So sánh trong `PriorityQueue`
+
+`PriorityQueue` sắp xếp dựa trên **Comparator**:
+
+* Nếu `compare(a, b) < 0` → `a` đứng trước `b`.
+* Nếu `compare(a, b) > 0` → `b` đứng trước `a`.
+
+---
+
+### 3. Trường hợp mặc định (min-heap)
+
+Nếu viết:
+
+```java
+(a, b) -> Long.compare(a, b)
+```
+
+Thì:
+
+* `a < b` → kết quả âm → `a` đứng trước → **số nhỏ hơn ưu tiên trước** → min-heap.
+
+Ví dụ: `[5, 10, 20]` → poll ra `5` trước.
+
+---
+
+### 4. Trường hợp đảo ngược (max-heap)
+
+Nếu viết:
+
+```java
+(a, b) -> Long.compare(b, a)
+```
+
+Thì:
+
+* `a < b` → `Long.compare(b, a)` trả về dương → `b` đứng trước → **số lớn hơn ưu tiên trước** → max-heap.
+
+Ví dụ: `[5, 10, 20]` → poll ra `20` trước.
+
+---
+
+✅ Nói ngắn gọn:
+
+* `Long.compare(a, b)` → sắp xếp **tăng dần** (min-heap).
+* `Long.compare(b, a)` → sắp xếp **giảm dần** (max-heap).
+
+---
+
+Bạn có muốn mình làm **bảng so sánh chi tiết** giữa 2 cái này (a,b) và (b,a) để dễ nhớ hơn không?
+
+
+    public TaskManager(List<List<Integer>> tasks) {
+        for (List<Integer> task : tasks) {
+            int userId = task.get(0);
+            int taskId = task.get(1);
+            int priority = task.get(2);
+            priorities[taskId] = priority;
+            userIds[taskId] = userId;
+            PQ.offer((long) priority * 100001 + taskId);
+        }
+    }
+
+    public void add(int userId, int taskId, int priority) {
+        if (priorities[taskId] > 0)
+            return;
+        priorities[taskId] = priority;
+        userIds[taskId] = userId;
+        PQ.offer((long) priority * 100001 + taskId);
+    }
+
+    public void edit(int taskId, int newPriority) {
+        priorities[taskId] = newPriority;
+        PQ.offer((long) newPriority * 100001 + taskId);
+    }
+
+    public void rmv(int taskId) {
+        priorities[taskId] = -1;
+    }
+
+   public int execTop() {
+    while (!PQ.isEmpty()) {
+        long current = PQ.poll(); // lấy phần tử có priority cao nhất trong heap
+        int taskId = (int) (current % 100001); // tách taskId ra
+        int priority = (int) (current / 100001); // tách priority ra
+
+        // kiểm tra xem task này còn hợp lệ không
+        if (priorities[taskId] != priority)
+            continue; // nếu không khớp → bỏ qua (lazy deletion)
+
+        // nếu khớp → task hợp lệ, đánh dấu đã xóa
+        priorities[taskId] = -1;
+
+        // trả về userId của task này
+        return userIds[taskId];
+    }
+    return -1; // nếu heap rỗng hoặc không có task hợp lệ
+}
+
+
+À ok 👍 mình giải thích rõ đoạn code này nhé:
+
+```java
+public void add(int userId, int taskId, int priority) {
+    if (priorities[taskId] > 0)
+        return;
+    priorities[taskId] = priority;
+    userIds[taskId] = userId;
+    PQ.offer((long) priority * 100001 + taskId);
+}
+```
+
+---
+
+### Giải thích từng dòng
+
+1. **`if (priorities[taskId] > 0) return;`**
+
+   * Ở đây, mảng `priorities` lưu **priority hiện tại** của mỗi task.
+   * Khi `priorities[taskId] > 0` nghĩa là task này **đã tồn tại** trong hệ thống rồi → không cho thêm lại nữa → `return` để thoát ra sớm.
+   * Các giá trị mặc định của `priorities` trong Java là `0` (nếu chưa gán). Vì vậy:
+
+     * `= 0` → task chưa được thêm.
+     * `> 0` → task tồn tại.
+     * `= -1` → task đã bị xóa (do `rmv()` gán).
+   * Do đó `> 0` ở đây chính là điều kiện "task đã tồn tại", nên hàm sẽ bỏ qua, không thêm trùng.
+
+2. **`priorities[taskId] = priority;`**
+
+   * Lưu priority cho task mới này.
+
+3. **`userIds[taskId] = userId;`**
+
+   * Lưu userId tương ứng với task.
+
+4. **`PQ.offer((long) priority * 100001 + taskId);`**
+
+   * Đưa task mới vào `PriorityQueue` (max-heap).
+   * Encode priority và taskId vào 1 số `long` để sắp xếp theo:
+
+     * `priority` trước (càng lớn càng ưu tiên),
+     * nếu `priority` bằng nhau → so sánh `taskId` (taskId lớn hơn ưu tiên hơn).
+
+---
+
+### 📌 Tóm lại:
+
+* `if (priorities[taskId] > 0) return;`
+  → Mục đích: **ngăn việc thêm một task mới có cùng `taskId` nếu nó đã tồn tại trong hệ thống.**
+
+* Dấu `> 0` được chọn vì:
+
+  * `0` = task chưa bao giờ được thêm,
+  * `-1` = task đã bị xóa,
+  * chỉ khi `> 0` thì mới là **task còn sống trong hệ thống**.
+
+---
+
+👉 Bạn có muốn mình viết lại hàm `add` để **cho phép thêm lại task đã xóa** (khi `priorities[taskId] == -1`) thay vì return luôn không?
+Hay, mình giải thích luôn cho bạn vì sao lại dùng `-1` ở đây nhé 👇
+
+```java
+public void rmv(int taskId) {
+    priorities[taskId] = -1;
+}
+```
+
+---
+
+### 🚩 Ý nghĩa của `-1`
+
+* Trong mảng `priorities`, ta đang dùng các giá trị đặc biệt để biểu diễn **trạng thái** của task:
+
+  * `0` (mặc định) → task **chưa bao giờ được thêm**.
+  * `> 0` → task **đang tồn tại**, với giá trị là priority thật sự.
+  * `-1` → task **đã bị xóa** (removed).
+
+Như vậy `-1` là một **dấu hiệu (flag)** để hệ thống biết rằng:
+
+* TaskId này đã từng tồn tại,
+* nhưng giờ không còn hợp lệ nữa.
+
+---
+
+### 🚩 Tại sao không xóa hẳn trong PriorityQueue (`PQ`)?
+
+* Vì `PriorityQueue` trong Java **không hỗ trợ xóa phần tử bất kỳ một cách nhanh chóng** (chỉ xóa được `poll()` hoặc `peek()` đầu heap).
+* Nếu muốn xóa phần tử bất kỳ, phải tìm trong heap → rất tốn O(n).
+
+Thay vào đó, ta dùng **lazy deletion (xóa lười)**:
+
+1. Khi gọi `rmv(taskId)`, chỉ cần đánh dấu `priorities[taskId] = -1`.
+2. Task vẫn còn trong heap `PQ`, nhưng khi `execTop()` chạy, nó sẽ kiểm tra:
+
+   ```java
+   if (priorities[taskId] != priority) continue;
+   ```
+
+   → Nếu thấy priority đã khác (`-1` hoặc số mới sau khi edit), thì bỏ qua phần tử cũ trong heap.
+
+Cách này nhanh hơn rất nhiều vì xóa chỉ cần **O(1)** (đánh dấu `-1`), còn heap sẽ tự dọn rác khi cần.
+
+---
+
+✅ **Tóm lại**:
+
+* `-1` được dùng như một cờ báo để biết task đã bị xoá.
+* Đây là kỹ thuật **lazy deletion** để tránh phải xóa phần tử trực tiếp trong PriorityQueue (tốn kém).
+
+---
+
+👉 Bạn có muốn mình vẽ lại **quy trình execTop() với lazy deletion** (task được add → edit → remove → heap xử lý ra sao) để dễ hình dung hơn không?

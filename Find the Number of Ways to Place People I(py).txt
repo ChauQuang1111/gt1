@@ -1,0 +1,134 @@
+class Solution:
+    def numberOfPairs(self, points: List[List[int]]) -> int:
+        points.sort(key=lambda x: (x[0], -x[1]))
+Bạn thắc mắc vì sao Python lại có vẻ "kỳ lạ" khi sắp xếp, không so sánh hai điểm trực tiếp như Java. Tôi sẽ giải thích bằng một ví dụ cụ thể để bạn thấy nó hoạt động như thế nào.
+
+Hãy tưởng tượng bạn có một danh sách các điểm sau:
+`points = [[2, 5], [1, 3], [3, 2], [2, 1], [3, 5]]`
+
+Bạn muốn sắp xếp danh sách này theo quy tắc:
+1.  **Ưu tiên 1:** Tăng dần theo tọa độ x.
+2.  **Ưu tiên 2:** Nếu x bằng nhau, giảm dần theo tọa độ y.
+
+### Cách Java hoạt động (so sánh 2 điểm một lúc)
+
+Java sử dụng một **bộ so sánh (Comparator)** để so sánh hai điểm bất kỳ, chẳng hạn như điểm `A` và điểm `B`, rồi đưa ra quyết định điểm nào đứng trước.
+
+-   **Bước 1:** So sánh `[2, 5]` và `[1, 3]`.
+    -   `a[0] = 2`, `b[0] = 1`. Vì `2 > 1`, `a[0] - b[0]` trả về dương. Java biết `[1, 3]` phải đứng trước `[2, 5]`.
+-   **Bước 2:** So sánh `[2, 5]` và `[2, 1]`.
+    -   `a[0] = 2`, `b[0] = 2`. `a[0] - b[0]` trả về 0. Java chuyển sang so sánh y.
+    -   `a[1] = 5`, `b[1] = 1`. `b[1] - a[1]` trả về `1 - 5 = -4` (âm). Java biết `[2, 5]` phải đứng trước `[2, 1]`.
+-   ...và cứ tiếp tục như thế cho đến khi toàn bộ danh sách được sắp xếp.
+
+### Cách Python hoạt động (chuyển đổi và so sánh các khóa)
+
+Python không so sánh trực tiếp hai điểm. Thay vào đó, nó sử dụng một **hàm khóa (`key`)** để **chuyển đổi** mỗi điểm thành một "giá trị so sánh" riêng biệt, sau đó sắp xếp dựa trên các giá trị đó.
+
+1.  **Python đi qua từng điểm và tạo ra "khóa" của nó:**
+    -   `[2, 5]` -> khóa là `(2, -5)`
+    -   `[1, 3]` -> khóa là `(1, -3)`
+    -   `[3, 2]` -> khóa là `(3, -2)`
+    -   `[2, 1]` -> khóa là `(2, -1)`
+    -   `[3, 5]` -> khóa là `(3, -5)`
+
+2.  **Python sắp xếp danh sách các khóa này:** `[(2, -5), (1, -3), (3, -2), (2, -1), (3, -5)]`.
+    -   Python so sánh các tuple từ trái sang phải.
+    -   **Đầu tiên, nó so sánh các phần tử đầu tiên (tọa độ x):** `1 < 2 < 3`. Dựa vào đó, nó sắp xếp các tuple.
+        -   `(1, -3)` lên đầu.
+        -   `(2, -5)` và `(2, -1)` ở giữa.
+        -   `(3, -2)` và `(3, -5)` ở cuối.
+    -   **Sau đó, nó so sánh các phần tử thứ hai cho các tuple có x bằng nhau:**
+        -   So sánh `(2, -5)` và `(2, -1)`. Vì `-5 < -1`, tuple `(2, -5)` sẽ đứng trước `(2, -1)`.
+        -   So sánh `(3, -2)` và `(3, -5)`. Vì `-5 < -2`, tuple `(3, -5)` sẽ đứng trước `(3, -2)`.
+
+3.  **Cuối cùng, Python sắp xếp lại danh sách `points` ban đầu dựa trên thứ tự của các khóa đã được sắp xếp.**
+
+**Kết quả cuối cùng (cả Java và Python đều cho ra kết quả giống nhau):**
+`[[1, 3], [2, 5], [2, 1], [3, 5], [3, 2]]`
+
+### Tại sao Python lại "kỳ lạ" như vậy?
+
+Thực ra, đây là một tính năng mạnh mẽ của Python. Nó cho phép bạn biểu diễn một logic so sánh phức tạp bằng một biểu thức đơn giản và trực quan. Bạn không cần phải viết logic `if/else` tường minh.
+
+* `lambda x: (x[0], -x[1])` là cách để nói: "Đối với mỗi điểm, hãy tạo ra một 'mã' gồm hai phần: phần 1 là x, phần 2 là y đảo dấu. Hãy sắp xếp các mã này, và thứ tự của các điểm sẽ theo thứ tự của các mã."
+
+Đây chính là lý do tại sao mã Python lại ngắn gọn hơn nhiều, nó sử dụng các **tuple** và **lambda** một cách rất hiệu quả để giải quyết bài toán so sánh nhiều tiêu chí.
+        result = 0
+        for i, (x0, y0) in enumerate(points):
+		Đây là một cách viết trong Python được gọi là "lặp lại với chỉ số và giá trị" (looping with index and value).
+
+### Cú pháp: `for i, (x0, y0) in enumerate(points):`
+
+Hãy phân tích từng phần:
+
+* **`enumerate(points)`**: Đây là một hàm tích hợp sẵn của Python. Nó nhận một đối tượng có thể lặp (như một danh sách `points`) và trả về một chuỗi các cặp giá trị `(index, value)`.
+    * Ví dụ: Nếu `points` là `[[1, 2], [3, 4]]`, thì `enumerate(points)` sẽ tạo ra `(0, [1, 2])` và `(1, [3, 4])`.
+* **`for i, ... in ...`**: Vòng lặp `for` sẽ lặp qua các cặp giá trị mà `enumerate` tạo ra.
+    * **`i`**: Biến này sẽ nhận giá trị của `index` (chỉ số) từ mỗi cặp.
+* **`... (x0, y0) ...`**: Đây là kỹ thuật **phân tách tuple** (tuple unpacking). Mỗi `value` từ `enumerate` thực chất là một danh sách hoặc một tuple (ví dụ: `[1, 2]`). Python cho phép bạn gán các phần tử của một tuple/danh sách vào nhiều biến cùng một lúc.
+    * `x0` sẽ nhận giá trị của phần tử đầu tiên của `value` (tọa độ x).
+    * `y0` sẽ nhận giá trị của phần tử thứ hai của `value` (tọa độ y).
+
+### Tóm tắt
+
+Cú pháp này cho phép bạn làm những việc sau trong một dòng duy nhất:
+
+* Lặp qua danh sách `points`.
+* Đồng thời lấy được **chỉ số (`i`)** của mỗi điểm.
+* Đồng thời lấy được **tọa độ x (`x0`) và y (`y0`)** của mỗi điểm.
+
+Nó là một cách viết gọn gàng và dễ đọc hơn nhiều so với việc phải lặp bằng chỉ số và truy cập các phần tử bằng `points[i][0]` và `points[i][1]`.
+
+
+            bot = -inf
+            top = y0
+            for (x1, y1) in points[i + 1:]:
+			Bạn hỏi về cú pháp `for (x1, y1) in points[i + 1:]` trong Python, một cách viết rất ngắn gọn và hiệu quả.
+
+Đây là sự kết hợp của hai kỹ thuật chính của Python: **tạo một "slice"** của danh sách và **phân tách tuple**.
+
+1.  **`points[i + 1:]` (Tạo một slice)**:
+    * `points` là danh sách các điểm.
+    * `[i + 1:]` là một "slice" (lát cắt) của danh sách đó. Nó tạo ra một danh sách mới chứa tất cả các phần tử của `points` **bắt đầu từ chỉ số `i + 1` cho đến hết danh sách**.
+    * Ví dụ: Nếu `points = [p0, p1, p2, p3]` và `i = 1`, thì `points[i + 1:]` sẽ tạo ra một danh sách mới là `[p2, p3]`.
+
+2.  **`for (x1, y1) in ...` (Phân tách tuple)**:
+    * Vòng lặp `for` sẽ lặp qua từng phần tử trong danh sách slice vừa tạo.
+    * Mỗi phần tử là một điểm (ví dụ: `[x, y]`).
+    * Cú pháp `(x1, y1)` cho phép bạn tự động gán giá trị của điểm đó vào hai biến riêng biệt:
+        * `x1` sẽ nhận giá trị của tọa độ x.
+        * `y1` sẽ nhận giá trị của tọa độ y.
+
+Tóm lại, `for (x1, y1) in points[i + 1:]` cho phép bạn duyệt qua tất cả các điểm sau điểm `i` trong danh sách gốc một cách trực tiếp, đồng thời truy cập ngay lập tức vào tọa độ x và y của chúng, giúp mã trở nên rất gọn gàng và dễ đọc.
+Để bạn dễ hiểu hơn, chúng ta hãy dùng một ví dụ cụ thể với một danh sách các điểm.
+
+Giả sử bạn có danh sách điểm đã được sắp xếp:
+`points = [[1, 3], [2, 5], [2, 1], [3, 5], [3, 2]]`
+
+Vòng lặp ngoài sẽ chạy với chỉ số `i` từ 0 đến 4. Chúng ta sẽ xem xét trường hợp khi `i = 1`.
+
+### Ví dụ: Khi `i = 1`
+
+* **Điểm `i` là `points[1]`, tức là `[2, 5]`.**
+* **Vòng lặp trong (`for (x1, y1) in points[i + 1:]`) sẽ hoạt động như sau:**
+    1. **Tạo slice**: `points[1 + 1:]` tương đương với `points[2:]`, nó sẽ tạo ra một danh sách con mới từ chỉ số 2 trở đi: `[[2, 1], [3, 5], [3, 2]]`.
+    2. **Duyệt qua danh sách con**: Vòng lặp `for` sẽ lặp qua từng phần tử trong danh sách con này.
+
+* **Lần lặp đầu tiên của vòng lặp trong:**
+    * Vòng lặp lấy phần tử đầu tiên của danh sách con: `[2, 1]`.
+    * **Phân tách tuple**: `(x1, y1)` sẽ gán `x1 = 2` và `y1 = 1`.
+    * Bây giờ bạn có thể thực hiện logic kiểm tra của mình với `points[i]` (`[2, 5]`) và điểm hiện tại `(x1, y1)` (`[2, 1]`).
+
+* **Lần lặp thứ hai của vòng lặp trong:**
+    * Vòng lặp lấy phần tử tiếp theo: `[3, 5]`.
+    * **Phân tách tuple**: `x1` được gán là `3`, `y1` là `5`.
+    * Và cứ tiếp tục như vậy cho đến hết danh sách con.
+
+Như bạn thấy, cách viết này giúp mã ngắn gọn hơn nhiều. Thay vì phải viết `for j in range(i + 1, n):`, rồi sau đó lại phải truy cập `x1 = points[j][0]` và `y1 = points[j][1]`, bạn có thể thực hiện cả ba việc này chỉ trong một dòng.
+                if y1 <= top and y1 > bot:
+                    result += 1
+                    bot = y1
+                    if y1 == top:
+                        break
+        return result

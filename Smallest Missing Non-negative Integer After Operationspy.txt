@@ -1,0 +1,834 @@
+Smallest Missing Non-negative Integer After Operations
+class Solution:
+    def findSmallestInteger(self, nums: List[int], value: int) -> int:
+        n = len(nums)
+        if value == 1:
+            return n
+        freq = [0]*value
+		
+        for item in nums:
+            freq[item%value] += 1
+        maxround = min(freq)
+        freq = [item-maxround for item in freq]
+        if freq[0] == 0:
+            return maxround * value
+        ind = 0
+        while ind+1<value and freq[ind+1] > 0:
+            ind += 1
+        return maxround * value+ind+1
+		
+Câu lệnh:
+
+```python
+for item in nums:
+    freq[item % value] += 1
+```
+
+👉 **Giải thích chi tiết:**
+
+---
+
+### 🧠 Mục đích:
+
+Đếm **tần suất xuất hiện** của từng giá trị **phần dư (mod)** khi chia các phần tử trong `nums` cho `value`.
+
+---
+
+### 🔍 Bước thực hiện:
+
+* `item % value` → lấy **phần dư** khi chia `item` cho `value`.
+  (tức là nhóm các số có cùng phần dư vào cùng một nhóm.)
+
+* `freq[item % value] += 1` → tăng bộ đếm của nhóm phần dư đó lên 1.
+
+---
+
+### 🧩 Ví dụ:
+
+Giả sử:
+
+```python
+nums = [3, 7, 11, 14]
+value = 4
+freq = [0, 0, 0, 0]
+```
+
+Ta duyệt từng phần tử:
+
+| item | item % value | freq sau khi cập nhật |
+| ---- | ------------ | --------------------- |
+| 3    | 3            | [0, 0, 0, 1]          |
+| 7    | 3            | [0, 0, 0, 2]          |
+| 11   | 3            | [0, 0, 0, 3]          |
+| 14   | 2            | [0, 0, 1, 3]          |
+
+👉 Cuối cùng, `freq = [0, 0, 1, 3]`
+
+---
+
+### 💡 Ý nghĩa:
+
+* `freq[i]` cho biết **có bao nhiêu số trong mảng có phần dư là `i`** khi chia cho `value`.
+* Sau này, ta dùng mảng `freq` để xác định phần dư nào xuất hiện ít nhất → từ đó tìm **số nhỏ nhất còn thiếu**.
+Hay lắm 👏 — mình cùng tính lại nhé:
+
+Ta có:
+
+```
+7 % 4 = 3
+```
+
+👉 Vì:
+
+* 4 * 1 = 4
+* 7 - 4 = 3
+  => phần dư = **3**
+
+---
+
+📘 Như vậy trong ví dụ:
+
+```python
+nums = [3, 7, 11, 14]
+value = 4
+```
+
+thì:
+
+| item | item % value | Giải thích   |
+| ---- | ------------ | ------------ |
+| 3    | 3            | 4×0=0, dư 3  |
+| 7    | 3            | 4×1=4, dư 3  |
+| 11   | 3            | 4×2=8, dư 3  |
+| 14   | 2            | 4×3=12, dư 2 |
+
+➡️ Kết quả `freq = [0, 0, 1, 3]` là đúng.
+
+---
+
+💡 **Ghi nhớ:**
+
+* Toán tử `%` (modulo) trong Python trả về **phần dư không âm** của phép chia.
+* `a % b` luôn nằm trong khoảng `[0, b-1]` (nếu `b > 0`).
+Rất hay 👏 — hai dòng này là **trọng tâm** của thuật toán, mình giải thích chi tiết nhé 👇
+
+---
+
+### 🧠 Bối cảnh:
+
+Trước đó ta đã có:
+
+```python
+for item in nums:
+    freq[item % value] += 1
+```
+
+→ Mảng `freq` cho biết **tần suất** xuất hiện của từng phần dư khi chia các phần tử trong `nums` cho `value`.
+
+---
+
+### 🔹 Dòng 1:
+
+```python
+maxround = min(freq)
+```
+
+* `min(freq)` tìm **giá trị nhỏ nhất** trong mảng `freq`.
+* Vì ta muốn các phần dư xuất hiện **đều nhau** để tránh “thiếu” số nào khi thêm `value` liên tục, nên giá trị nhỏ nhất chính là **số vòng (round)** ta có thể hoàn toàn “điền đủ” cho tất cả các phần dư.
+
+🧩 Ví dụ:
+
+```
+freq = [3, 4, 4, 3]
+=> min(freq) = 3
+```
+
+→ Nghĩa là: ta có thể tạo **đầy đủ 3 vòng đầu tiên** (0, 1, 2, 3), mỗi vòng đều có ít nhất 1 phần dư tương ứng.
+
+---
+
+### 🔹 Dòng 2:
+
+```python
+freq = [item - maxround for item in freq]
+```
+
+* Sau khi đã “điền” đủ 3 vòng, ta trừ đi `maxround` khỏi mọi phần tử.
+* Lúc này `freq` chỉ còn phần **dư thừa** (những phần dư vẫn còn sau khi đã dùng hết 3 vòng).
+
+🧩 Tiếp ví dụ:
+
+```
+freq = [3, 4, 4, 3]
+maxround = 3
+=> freq = [0, 1, 1, 0]
+```
+
+Điều này có nghĩa:
+
+* Sau 3 vòng đủ cả 4 phần dư (0→3),
+* Ta còn dư thêm 1 số có phần dư 1 và 1 số có phần dư 2.
+
+---
+
+### 🎯 Tóm tắt ý nghĩa:
+
+| Biến                                        | Ý nghĩa                                                          |
+| ------------------------------------------- | ---------------------------------------------------------------- |
+| `maxround`                                  | Số vòng đầy đủ mà tất cả các phần dư đều xuất hiện ít nhất 1 lần |
+| `freq = [item - maxround for item in freq]` | Loại bỏ phần đã “dùng hết”, giữ lại phần dư thừa                 |
+
+---
+
+👉 Mục tiêu sau cùng là **xác định phần dư nhỏ nhất chưa xuất hiện** sau khi đã dùng hết `maxround` vòng, để tìm **số nguyên nhỏ nhất còn thiếu**.
+Rất hay 👏 — mình giải thích thật chi tiết dòng này nhé:
+
+---
+
+### 💡 Dòng code:
+
+```python
+freq[item % value] += 1
+```
+
+---
+
+### 🧠 Ý nghĩa từng phần:
+
+| Thành phần     | Giải thích                                                |
+| -------------- | --------------------------------------------------------- |
+| `item`         | Là một phần tử trong danh sách `nums`                     |
+| `value`        | Là giá trị chia (được cho trong đề bài)                   |
+| `item % value` | Lấy **phần dư** khi `item` chia cho `value`               |
+| `freq[...]`    | Là mảng (danh sách) đếm số lần xuất hiện của từng phần dư |
+| `+= 1`         | Tăng thêm 1 đơn vị tại vị trí tương ứng (cộng dồn)        |
+
+---
+
+### 📘 Nói dễ hiểu:
+
+Mỗi số trong `nums` khi chia cho `value` sẽ cho ra **một phần dư** trong khoảng `0 → value - 1`.
+Dòng lệnh này dùng để **đếm tần suất** của từng phần dư đó.
+
+---
+
+### 🧩 Ví dụ cụ thể:
+
+Giả sử:
+
+```python
+nums = [7, 2, 5, 9]
+value = 4
+freq = [0, 0, 0, 0]
+```
+
+Duyệt từng `item` trong `nums`:
+
+| item | item % 4 | freq sau khi cộng |
+| ---- | -------- | ----------------- |
+| 7    | 3        | [0, 0, 0, 1]      |
+| 2    | 2        | [0, 0, 1, 1]      |
+| 5    | 1        | [0, 1, 1, 1]      |
+| 9    | 1        | [0, 2, 1, 1]      |
+
+→ `freq[k]` cho biết **có bao nhiêu số trong mảng `nums` có phần dư là `k` khi chia cho 4**.
+
+---
+
+✅ **Tóm lại:**
+`freq[item % value] += 1`
+→ Đếm xem mỗi phần dư xuất hiện bao nhiêu lần trong `nums`.
+Đây là **bước thống kê quan trọng** để biết phần dư nào bị “thiếu” hoặc “dư” khi tìm **số nguyên nhỏ nhất chưa tạo được**.
+À rất hay 👍 — bạn đang hỏi **mục đích của dòng này** đúng không:
+
+```python
+freq = [item - maxround for item in freq]
+```
+
+Giờ mình giải thích **từng bước dễ hiểu**, kèm ví dụ cụ thể nhé 👇
+
+---
+
+## 🧩 1. Bối cảnh của bài toán
+
+Bài **2598 – Smallest Missing Non-negative Integer After Operations** hỏi:
+
+> Sau khi ta được phép cộng hoặc trừ `value` nhiều lần vào các phần tử trong `nums`, thì **số nguyên nhỏ nhất không thể tạo được** là bao nhiêu?
+
+---
+
+## 🧠 2. Ý tưởng chính của thuật toán
+
+### Bước 1:
+
+Mỗi số trong `nums` chia cho `value` cho ra một **phần dư** `r` (từ `0 → value - 1`).
+
+→ Nếu ta có 1 số dư `r`, ta có thể tạo ra **các số**:
+
+```
+r, r + value, r + 2*value, r + 3*value, ...
+```
+
+### Bước 2:
+
+Ta đếm tần suất xuất hiện của từng phần dư:
+
+```python
+freq[item % value] += 1
+```
+
+→ `freq[r]` là số lượng số có phần dư `r`.
+
+---
+
+## 🔹 3. Vậy `maxround = min(freq)` nghĩa là gì?
+
+`min(freq)` = số lượng **vòng (round)** đầy đủ mà tất cả các phần dư đều có ít nhất một số.
+
+Ví dụ:
+
+```
+freq = [3, 4, 4, 3]
+min(freq) = 3
+```
+
+=> Tức là có **3 vòng đầy đủ** (0, 1, 2, 3) mà mỗi phần dư xuất hiện ít nhất một lần.
+
+---
+
+## 🔹 4. Còn `freq = [item - maxround for item in freq]` để làm gì?
+
+Sau khi đã “dùng” 3 vòng đầu tiên (0→3), ta **trừ đi phần đã dùng**:
+
+```
+freq = [3, 4, 4, 3]
+maxround = 3
+=> freq = [0, 1, 1, 0]
+```
+
+→ Nghĩa là:
+
+* Phần dư `0` và `3` đã hết (đã dùng đủ 3 lần)
+* Phần dư `1` và `2` vẫn còn dư 1 lần
+
+---
+
+## 🧭 5. Mục đích thật sự
+
+Việc trừ đi `maxround` giúp ta:
+
+> Biết **sau khi đã tạo đủ các vòng đầu tiên**, phần dư nào vẫn còn số thừa, phần dư nào đã hết.
+
+Từ đó, thuật toán có thể tiếp tục tìm:
+
+* Phần dư đầu tiên **bị thiếu (freq[i] == 0)**,
+* Tính ra **số nguyên nhỏ nhất chưa tạo được** bằng công thức:
+
+  ```
+  maxround * value + index_của_phần_dư_thiếu
+  ```
+
+---
+
+## 💡 Tóm lại:
+
+| Dòng code                                   | Mục đích                                                                              |
+| ------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `maxround = min(freq)`                      | Tìm số vòng đầy đủ mà mọi phần dư đều xuất hiện ít nhất 1 lần                         |
+| `freq = [item - maxround for item in freq]` | Loại bỏ phần đã dùng hết, giữ lại phần dư thừa để kiểm tra tiếp phần dư nào còn thiếu |
+
+---
+
+👉 **Hiểu nôm na:**
+Sau khi “điền đầy” hết 3 vòng đủ 0→value-1, dòng này giúp reset `freq` để xem **vòng kế tiếp còn thừa hay thiếu phần dư nào**.
+Nhờ vậy ta biết **số nhỏ nhất tiếp theo chưa tạo được là gì**.
+Rất hay 👍 — phần này chính là **đoạn quyết định kết quả cuối cùng** của bài toán, nên mình sẽ giải thích thật kỹ và dễ hiểu từng dòng nhé 👇
+
+---
+
+## 🧩 Ngữ cảnh
+
+Sau khi bạn đã có:
+
+```python
+maxround = min(freq)
+freq = [item - maxround for item in freq]
+```
+
+→ Lúc này `freq` thể hiện **số lượng còn lại** của từng phần dư sau khi đã trừ đi các “vòng đầy đủ” (mỗi vòng gồm tất cả các phần dư từ 0 → value-1).
+
+Ví dụ:
+
+```
+value = 4
+freq = [0, 1, 1, 0]
+maxround = 3
+```
+
+Nghĩa là:
+
+* Đã tạo đủ 3 vòng đầu tiên (0,1,2,3 → 3 vòng)
+* Còn dư phần dư 1 và 2
+* Phần dư 0 và 3 đã hết
+
+---
+
+## 🧠 Phân tích từng dòng
+
+### ①
+
+```python
+if freq[0] == 0:
+    return maxround * value
+```
+
+🔹 Nếu phần dư `0` không còn xuất hiện nữa,
+→ tức là ngay sau khi hoàn thành `maxround` vòng,
+ta **không thể tạo ra số tiếp theo là `maxround * value`**.
+
+📘 Ví dụ:
+
+```
+value = 4
+freq = [0, 1, 1, 0]
+maxround = 3
+```
+
+→ Phần dư `0` hết → không thể tạo ra số `3*4 = 12`.
+
+✅ Kết quả = `12`.
+
+---
+
+### ②
+
+```python
+ind = 0
+while ind + 1 < value and freq[ind + 1] > 0:
+    ind += 1
+```
+
+🔹 Nếu `freq[0] != 0`, tức là phần dư `0` **vẫn còn**,
+ta kiểm tra **tiếp** xem các phần dư kế tiếp (`1`, `2`, `3`, …) còn hay không.
+
+Vòng `while` này **tăng `ind`** lên liên tục chừng nào:
+
+* chưa vượt quá `value`, **và**
+* phần dư kế tiếp (`freq[ind + 1]`) vẫn còn > 0.
+
+🧩 Ví dụ:
+
+```
+freq = [1, 1, 0, 0]
+```
+
+* `freq[0] != 0` → qua `if`
+* `freq[1] > 0` → ind = 1
+* `freq[2] == 0` → dừng vòng lặp
+
+→ `ind = 1`.
+
+---
+
+### ③
+
+```python
+return maxround * value + ind + 1
+```
+
+Khi vòng lặp dừng, nghĩa là:
+
+* `freq[ind]` vẫn còn > 0
+* Nhưng `freq[ind + 1] == 0`
+
+⇒ **Phần dư đầu tiên bị thiếu** là `(ind + 1)`.
+
+Công thức kết quả:
+
+```
+maxround * value + (ind + 1)
+```
+
+= “số nhỏ nhất chưa tạo được”.
+
+---
+
+## ✅ Ví dụ tổng hợp
+
+```
+nums = [1,2,3,10,11,12]
+value = 3
+```
+
+Tính ra:
+
+```
+nums % 3 = [1,2,0,1,2,0]
+freq = [2,2,2]
+min(freq) = 2 → maxround = 2
+freq = [0,0,0]
+```
+
+→ `freq[0] == 0` → return `2 * 3 = 6`
+
+=> **Số nhỏ nhất chưa tạo được là 6**
+
+---
+
+## 🧭 Tóm tắt ý nghĩa
+
+| Dòng code                                | Mục đích                                                     |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| `if freq[0] == 0:`                       | Nếu phần dư 0 đã hết, thì kết quả là `maxround * value`      |
+| `while ind+1<value and freq[ind+1] > 0:` | Tìm phần dư đầu tiên bị thiếu sau khi trừ đi `maxround` vòng |
+| `return maxround * value + ind + 1`      | Tính ra số nguyên nhỏ nhất chưa thể tạo được                 |
+
+---
+
+👉 **Hiểu nôm na:**
+
+* Mỗi “vòng” là 1 chu kỳ gồm các phần dư 0→value-1.
+* Sau khi dùng hết `maxround` vòng, ta tìm phần dư đầu tiên chưa đủ → đó chính là **vị trí của số nhỏ nhất còn thiếu** trong dãy có thể tạo ra.
+Rất hay 👏 — đây là dòng **cốt lõi** của thuật toán, mình sẽ giải thích thật chậm và dễ hiểu nhé 👇
+
+---
+
+## 🧩 Dòng code:
+
+```python
+return maxround * value
+```
+
+---
+
+## 💡 Trước hết, nhắc lại ý nghĩa của các biến:
+
+| Biến       | Ý nghĩa                                                                       |
+| ---------- | ----------------------------------------------------------------------------- |
+| `value`    | Số chia mà ta được phép cộng hoặc trừ vào mỗi phần tử trong `nums`            |
+| `maxround` | Số **vòng đầy đủ** mà mọi phần dư (0 → value−1) đều xuất hiện ít nhất một lần |
+
+---
+
+## 🔹 1️⃣ Hiểu “vòng đầy đủ” là gì?
+
+Mỗi vòng gồm đủ các phần dư từ `0 → value-1`.
+
+Ví dụ:
+
+```
+value = 3
+```
+
+thì các số trong một vòng đầy đủ là:
+
+```
+0, 1, 2
+```
+
+Sau đó vòng tiếp theo là:
+
+```
+3, 4, 5
+```
+
+v.v...
+
+---
+
+## 🔹 2️⃣ `maxround` là số vòng bạn đã “điền đủ”
+
+Nếu `maxround = 2`, điều đó có nghĩa:
+
+* Ta có thể tạo được đủ **hai vòng đầu tiên**:
+
+```
+vòng 0: 0, 1, 2
+vòng 1: 3, 4, 5
+```
+
+Tức là ta có thể tạo ra tất cả các số từ `0 → (2*value - 1)`.
+
+---
+
+## 🔹 3️⃣ Khi `freq[0] == 0`
+
+Dòng `if freq[0] == 0:` kiểm tra xem **phần dư 0 còn không**.
+
+* Nếu **phần dư 0 đã hết**, tức là ta **không thể bắt đầu vòng kế tiếp** nữa.
+* Vòng kế tiếp bắt đầu bằng `maxround * value`.
+
+Ví dụ:
+
+```
+value = 4
+maxround = 3
+```
+
+→ Ba vòng đầy đủ bạn đã có:
+
+```
+0–3, 4–7, 8–11
+```
+
+→ Vòng kế tiếp sẽ bắt đầu từ **12 = 3 * 4**
+
+Nếu phần dư `0` đã hết → bạn không thể tạo ra `12`.
+
+---
+
+## ✅ Vậy nên:
+
+```python
+return maxround * value
+```
+
+trả về **số nhỏ nhất không thể tạo được**, vì:
+
+* Tất cả các số từ `0` đến `maxround * value - 1` đều có thể tạo,
+* Nhưng `maxround * value` là **số đầu tiên bị thiếu** (phần dư 0 không còn để tạo nó).
+
+---
+
+## 🎯 Tóm lại
+
+| Biến               | Ý nghĩa                                                                                         |
+| ------------------ | ----------------------------------------------------------------------------------------------- |
+| `maxround`         | Số vòng đầy đủ bạn có thể tạo (mỗi vòng có đủ các phần dư)                                      |
+| `maxround * value` | Số đầu tiên của vòng kế tiếp — chính là **số nhỏ nhất không thể tạo ra** khi phần dư `0` đã hết |
+
+---
+
+🧩 **Ví dụ nhỏ:**
+
+```
+nums = [0, 1, 2, 3, 4, 5]
+value = 3
+→ freq = [2, 2, 2]
+→ maxround = min(freq) = 2
+→ freq = [0, 0, 0]
+→ freq[0] == 0 → return 2 * 3 = 6
+```
+
+👉 Kết quả = **6**, vì ta tạo được 0–5,
+nhưng **không thể tạo được 6** nữa.
+Tốt — mình giải thích kỹ từng phần của vòng lặp này và ý nghĩa logic phía sau, kèm ví dụ để bạn nắm rõ nhé.
+
+### Đoạn mã cần giải thích
+
+```python
+ind = 0
+while ind + 1 < value and freq[ind + 1] > 0:
+    ind += 1
+```
+
+---
+
+### Mục đích chung
+
+Vòng lặp này **tìm phần dư nhỏ nhất (từ 1 tới value-1) còn *không bị thiếu*** sau khi đã trừ đi `maxround` vòng đầy đủ.
+Khi vòng dừng, `ind + 1` chính là **phần dư đầu tiên bị thiếu** (tức `freq[ind+1] == 0`), và kết quả trả về sẽ dùng `ind + 1`.
+
+---
+
+### Giải thích điều kiện `while`
+
+* `ind + 1 < value`
+  → đảm bảo ta không truy cập vượt chỉ số mảng `freq` (phần dư lớn nhất là `value-1`).
+* `freq[ind + 1] > 0`
+  → kiểm tra phần dư kế tiếp (bắt đầu từ 1) còn số dư thừa hay không.
+  Nếu > 0 nghĩa là phần dư đó còn ít nhất một số để tạo, ta có thể tiếp tục sang phần dư tiếp theo.
+
+Nếu cả hai đúng thì `ind += 1` — tức tiến tới kiểm tra phần dư kế tiếp.
+
+---
+
+### Tại sao dùng `ind + 1` thay vì `ind`?
+
+Trước vòng lặp ta khởi `ind = 0`. Ta đã xử lý trường hợp `freq[0] == 0` trước đó (nếu vậy trả về). Khi `freq[0] > 0`, ta muốn **kiểm tra lần lượt phần dư 1, 2, 3, ...** để tìm phần dư đầu tiên bị thiếu.
+Do đó điều kiện dùng `ind + 1` để kiểm tra phần dư kế tiếp, và `ind` sẽ dừng ở phần dư **cuối cùng còn (cùng một chuỗi liên tiếp từ 0)**. Phần dư bị thiếu chính là `ind + 1`.
+
+---
+
+### Ví dụ minh hoạ
+
+Ví dụ 1:
+
+```
+value = 5
+freq = [1, 1, 0, 2, 0]   # sau khi trừ maxround
+```
+
+* Trước đó đã kiểm tra `freq[0] != 0`, nên vào vòng while:
+
+  * ind=0: check freq[1] > 0 → True → ind=1
+  * ind=1: check freq[2] > 0 → False → dừng
+    => ind = 1 → phần dư đầu tiên thiếu là `ind+1 = 2`.
+
+Ví dụ 2 (liên tiếp hết):
+
+```
+value = 4
+freq = [1,1,1,1]
+```
+
+* ind=0: freq[1]>0 → ind=1
+* ind=1: freq[2]>0 → ind=2
+* ind=2: freq[3]>0 → ind=3
+* now ind+1 = 4 not < value -> dừng (ran to end)
+  => ind = 3 -> ind+1 would be 4 (beyond), nhưng thực tế nếu mọi phần dư >0 thì bạn sẽ không hit the earlier `freq[0]==0` and will return maxround*value + ind+1 which equals next number after complete cycles — this case usually means all freq>0 so minimal missing is maxround*value + value (but code logic earlier ensures this situation handled by math; in practice min(freq)=maxround ensures at least something).
+
+(Implementation note: loop stops either because next freq==0 or because reached end limit `ind+1==value`.)
+
+---
+
+### Tóm tắt ngắn gọn
+
+* Vòng `while` duyệt các phần dư tăng dần bắt đầu từ `1`.
+* Nó tiến (`ind += 1`) miễn là phần dư kế tiếp còn > 0.
+* Khi dừng, `ind + 1` là **phần dư đầu tiên bị thiếu** — dùng để tính số nhỏ nhất không thể tạo: `maxround * value + (ind + 1)`.
+
+Bạn muốn mình minh họa thêm bằng một ví dụ cụ thể (ghi rõ các bước `maxround`, `freq` trước/sau trừ, và cách vòng while chạy) không?
+Rất hay — đoạn này là phần **xử lý phần dư còn lại** sau khi đã chia tròn được nhiều “vòng đầy đủ” (full rounds).
+Giải thích chi tiết:
+
+---
+
+### **Bối cảnh**
+
+Ở trên ta đã có:
+
+```python
+maxround = min(freq)
+freq = [item - maxround for item in freq]
+```
+
+→ tức là ta đã **lấy đi được `maxround` vòng tròn đầy đủ**, mỗi vòng có `value` phần tử.
+Bây giờ ta muốn biết **vòng tiếp theo còn được bao nhiêu phần tử nữa** (chưa đủ một vòng).
+
+---
+
+### **Dòng code**
+
+```python
+while ind + 1 < value and freq[ind + 1] > 0:
+    ind += 1
+```
+
+#### 🧠 Giải thích ý nghĩa:
+
+* `freq` là danh sách đếm số lượng phần tử theo phần dư (`item % value`).
+* Sau khi trừ `maxround`, một vài vị trí trong `freq` vẫn còn > 0, nghĩa là vẫn còn phần tử chưa tạo thành vòng đầy đủ.
+* `ind` ban đầu = 0.
+  Vòng `while` này sẽ **di chuyển chỉ số `ind` đến phần dư cao nhất mà vẫn còn phần tử**.
+
+Ví dụ:
+
+```
+value = 4
+freq = [0, 2, 1, 0]
+```
+
+→ `freq[0] = 0` (không còn phần tử dư 0)
+→ `freq[1] > 0` và `freq[2] > 0`
+Vòng lặp sẽ dừng ở `ind = 2`
+→ nghĩa là ta có thể “thêm” được thêm 2 phần tử trong vòng kế tiếp (không trọn vẹn).
+
+---
+
+### **Kết hợp với dòng return:**
+
+```python
+return maxround * value + ind + 1
+```
+
+→ `maxround * value`: tổng phần tử trong các vòng đầy đủ
+→ `ind + 1`: số phần tử thêm được trong vòng chưa đầy (vì `ind` bắt đầu từ 0 nên cộng thêm 1)
+
+---
+
+✅ **Tóm lại:**
+Đoạn `while` này **tìm xem vòng tiếp theo có thể thêm được bao nhiêu phần tử nữa sau khi đã chia đủ các vòng đầy đủ.**
+Giúp tính ra **tổng số phần tử tối đa có thể xếp được** theo quy luật của bài toán.
+Ok, mình nói chậm và dễ hiểu hơn nhé 👇
+
+---
+
+Giả sử ta có dãy số, và muốn **chia chúng thành nhiều nhóm** sao cho **mỗi nhóm có `value` phần tử liên tiếp nhau khi lấy phần dư (`% value`)**.
+
+Sau khi đếm tần suất `freq`, ta biết mỗi phần dư (0, 1, 2, …, `value-1`) có bao nhiêu số.
+
+---
+
+### Bước 1: `maxround = min(freq)`
+
+👉 Đây là số **vòng đầy đủ** mà ta có thể chia được.
+Vì nếu phần dư nào đó ít nhất có `min(freq)` phần tử, thì ta có thể lấy được từng phần tử từ mỗi phần dư một lần — tạo thành một “vòng tròn đầy đủ”.
+
+---
+
+### Bước 2: `freq = [item - maxround for item in freq]`
+
+👉 Sau khi đã tạo được `maxround` vòng đầy đủ, ta trừ đi số phần tử đó.
+Còn lại trong `freq` là **những phần dư chưa đủ để tạo thêm một vòng tròn đầy đủ**.
+
+---
+
+### Bước 3: kiểm tra phần dư còn lại
+
+```python
+ind = 0
+while ind + 1 < value and freq[ind + 1] > 0:
+    ind += 1
+```
+
+👉 Mục đích: tìm xem ta còn bao nhiêu **phần dư liên tiếp (bắt đầu từ 0)** vẫn còn số.
+
+* Nếu `freq[1] > 0` thì ta có thêm phần dư 1
+* Nếu `freq[2] > 0` nữa thì ta có thêm phần dư 2
+* Và cứ thế… cho đến khi gặp một phần dư bị hết (`freq[i] == 0`) thì dừng.
+
+`ind` cuối cùng sẽ là **phần dư cao nhất mà ta còn phần tử**.
+
+---
+
+### Bước 4: `return maxround * value + ind + 1`
+
+👉 Giờ ta tính tổng số phần tử tối đa có thể chia:
+
+* `maxround * value`: số phần tử thuộc **các vòng đầy đủ**
+* `ind + 1`: là số phần tử thuộc **vòng kế tiếp chưa đầy**, vì `ind` bắt đầu từ 0 nên cộng thêm 1.
+
+---
+
+#### Ví dụ:
+
+```
+value = 4
+freq ban đầu = [3, 3, 2, 1]
+=> maxround = min(freq) = 1
+Sau khi trừ: freq = [2, 2, 1, 0]
+
+ind chạy như sau:
+- freq[1] > 0 → ind = 1
+- freq[2] > 0 → ind = 2
+- freq[3] = 0 → dừng
+
+Vậy ind = 2
+```
+
+Kết quả:
+
+```
+return 1 * 4 + 2 + 1 = 7
+```
+
+👉 Nghĩa là:
+
+* 1 vòng đầy đủ (4 phần tử)
+* * 3 phần tử từ vòng kế tiếp
+    = **tổng 7 phần tử** có thể lấy được.
+
+---
+
+Bạn có muốn mình minh họa bằng một **ví dụ Python in ra từng bước** để dễ hiểu hơn không?

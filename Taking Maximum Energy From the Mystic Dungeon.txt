@@ -1,0 +1,514 @@
+Taking Maximum Energy From the Mystic Dungeon
+class Solution {
+    public int maximumEnergy(int[] energy, int k) {
+        int n = energy.length, m = n-k, max = -1000;
+        for (int i = m; i < n; i++) {
+            for (int j = i, tmp = 0; j > -1; j -= k) {
+                tmp += energy[j];
+                if (max < tmp) {
+                    max = tmp;
+                }
+            }
+        }
+        
+        return max;
+    }
+}
+Rất hay 👏 câu hỏi rất đúng chỗ — mình giải thích kỹ 2 chỗ này nhé:
+`m = n - k` và `max = -1000` trong code Java của bạn 👇
+
+---
+
+### 🧩 1️⃣ `m = n - k` — **Tại sao phải là n - k**
+
+👉 Đây là **vị trí bắt đầu đầu tiên** mà ta cần xét khi duyệt ngược.
+
+Cụ thể:
+
+* Bạn có thể **bắt đầu ở bất kỳ phòng nào**,
+  nhưng vòng lặp trong của bạn chạy kiểu:
+
+  ```java
+  for (int j = i; j > -1; j -= k)
+  ```
+
+  tức là **đi lùi từng bước k**.
+* Nếu bạn bắt đầu quá sớm (ví dụ `i < n - k`),
+  thì ở bước đầu tiên `j -= k` sẽ **nhảy ra ngoài mảng** (âm).
+
+👉 Vì vậy, chỉ các vị trí **từ `n - k` → `n - 1`**
+mới là **những điểm xuất phát “đầy đủ” nhất**,
+đảm bảo bạn **lùi được ít nhất 1 lần**, hoặc **đang ở cuối mảng**.
+
+#### 🧮 Ví dụ:
+
+```
+energy = [5, 2, -10, -5, 1]
+n = 5, k = 3 → m = 2
+```
+
+* i = 2 → đi lùi: 2 → (-1) ✅ hợp lệ
+* i = 3 → đi lùi: 3 → 0 ✅ hợp lệ
+* i = 4 → đi lùi: 4 → 1 ✅ hợp lệ
+  → Vì vậy chỉ cần xét i từ 2 → 4.
+
+Nếu bạn bắt đầu từ i = 1 → j = 1 → (-2) ❌
+→ Sẽ vượt ngoài mảng.
+
+---
+
+### 🧩 2️⃣ `max = -1000` — **Tại sao khởi tạo như vậy**
+
+* Biến `max` dùng để lưu **năng lượng lớn nhất tìm được**.
+* Ta cần khởi tạo nó bằng **một giá trị nhỏ hơn mọi khả năng trong bài**.
+  → Ở đây, đề bài gốc (LeetCode 3147) có ràng buộc:
+
+  ```
+  -1000 <= energy[i] <= 1000
+  ```
+
+  nên việc khởi tạo `max = -1000` là **an toàn**.
+
+➡️ Nếu bạn khởi tạo `max = 0`,
+thì khi tất cả giá trị năng lượng đều **âm**, kết quả sẽ sai.
+Ví dụ:
+
+```
+energy = [-5, -2, -8], k = 1
+```
+
+→ Tổng tốt nhất = -2
+nhưng nếu `max = 0` → sai.
+
+Vì vậy:
+
+```java
+int max = -1000;
+```
+
+đảm bảo đúng trong mọi trường hợp.
+
+---
+
+### ✅ **Tóm tắt:**
+
+| Biến          | Ý nghĩa                                  | Lý do                                                   |
+| ------------- | ---------------------------------------- | ------------------------------------------------------- |
+| `m = n - k`   | Bắt đầu duyệt từ vị trí hợp lệ cuối cùng | Vì chỉ các vị trí đó mới có thể đi ngược theo bước `k`  |
+| `max = -1000` | Giá trị khởi đầu nhỏ nhất có thể         | Đảm bảo kết quả đúng kể cả khi tất cả năng lượng đều âm |
+
+---
+
+Bạn có muốn mình chỉ luôn **phiên bản khởi tạo an toàn hơn** (dùng `Integer.MIN_VALUE` thay vì `-1000`) không?
+Ok 👍 mình giải thích lại **rõ ràng – dễ hiểu – trực quan** cho dòng
+
+```java
+int m = n - k;
+```
+
+trong code nhé 👇
+
+---
+
+### 🎯 Mục tiêu của thuật toán
+
+Ta muốn tính **tổng năng lượng lớn nhất** có thể nhận được,
+khi ta **nhảy lùi** mỗi lần **k bước** trong mảng `energy`.
+
+Vòng lặp ngoài:
+
+```java
+for (int i = m; i < n; i++)
+```
+
+→ nghĩa là: ta **chọn vị trí bắt đầu i** để bắt đầu đi lùi.
+
+---
+
+### 🧩 Vậy tại sao lại là `m = n - k`?
+
+Giả sử mảng có `n` phần tử (chỉ số từ `0 → n - 1`),
+và mỗi lần bạn **nhảy lùi k bước**, tức là:
+
+```
+j = i, rồi j -= k mỗi lần
+```
+
+Nếu ta bắt đầu từ **một chỉ số quá nhỏ**, ví dụ `i < n - k`,
+thì sẽ **bị trùng hoặc lặp lại** với những đường đi đã tính từ trước.
+
+👉 **Ta chỉ cần bắt đầu từ phần “cuối” mảng**,
+vì mọi vị trí phía trước sẽ được “bao phủ” khi nhảy lùi từ đó.
+
+---
+
+### 🔢 Ví dụ minh họa:
+
+```
+energy = [5, 2, -10, -5, 1]
+n = 5, k = 3
+→ m = n - k = 5 - 3 = 2
+```
+
+Ta sẽ xét `i = 2, 3, 4`
+
+| i | các phòng đi qua (j -= k) |
+| - | ------------------------- |
+| 2 | 2                         |
+| 3 | 3 → 0                     |
+| 4 | 4 → 1                     |
+
+💡 Bạn thấy không?
+
+* i = 3 và i = 4 đã bao gồm phòng 0 và 1.
+* i = 2 đã bao gồm phòng 2.
+  → Không cần xét i = 0 hay i = 1 nữa, vì các bước đó **đã được xét khi nhảy lùi** từ cuối lên rồi.
+
+---
+
+### ✅ Nói ngắn gọn:
+
+* `m = n - k` là **vị trí bắt đầu đầu tiên ở “cuối” mảng**,
+* Từ đó, ta duyệt đến `n - 1` để đảm bảo **mọi đường nhảy hợp lệ** đều được tính **một lần duy nhất**.
+
+---
+
+Nếu bạn muốn, mình có thể vẽ **sơ đồ minh họa các đường nhảy theo bước k** (mỗi mũi tên biểu thị `-k`) để bạn nhìn trực quan hơn — bạn muốn không?
+Rất hay 👏 — bây giờ ta nói **bản chất toán học** của công thức
+👉 `m = n - k`
+
+---
+
+### 🧩 Bối cảnh bài toán
+
+Ta có mảng `energy[0 … n-1]`.
+
+Ta sẽ “nhảy lùi” với bước nhảy `k`, nghĩa là:
+
+```
+i → i - k → i - 2k → i - 3k → …
+```
+
+miễn là chỉ số còn ≥ 0.
+
+Ta muốn chọn **vị trí bắt đầu i** sao cho thu được **tổng năng lượng lớn nhất**.
+
+---
+
+### 🧠 Phân tích chỉ số (theo toán học)
+
+Nếu bạn xét tất cả các dãy chỉ số theo bước `k`,
+chúng ta sẽ có **k nhóm riêng biệt**:
+
+[
+\begin{cases}
+0, k, 2k, 3k, \dots \
+1, k+1, 2k+1, 3k+1, \dots \
+2, k+2, 2k+2, 3k+2, \dots \
+\vdots \
+k-1, 2k-1, 3k-1, \dots
+\end{cases}
+]
+
+Mỗi nhóm này chứa **các vị trí có cùng phần dư khi chia cho k**.
+
+---
+
+### 🎯 Ta chỉ cần xét điểm **cuối cùng** trong mỗi nhóm
+
+Bởi vì:
+nếu ta đi lùi (j -= k), ta sẽ luôn đi từ **cuối nhóm → đầu nhóm**.
+
+Mỗi nhóm có phần tử cuối cùng có chỉ số:
+[
+i = (n - 1), (n - 2), ..., (n - k)
+]
+
+Như vậy, **các vị trí bắt đầu hợp lệ** chính là:
+[
+i \in [n - k, n - 1]
+]
+
+---
+
+### ✅ Vậy nên:
+
+[
+m = n - k
+]
+là **chỉ số nhỏ nhất trong nhóm cuối cùng**,
+và ta duyệt `i` từ `m` đến `n-1` để xét **mọi phần dư mod k**.
+
+---
+
+### 🔢 Ví dụ:
+
+Giả sử `n = 8`, `k = 3`
+
+Ta có các nhóm chỉ số (mod 3):
+
+| Nhóm    | Chỉ số (index) |
+| ------- | -------------- |
+| 0 mod 3 | 0, 3, 6        |
+| 1 mod 3 | 1, 4, 7        |
+| 2 mod 3 | 2, 5           |
+
+→ Phần tử cuối của từng nhóm: 6, 7, 5
+→ nhỏ nhất trong các phần tử cuối = **n - k = 8 - 3 = 5**
+
+Nên ta xét `i = 5, 6, 7`
+→ bao gồm tất cả phần dư mod 3 (0, 1, 2).
+→ đảm bảo **đủ 3 nhóm**, không trùng, không thiếu.
+
+---
+
+### 💡 Kết luận toán học
+
+Công thức:
+[
+m = n - k
+]
+xuất phát từ **nguyên lý chia chỉ số thành k nhóm theo modulo k**,
+và việc **chọn phần tử cuối cùng của mỗi nhóm** để bắt đầu xét.
+
+---
+
+👉 Tóm lại:
+
+| Ý nghĩa  | Giải thích toán học                                     |
+| -------- | ------------------------------------------------------- |
+| `n - k`  | là chỉ số nhỏ nhất trong k phần tử cuối của mảng        |
+| Lý do    | vì ta có k nhóm chỉ số tương ứng với k phần dư mod k    |
+| Tác dụng | đảm bảo duyệt mỗi nhóm chỉ 1 lần khi đi lùi theo bước k |
+
+---
+
+Bạn có muốn mình vẽ **biểu đồ số học modulo k** (kiểu như sơ đồ nhóm chỉ số theo mod) để nhìn trực quan hơn không?
+Rất hay 👏 — ta sẽ **giải thích chi tiết từng dòng** của đoạn code này.
+Đây là phần **cốt lõi** của thuật toán, nên hiểu rõ rất quan trọng nhé.
+
+---
+
+### 🔍 Code:
+
+```java
+for (int i = m; i < n; i++) {
+    for (int j = i, tmp = 0; j > -1; j -= k) {
+        tmp += energy[j];
+        if (max < tmp) {
+            max = tmp;
+        }
+    }
+}
+```
+
+---
+
+### 💡 Giải thích từng bước:
+
+#### 1️⃣ `for (int i = m; i < n; i++)`
+
+👉 Đây là **vòng lặp ngoài**.
+
+* `m = n - k`
+* Nên `i` chạy qua **k phần tử cuối cùng** của mảng `energy`.
+
+→ Như đã giải thích trước, mỗi `i` đại diện cho **một nhóm phần tử có cùng phần dư mod k**.
+
+Ví dụ:
+Nếu `n = 8`, `k = 3`, thì `m = 5`.
+→ `i` chạy từ 5 đến 7, tương ứng với nhóm mod 2, mod 0, mod 1.
+
+---
+
+#### 2️⃣ `for (int j = i, tmp = 0; j > -1; j -= k)`
+
+👉 Đây là **vòng lặp trong**.
+
+* Bắt đầu tại vị trí `i`.
+* Cộng ngược về phía trước, **mỗi lần lùi `k` bước** (`j -= k`).
+* `tmp` là biến tạm để **tính tổng năng lượng** của đường đi.
+
+💭 Hiểu đơn giản:
+Từ điểm `i`, bạn “đi ngược” về các vị trí cách `k`, `2k`, `3k`, …
+và cộng tất cả giá trị `energy[j]` trên đường đi.
+
+---
+
+#### 3️⃣ `tmp += energy[j];`
+
+👉 Cộng năng lượng tại vị trí `j` vào tổng tạm `tmp`.
+
+---
+
+#### 4️⃣ `if (max < tmp) { max = tmp; }`
+
+👉 Cập nhật **năng lượng tối đa** nếu đường đi hiện tại lớn hơn `max`.
+
+* `max` giữ tổng năng lượng lớn nhất tìm được đến thời điểm hiện tại.
+* So sánh và cập nhật sau mỗi bước đi ngược.
+
+---
+
+### 🧠 Ví dụ minh họa
+
+Giả sử:
+
+```
+energy = [2, -3, 5, -1, 2, 4]
+k = 2
+```
+
+👉 Khi đó:
+
+* `n = 6`
+* `m = 6 - 2 = 4`
+  → `i` chạy từ `4` đến `5`.
+
+---
+
+🔹 **Bước 1:** `i = 4`
+
+```
+j = 4 → tmp = 2
+j = 2 → tmp = 2 + 5 = 7
+j = 0 → tmp = 7 + 2 = 9
+```
+
+→ max = 9
+
+---
+
+🔹 **Bước 2:** `i = 5`
+
+```
+j = 5 → tmp = 4
+j = 3 → tmp = 4 + (-1) = 3
+j = 1 → tmp = 3 + (-3) = 0
+```
+
+→ max = max(9, 4, 3, 0) = 9
+
+✅ Kết quả cuối cùng: `max = 9`
+
+---
+
+### 🔁 Tóm tắt ý nghĩa logic
+
+| Biến  | Vai trò                                        |
+| ----- | ---------------------------------------------- |
+| `i`   | Vị trí bắt đầu của từng nhóm (mod k)           |
+| `j`   | Đi lùi từng bước `k` trong nhóm đó             |
+| `tmp` | Tổng năng lượng tạm tại đường đi hiện tại      |
+| `max` | Tổng năng lượng lớn nhất trong tất cả đường đi |
+
+---
+
+### 📊 Hình ảnh tư duy
+
+```
+energy = [2, -3, 5, -1, 2, 4]
+index   =  0   1   2   3   4   5
+k = 2
+Groups by mod 2:
+  0 mod 2 → [0, 2, 4]
+  1 mod 2 → [1, 3, 5]
+We start from 4 and 5 (the last elements of each group)
+and go backward by step of k=2.
+```
+
+---
+
+👉 Kết luận:
+
+* Vòng lặp **ngoài** chọn nhóm (theo mod k).
+* Vòng lặp **trong** đi lùi trong nhóm, cộng năng lượng, cập nhật max.
+* `max` giữ tổng năng lượng lớn nhất có thể đạt được.
+
+---
+
+Bạn có muốn mình chuyển đoạn này thành **một phiên bản Java có chú thích từng dòng đầy đủ** không (rõ ràng, dễ học thuộc)?
+Rất hay — câu hỏi này cho thấy bạn thật sự hiểu sâu 🔥
+
+Giờ ta nhìn lại đoạn code nhé 👇
+
+```java
+for (int j = i, tmp = 0; j > -1; j -= k) {
+    tmp += energy[j];
+    if (max < tmp) {
+        max = tmp;
+    }
+}
+```
+
+---
+
+Giả sử trong ví dụ:
+
+```java
+energy = [2, -3, 5, -1, 2, 4];
+k = 2;
+n = 6;
+m = n - k = 4;
+```
+
+Khi **vòng ngoài** chạy đến `i = 4`
+→ vòng trong bắt đầu:
+
+```java
+j = 4, tmp = 0
+```
+
+Bây giờ đi từng bước:
+
+---
+
+### 🔹 Bước 1:
+
+```java
+tmp += energy[j];  // energy[4] = 2
+```
+
+👉 `tmp = 0 + 2 = 2`
+
+---
+
+### 🔹 Bước 2:
+
+Giảm `j` đi `k = 2`
+
+```
+j = 4 - 2 = 2
+tmp += energy[2] = 5
+=> tmp = 2 + 5 = 7
+```
+
+---
+
+### 🔹 Bước 3:
+
+Tiếp tục lùi
+
+```
+j = 2 - 2 = 0
+tmp += energy[0] = 2
+=> tmp = 7 + 2 = 9
+```
+
+---
+
+✅ Vậy ở bước đầu tiên (`j = 4`) → `tmp = 2`
+vì ban đầu `tmp = 0`, rồi ta cộng `energy[4] = 2`.
+Nó chỉ là **giá trị năng lượng tại vị trí 4** được cộng vào biến tổng `tmp`.
+
+---
+
+Tóm lại:
+
+| Bước | j | energy[j] | tmp (tổng tạm thời) |
+| ---- | - | --------- | ------------------- |
+| 1    | 4 | 2         | 2                   |
+| 2    | 2 | 5         | 7                   |
+| 3    | 0 | 2         | 9                   |
+
+→ đó là lý do tại sao **`tmp = 2`** khi `j = 4`.

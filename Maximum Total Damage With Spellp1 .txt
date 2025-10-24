@@ -1,0 +1,508 @@
+Maximum Total Damage With Spell 
+class Solution:
+    def maximumTotalDamage(self, power: List[int]) -> int:
+         # Đếm số lần xuất hiện của mỗi loại phép (vì có thể có nhiều phép cùng power)
+        counts = Counter(power)
+
+        # Lấy danh sách các giá trị power duy nhất, sắp xếp tăng dần,
+        # và thêm 3 phần tử 0 ở đầu để tránh lỗi truy cập chỉ số âm trong DP
+        keys = [0, 0, 0] + sorted(list(counts.keys()))
+        n = len(keys)
+
+        # dp[i] = tổng sát thương tối đa có thể đạt được xét đến phép có giá trị keys[i]
+        dp = [0] * n
+
+        for i in range(3, n):
+            curr = counts[keys[i]] * keys[i]
+            if keys[i] - keys[i-1] > 2:
+                dp[i] = dp[i-1] + curr
+            elif keys[i] - keys[i-2] > 2:
+                dp[i] = max(dp[i-1], dp[i-2] + curr)
+            else:
+                dp[i] = max(dp[i-1], dp[i-3] + curr)
+
+        return dp[-1]
+
+
+Tốt lắm 👍 đoạn này chính là **trái tim của thuật toán Dynamic Programming** trong bài 3186.
+Giờ mình sẽ giải thích **từng dòng** cực rõ ràng, kèm **ý nghĩa toán học** để bạn hiểu tại sao công thức này đúng nhé 👇
+
+---
+
+### ✅ Bối cảnh:
+
+Giả sử bạn có:
+
+```python
+keys = [0, 0, 0, 1, 3, 6, 8]
+counts = {1: 1, 3: 2, 6: 1, 8: 1}
+```
+
+Tức là:
+
+* Có 1 phép có power = 1
+* Có 2 phép có power = 3
+* Có 1 phép có power = 6
+* Có 1 phép có power = 8
+
+Mục tiêu:
+
+> Chọn tập hợp các phép sao cho **không chọn hai phép cách nhau ≤ 2**,
+> và **tổng sát thương** là lớn nhất.
+
+---
+
+## 🔍 Phân tích từng dòng
+
+### 🔹 Dòng 1:
+
+```python
+curr = counts[keys[i]] * keys[i]
+```
+
+👉 Đây là **tổng sát thương** nếu ta **chọn tất cả các phép** có sức mạnh `keys[i]`.
+
+**Ví dụ:**
+Nếu có 2 phép có power = 3 → `curr = 2 * 3 = 6`.
+
+---
+
+### 🔹 Dòng 2:
+
+```python
+if keys[i] - keys[i-1] > 2:
+    dp[i] = dp[i-1] + curr
+```
+
+👉 Trường hợp **khoảng cách > 2** giữa `keys[i]` và `keys[i-1]`.
+
+→ Nghĩa là phép hiện tại **không xung đột** với phép liền trước.
+→ Ta có thể **chọn luôn** phép này và cộng dồn kết quả trước đó.
+
+**Ví dụ:**
+Nếu `keys[i] = 6`, `keys[i-1] = 3`, thì `6 - 3 = 3 > 2` → không xung đột.
+=> `dp[i] = dp[i-1] + curr`.
+
+---
+
+### 🔹 Dòng 3:
+
+```python
+elif keys[i] - keys[i-2] > 2:
+    dp[i] = max(dp[i-1], dp[i-2] + curr)
+```
+
+👉 Trường hợp này xảy ra khi:
+
+* `keys[i]` và `keys[i-1]` **quá gần nhau** (≤ 2)
+* Nhưng `keys[i]` và `keys[i-2]` **đủ xa** (> 2)
+
+Khi đó ta có hai lựa chọn:
+
+1. **Không chọn** `keys[i]` → giữ nguyên `dp[i-1]`
+2. **Chọn** `keys[i]` → phải **bỏ qua** `keys[i-1]`, nên cộng với `dp[i-2]`
+
+=> Lấy **giá trị lớn hơn** giữa hai cách.
+
+**Ví dụ:**
+Nếu `keys = [1, 2, 5]` →
+`2 - 1 ≤ 2`, `5 - 2 = 3 > 2`
+→ `dp[i] = max(dp[i-1], dp[i-2] + curr)`
+
+---
+
+### 🔹 Dòng 4:
+
+```python
+else:
+    dp[i] = max(dp[i-1], dp[i-3] + curr)
+```
+
+👉 Đây là trường hợp tệ nhất:
+
+* `keys[i]` **gần cả hai phần tử trước** (`keys[i-1]` và `keys[i-2]`).
+
+Khi đó, để tránh xung đột, ta phải **lùi xa hơn**, tức là chỉ cộng thêm `dp[i-3]`.
+
+Nghĩa là:
+
+> Nếu chọn `keys[i]`, phải bỏ qua 2 giá trị liền trước (vì đều ≤ 2 đơn vị).
+> Còn nếu không chọn, thì giữ `dp[i-1]`.
+
+---
+
+### 🔹 Dòng 5:
+
+```python
+return dp[-1]
+```
+
+Sau khi duyệt hết, `dp[-1]` chính là **tổng sát thương tối đa** có thể đạt được.
+
+---
+
+## 🧩 Ví dụ minh họa nhỏ
+
+Giả sử:
+
+```python
+power = [1, 2, 3, 6]
+```
+
+Khi đó:
+
+```
+counts = {1:1, 2:1, 3:1, 6:1}
+keys = [0,0,0,1,2,3,6]
+```
+
+|  i | keys[i] | curr |                 dp[i] |   Giải thích |
+| -: | ------: | ---: | --------------------: | -----------: |
+|  3 |       1 |    1 |                     1 | Chọn power=1 |
+|  4 |       2 |    2 | max(dp[3], dp[1]+2)=2 |    Gần với 1 |
+|  5 |       3 |    3 | max(dp[4], dp[2]+3)=3 |    Gần với 2 |
+|  6 |       6 |    6 |             dp[5]+6=9 | Xa (6−3=3>2) |
+
+✅ Kết quả cuối cùng: **9**
+
+---
+
+## 🧠 Tóm lại:
+
+| Công thức                              | Ý nghĩa                                         |
+| -------------------------------------- | ----------------------------------------------- |
+| `dp[i] = dp[i-1] + curr`               | Nếu phép hiện tại không xung đột với phép trước |
+| `dp[i] = max(dp[i-1], dp[i-2] + curr)` | Nếu xung đột với 1 phép trước                   |
+| `dp[i] = max(dp[i-1], dp[i-3] + curr)` | Nếu xung đột với 2 phép trước                   |
+
+---
+
+Bạn có muốn mình vẽ **sơ đồ quan hệ dp[i] ↔ keys[i]** bằng mũi tên để thấy rõ cách các bước “nhảy qua nhau” không? Nhìn hình là nắm được công thức ngay luôn.
+Câu hỏi này rất hay 👍 — và là **chìa khóa để hiểu kết thúc của quy hoạch động (DP)**.
+Giờ tui giải thích thật rõ và dễ hiểu cho bạn nhé 👇
+
+---
+
+## 🧠 Nhắc lại bối cảnh
+
+Bạn có:
+
+```python
+dp[i] = tổng sát thương tối đa có thể đạt được **xét đến phép có power = keys[i]**
+```
+
+Và bạn đã duyệt hết tất cả các giá trị `keys` (tức là tất cả phép có thể chọn).
+
+---
+
+## 🎯 Vậy `dp[-1]` nghĩa là gì?
+
+Trong Python:
+
+* `dp[-1]` = **phần tử cuối cùng của mảng dp**
+  (tức là `dp[n-1]` nếu n là độ dài của dp)
+
+Vì bạn duyệt từ trái sang phải, nên:
+
+* `dp[0]` → chỉ tính đến phần tử đầu tiên
+* `dp[1]` → tính đến phần tử thứ hai
+* ...
+* `dp[-1]` → **tính đến phần tử cuối cùng**
+
+=> `dp[-1]` chính là **kết quả cuối cùng**, tức **tổng sát thương tối đa khi xét toàn bộ các phép**.
+
+---
+
+## 📘 Ví dụ minh họa
+
+Giả sử bạn có:
+
+```python
+power = [1, 2, 3, 6]
+```
+
+Sau khi tính, bạn được:
+
+```
+dp = [0, 0, 0, 1, 2, 3, 9]
+```
+
+|  i | keys[i] | dp[i] |                  Ý nghĩa |
+| -: | ------: | ----: | -----------------------: |
+|  3 |       1 |     1 | tối đa khi chỉ xét đến 1 |
+|  4 |       2 |     2 |     tối đa khi xét đến 2 |
+|  5 |       3 |     3 |     tối đa khi xét đến 3 |
+|  6 |       6 |     9 |     tối đa khi xét đến 6 |
+
+→ `dp[-1] = dp[6] = 9`
+→ đây chính là **tổng sát thương tối đa** khi xét hết tất cả các phép (`1, 2, 3, 6`).
+
+---
+
+## 🧩 So sánh cho dễ hiểu
+
+| Trường hợp               | Giá trị trả về        | Ý nghĩa                                 |
+| ------------------------ | --------------------- | --------------------------------------- |
+| `return dp[-1]`          | ✅ đúng                | tổng sát thương tối đa của toàn bộ phép |
+| `return max(dp)`         | cũng đúng, nhưng thừa | vì dp luôn **không giảm** theo i        |
+| `return dp[i]` (i < n-1) | ❌ sai                 | mới xét một phần dữ liệu                |
+
+---
+
+## 🔍 Kết luận
+
+`return dp[-1]` vì:
+
+> Khi bạn duyệt từ trái → phải, mỗi `dp[i]` đã tích lũy kết quả tối ưu tính đến `keys[i]`.
+> Phần tử cuối cùng (`dp[-1]`) là **tổng sát thương tối đa của toàn bộ phép**.
+
+---
+
+Nếu bạn muốn, tui có thể minh họa quá trình tính `dp` từng bước bằng **bảng diễn biến** để bạn thấy tại sao `dp[-1]` luôn là lớn nhất.
+Bạn có muốn tui làm bảng đó không?
+Tuyệt vời 👍 — đây chính là **bước quan trọng nhất** trong việc hiểu quy hoạch động (Dynamic Programming).
+Bây giờ mình sẽ **giải thích chi tiết vì sao công thức `dp[i] = dp[i-1] + curr` lại đúng**, bằng **trực giác**, **toán học**, và **ví dụ cụ thể** 👇
+
+---
+
+## 🧩 1️⃣ Bối cảnh của bài toán
+
+Bạn có các giá trị phép thuật `power[i]`.
+Nếu bạn chọn một phép có **sức mạnh x**, thì bạn **không được chọn** các phép có sức mạnh:
+
+```
+x-2, x-1, x+1, x+2
+```
+
+Nhiệm vụ:
+
+> Chọn tập hợp các phép sao cho **tổng sức mạnh là lớn nhất**,
+> mà **không chọn hai phép quá gần nhau (≤2 đơn vị)**.
+
+---
+
+## 🧠 2️⃣ Giải thích trực giác của công thức
+
+Công thức:
+
+```python
+dp[i] = dp[i-1] + curr
+```
+
+xuất hiện khi:
+
+```python
+keys[i] - keys[i-1] > 2
+```
+
+👉 Điều kiện này có nghĩa là:
+
+* Phép hiện tại `keys[i]` **cách đủ xa** với phép trước `keys[i-1]`
+* → Không có **xung đột**
+* → Bạn có thể **chọn cả hai phép** mà không vi phạm quy tắc
+
+---
+
+Vậy thì:
+
+* `dp[i-1]`: tổng sát thương tối đa **khi xét đến phép trước đó**
+* `curr`: sát thương **mà bạn có thể thêm vào** nếu chọn phép hiện tại
+
+=> Khi hai phép **không xung đột**, bạn **có thể cộng thẳng lại**
+⟹ công thức:
+
+```python
+dp[i] = dp[i-1] + curr
+```
+
+---
+
+## 🧮 3️⃣ Ví dụ minh họa
+
+Giả sử:
+
+```
+power = [1, 3, 6]
+```
+
+→ Sau khi sắp xếp: `keys = [0, 0, 0, 1, 3, 6]`
+
+|  i | keys[i] |  curr | Khoảng cách với trước |                Công thức |     dp[i] |      Giải thích |
+| -: | ------: | ----: | --------------------: | -----------------------: | --------: | --------------: |
+|  3 |       1 | 1×1=1 |                     – |                        – |         1 |         Bắt đầu |
+|  4 |       3 | 1×3=3 |           3−1=2 (gần) |      dùng công thức khác |         3 | Không cộng được |
+|  5 |       6 | 1×6=6 |            6−3=3 (>2) | ✅ dp[i] = dp[i−1] + curr | 3 + 6 = 9 |       Cộng được |
+
+✅ Kết quả: `dp[-1] = 9`
+→ Vì `1` và `6` cách nhau đủ xa, nên ta cộng thẳng `curr` vào `dp[i-1]`.
+
+---
+
+## ⚙️ 4️⃣ So sánh với các trường hợp khác
+
+| Khoảng cách giữa keys[i] và keys[i-1] | Ý nghĩa                                    |                                      Công thức                                     |
+| :-----------------------------------: | :----------------------------------------- | :--------------------------------------------------------------------------------: |
+|                 `> 2`                 | Không xung đột → có thể cộng thẳng         |                              `dp[i] = dp[i-1] + curr`                              |
+|           `== 2` hoặc `< 2`           | Có xung đột → phải so sánh giữa chọn và bỏ | `dp[i] = max(dp[i-1], dp[i-2] + curr)` hoặc `dp[i] = max(dp[i-1], dp[i-3] + curr)` |
+
+---
+
+## 🧩 5️⃣ Giải thích toán học
+
+Gọi:
+
+* `S` là tập các chỉ số được chọn (thỏa điều kiện không xung đột)
+* `dp[i]` là tổng lớn nhất khi xét đến phần tử `i`
+
+Nếu `keys[i]` **không xung đột** với các phần tử trước đó (tức là khoảng cách > 2),
+thì việc chọn nó không ảnh hưởng đến bất kỳ phần tử nào trong `dp[i-1]`.
+
+Do đó:
+[
+dp[i] = dp[i-1] + curr
+]
+vì **bạn cộng thêm giá trị mới mà không cần bỏ bớt cái cũ**.
+
+---
+
+## 🧠 6️⃣ Tóm tắt ý nghĩa công thức
+
+| Biểu thức                | Nghĩa                                                                    |
+| :----------------------- | :----------------------------------------------------------------------- |
+| `dp[i-1]`                | Tổng sát thương tối đa **đến phép trước**                                |
+| `curr`                   | Tổng sát thương **của phép hiện tại**                                    |
+| `dp[i] = dp[i-1] + curr` | Vì phép hiện tại **đủ xa**, nên có thể **chọn cả hai** mà không xung đột |
+
+---
+
+Nếu bạn muốn, tui có thể vẽ sơ đồ "các node keys[i]" + mũi tên thể hiện khi nào thì cộng được (`>2`) để bạn nhìn là hiểu ngay công thức này — bạn có muốn không?
+Rồi, rất hay — câu hỏi của bạn là **cốt lõi** của việc học DP (Dynamic Programming) 🧠
+Chúng ta đi **từ đầu**, **từng bước logic** để thấy **công thức “tự nhiên sinh ra” như thế nào**, chứ không phải “được cho sẵn”.
+
+---
+
+## 🎯 Giả sử ta có một danh sách các phép:
+
+```
+power = [1, 3, 6]
+```
+
+Và quy tắc là:
+
+> Nếu chọn một phép có sức mạnh x, thì không được chọn các phép có sức mạnh (x−2, x−1, x+1, x+2)
+
+---
+
+## 🧩 Mục tiêu:
+
+Chọn ra **tập hợp các phép** sao cho:
+
+* Không vi phạm quy tắc trên
+* Và **tổng sức mạnh lớn nhất**
+
+---
+
+## 🪜 Bước 1: Biểu diễn dữ liệu
+
+Giả sử ta nhóm lại theo giá trị sức mạnh:
+
+| Sức mạnh | Tổng sát thương (curr) |
+| :------: | :--------------------: |
+|     1    |         1×1 = 1        |
+|     3    |         1×3 = 3        |
+|     6    |         1×6 = 6        |
+
+Ta sắp xếp `keys = [1, 3, 6]`.
+
+---
+
+## 🪜 Bước 2: Xây dựng quy hoạch động `dp[i]`
+
+`dp[i]` = **tổng sát thương lớn nhất** khi xét đến phép `keys[i]`.
+
+Tức là:
+
+* Khi xét đến phép thứ i, ta có 2 khả năng:
+  1️⃣ Không chọn `keys[i]`
+  2️⃣ Chọn `keys[i]`
+
+---
+
+## 🪜 Bước 3: Hai trường hợp có thể xảy ra
+
+### **Trường hợp 1: `keys[i]` và `keys[i-1]` gần nhau (≤ 2)**
+
+Nếu bạn **chọn `keys[i]`**, thì **không được chọn `keys[i-1]`**.
+→ tổng tốt nhất sẽ là:
+
+```
+dp[i] = max(dp[i-1], dp[i-2] + curr)
+```
+
+---
+
+### **Trường hợp 2: `keys[i]` và `keys[i-1]` cách nhau > 2**
+
+Nếu chúng **cách xa nhau**,
+thì chọn `keys[i]` **không ảnh hưởng gì đến** `keys[i-1]`.
+=> bạn có thể chọn **cả hai**.
+
+Vậy tổng mới chính là:
+
+```
+dp[i] = dp[i-1] + curr
+```
+
+---
+
+## ⚙️ Bước 4: Làm ví dụ cụ thể
+
+|  i | keys[i] | curr | Khoảng cách |            Giải thích |                         dp[i] |
+| -: | ------: | ---: | ----------: | --------------------: | ----------------------------: |
+|  0 |       1 |    1 |           – |              Chỉ có 1 |                     dp[0] = 1 |
+|  1 |       3 |    3 |       3−1=2 | Gần → không chọn cùng |         dp[1] = max(1, 3) = 3 |
+|  2 |       6 |    6 |  6−3=3 (>2) |      Xa → chọn cả hai | dp[2] = dp[1] + 6 = 3 + 6 = 9 |
+
+✅ Cuối cùng `dp[-1] = 9`
+
+---
+
+## 🔍 Tại sao “hình thành” công thức được?
+
+Ta bắt đầu từ **quy tắc bài toán**:
+
+> Không được chọn hai giá trị gần nhau hơn 2 đơn vị.
+
+→ Từ đó, ta có hai khả năng:
+
+* Nếu hai giá trị gần nhau → loại một trong hai → dùng `max(dp[i-1], dp[i-2] + curr)`
+* Nếu hai giá trị cách xa nhau → không ảnh hưởng → **cộng thẳng luôn**
+
+Chính sự **không ảnh hưởng** này làm nảy sinh công thức:
+
+```
+dp[i] = dp[i-1] + curr
+```
+
+Nói đơn giản:
+
+> Nếu phép hiện tại và phép trước không xung đột,
+> thì bạn cứ cộng tổng cũ với giá trị mới,
+> vì chọn thêm phép này chỉ làm tổng tăng lên.
+
+---
+
+## 🧠 Một cách dễ hiểu bằng ví dụ đời thường
+
+Giả sử bạn đang thu tiền từ các căn nhà,
+nhưng quy định là:
+
+> Hai căn gần nhau (cách < 2m) không được lấy cùng lúc.
+
+Nếu căn tiếp theo ở **xa hơn 2m**,
+bạn **có thể lấy luôn tiền căn mới** mà không ảnh hưởng gì đến tổng trước đó.
+→ Tổng tiền mới = tổng tiền cũ + tiền căn mới.
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ các phép keys[i]** (kiểu như các chấm cách nhau, rồi vẽ mũi tên minh họa khi nào thì “cộng được”) để bạn **thấy trực quan** vì sao công thức này xuất hiện — bạn có muốn mình vẽ sơ đồ không?

@@ -1,0 +1,638 @@
+Word Search
+class Solution {
+    public boolean exist(char[][] board, String word) {
+        int m = board.length, n = board[0].length;
+        if (word.length() == 0) return true;
+
+        // 1) Count frequencies on board
+        int[] cnt = new int[128];
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++)
+                cnt[board[i][j]]++;
+
+        // 2) Check feasibility and decide direction
+        int[] need = new int[128];
+        for (int k = 0; k < word.length(); k++) need[word.charAt(k)]++;
+        for (int ch = 0; ch < 128; ch++)
+            if (need[ch] > 0 && need[ch] > cnt[ch]) return false;
+
+        // Rarity heuristic: start from less frequent end
+        char first = word.charAt(0), last = word.charAt(word.length() - 1);
+        if (cnt[first] > cnt[last]) {
+            word = new StringBuilder(word).reverse().toString();
+        }
+
+        // 3) Backtracking
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (dfs(board, word, 0, i, j)) return true;
+            }
+        }
+        return false;
+    }
+    
+    private boolean dfs(char[][] b, String w, int k, int r, int c) {
+        if (k == w.length()) return true;
+        if (r < 0 || c < 0 || r >= b.length || c >= b[0].length) return false;
+        if (b[r][c] != w.charAt(k)) return false;
+
+        char saved = b[r][c];
+        b[r][c] = '\0'; // mark visited
+
+        // Try four directions
+        if (dfs(b, w, k + 1, r + 1, c) ||
+            dfs(b, w, k + 1, r - 1, c) ||
+            dfs(b, w, k + 1, r, c + 1) ||
+            dfs(b, w, k + 1, r, c - 1)) {
+            b[r][c] = saved;
+            return true;
+        }
+
+        b[r][c] = saved; // restore
+        return false;
+    }
+
+}
+
+Đoạn code này trong **Java Word Search** có mục đích **đếm tần suất xuất hiện của từng ký tự trên bảng `board`**. Mình giải thích chi tiết:
+
+---
+
+### Code:
+
+```java
+// 1) Count frequencies on board
+int[] cnt = new int[128];
+for (int i = 0; i < m; i++)
+    for (int j = 0; j < n; j++)
+        cnt[board[i][j]]++;
+```
+
+---
+
+### Ý nghĩa:
+
+1. `int[] cnt = new int[128];`
+
+   * Tạo một **mảng đếm** 128 phần tử.
+   * Mỗi phần tử tương ứng với **mã ASCII của một ký tự**.
+   * 128 vì trong **ASCII chuẩn**:
+
+     * Ký tự `'A'` → 65
+     * Ký tự `'a'` → 97
+     * Tổng cộng 128 ký tự từ 0 → 127 (bao gồm chữ, số, dấu, ký tự điều khiển).
+
+2. Vòng lặp `for (i, j)`:
+
+   * Duyệt toàn bộ bảng `board`.
+   * `board[i][j]` là ký tự.
+   * `cnt[board[i][j]]++` tăng số lần xuất hiện ký tự đó.
+
+---
+
+### Ví dụ:
+
+**Board:**
+
+```
+A B C
+A D E
+```
+
+* ASCII `'A'` = 65, `'B'` = 66, `'C'` = 67, `'D'` = 68, `'E'` = 69
+* Mảng `cnt` sau khi chạy sẽ có:
+
+  ```
+  cnt[65] = 2   // 'A' xuất hiện 2 lần
+  cnt[66] = 1   // 'B' xuất hiện 1 lần
+  cnt[67] = 1   // 'C' xuất hiện 1 lần
+  cnt[68] = 1   // 'D' xuất hiện 1 lần
+  cnt[69] = 1   // 'E' xuất hiện 1 lần
+  ```
+
+---
+
+### Tại sao dùng **128**:
+
+* Vì Java lưu ký tự theo **Unicode**, nhưng nếu chỉ cần **chữ ASCII chuẩn (A-Z, a-z, số, ký tự đặc biệt)** thì **128 là đủ**.
+* Nó nhanh hơn so với dùng `Map<Character, Integer>` vì **truy cập mảng O(1)**.
+
+---
+
+Nếu bạn muốn, mình có thể vẽ **bản đồ bảng `board` → cnt array** để trực quan hơn.
+
+Bạn có muốn mình vẽ không?
+Đoạn code này trong **Word Search Java** dùng để **kiểm tra tính khả thi trước khi chạy DFS** và **tối ưu thứ tự duyệt**. Mình giải thích chi tiết:
+
+---
+
+### Code:
+
+```java
+int[] need = new int[128];
+for (int k = 0; k < word.length(); k++) 
+    need[word.charAt(k)]++;
+for (int ch = 0; ch < 128; ch++)
+    if (need[ch] > 0 && need[ch] > cnt[ch]) 
+        return false;
+
+// Rarity heuristic: start from less frequent end
+char first = word.charAt(0), last = word.charAt(word.length() - 1);
+if (cnt[first] > cnt[last]) {
+    word = new StringBuilder(word).reverse().toString();
+}
+```
+
+---
+
+### 1️⃣ Tại sao cần `need`:
+
+* `need[ch]` là số lần ký tự `ch` **xuất hiện trong `word`**.
+* Mục đích: **so sánh với `cnt[ch]`**, số ký tự trên bảng `board`.
+* Nếu có ký tự trong `word` mà **bảng không đủ số lượng** (`need[ch] > cnt[ch]`) → chắc chắn **không thể tìm được từ** → trả về `false` sớm, không cần DFS.
+
+**Ví dụ:**
+
+* `board`:
+
+```
+A B C
+A D E
+```
+
+* `word = "AAE"`
+
+* `cnt['A'] = 2, cnt['E'] = 1` → đủ → tiếp tục
+
+* `word = "AAA"`
+
+  * `need['A'] = 3` > `cnt['A'] = 2` → return false, vì không đủ A.
+
+---
+
+### 2️⃣ Rarity heuristic:
+
+```java
+char first = word.charAt(0), last = word.charAt(word.length() - 1);
+if (cnt[first] > cnt[last]) {
+    word = new StringBuilder(word).reverse().toString();
+}
+```
+
+* Ý tưởng: **bắt đầu từ ký tự ít xuất hiện hơn** trên bảng.
+* Vì nếu bắt đầu từ ký tự hiếm, khả năng **DFS cắt nhánh sớm** cao hơn → tối ưu tốc độ.
+
+**Ví dụ:**
+
+* `word = "FACE"`
+* `cnt['F'] = 1`, `cnt['E'] = 2` → F hiếm hơn E → vẫn bắt đầu từ F
+* Nếu ngược lại, ta đảo `word` để bắt đầu từ ký tự ít xuất hiện.
+
+---
+
+### ✅ Tóm tắt:
+
+1. `need` giúp **loại bỏ trường hợp không khả thi** trước khi DFS.
+2. So sánh `cnt[first] > cnt[last]` để **đảo từ bắt đầu từ ký tự hiếm hơn**, tối ưu backtracking.
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ minh họa `cnt` và `need` để dễ hiểu cách prune DFS**.
+
+Bạn có muốn mình làm không?
+OK! Mình sẽ minh họa **sơ đồ `cnt` và `need`** cho Word Search để bạn dễ hình dung cách prune DFS.
+
+---
+
+### Ví dụ bảng `board`:
+
+```
+A B C
+A D E
+F G H
+```
+
+* Kích thước: 3×3
+* Các ký tự xuất hiện nhiều lần: A (2 lần), B (1), C (1), D (1), E (1), F (1), G (1), H (1)
+
+---
+
+### 1️⃣ Tạo bảng `cnt`:
+
+`cnt[ch]` = số lần ký tự xuất hiện trên board.
+
+| Ch  | A | B | C | D | E | F | G | H |
+| --- | - | - | - | - | - | - | - | - |
+| cnt | 2 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+
+---
+
+### 2️⃣ Tạo bảng `need` từ `word`:
+
+Giả sử `word = "AACE"`
+
+* `need[ch]` = số lần ký tự cần dùng từ word
+
+| Ch   | A | B | C | D | E | F | G | H |
+| ---- | - | - | - | - | - | - | - | - |
+| need | 2 | 0 | 1 | 0 | 1 | 0 | 0 | 0 |
+
+---
+
+### 3️⃣ So sánh `need` và `cnt`:
+
+* A: need 2 ≤ cnt 2 ✅
+* C: need 1 ≤ cnt 1 ✅
+* E: need 1 ≤ cnt 1 ✅
+
+→ Từ khả thi → tiếp tục DFS
+
+---
+
+### 4️⃣ Nếu từ không khả thi:
+
+Giả sử `word = "AAAE"`
+
+| Ch   | A | B | C | D | E |
+| ---- | - | - | - | - | - |
+| need | 3 | 0 | 0 | 0 | 1 |
+| cnt  | 2 | 1 | 1 | 1 | 1 |
+
+* A: need 3 > cnt 2 ❌ → return false, prune DFS sớm
+
+**Ý nghĩa:** không cần phải thử mọi vị trí trên board.
+
+---
+
+### 5️⃣ Rarity heuristic:
+
+* `word = "AACE"`
+
+* first = 'A', last = 'E'
+
+* cnt\[first]=2, cnt\[last]=1 → last ít xuất hiện hơn → **đảo từ**: word = "ECAA"
+
+* Bắt đầu DFS từ 'E' (ít xuất hiện) → dễ fail nhanh nếu từ không tồn tại → **cắt nhánh sớm**, tối ưu tốc độ.
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ minh họa board + DFS path bắt đầu từ ký tự hiếm hơn** để nhìn trực quan cách prune.
+
+Bạn có muốn mình vẽ không?
+Dòng này là **check tính khả thi trước khi chạy DFS**. Giải thích chi tiết:
+
+```java
+if (need[ch] > 0 && need[ch] > cnt[ch])
+    return false;
+```
+
+* `need[ch]` → số lần ký tự `ch` xuất hiện trong **từ cần tìm** (`word`).
+* `cnt[ch]` → số lần ký tự `ch` có trên **bảng board**.
+
+**Ý nghĩa:**
+
+1. `need[ch] > 0` → chỉ quan tâm đến các ký tự **có xuất hiện trong word**.
+2. `need[ch] > cnt[ch]` → nếu **số lần cần > số lần có sẵn trên board**, tức là **không thể tạo được từ word từ bảng**.
+
+→ Khi gặp trường hợp này, lập tức `return false` → **prune DFS sớm**, không cần thử dò từng vị trí trên board.
+
+**Ví dụ minh họa:**
+
+* board:
+
+```
+A B C
+D E F
+```
+
+* word = `"AAE"`
+
+* need\['A'] = 2, cnt\['A'] = 1 → 2 > 1 → **không đủ ký tự A** → return false
+
+DFS sẽ **không bao giờ chạy** vì chắc chắn không tìm thấy word.
+
+---
+
+Nếu muốn, mình có thể giải thích tiếp **tại sao phải dùng `need` và `cnt` thay vì dò DFS luôn** và **lợi ích prune**. Bạn có muốn không?
+Đây là **hàm DFS** trong bài *Word Search*. Mục đích là kiểm tra xem có thể tìm được `word` bắt đầu từ ô `(r, c)` hay không. Giải thích chi tiết từng phần:
+
+```java
+private boolean dfs(char[][] b, String w, int k, int r, int c) {
+```
+
+* `b` → bảng chữ cái.
+* `w` → từ cần tìm.
+* `k` → chỉ số ký tự hiện tại trong từ `w`.
+* `(r, c)` → vị trí hiện tại trên bảng.
+
+---
+
+```java
+if (k == w.length()) return true;
+```
+
+* Nếu đã duyệt hết các ký tự của từ → **tìm thấy word** → trả về `true`.
+
+```java
+if (r < 0 || c < 0 || r >= b.length || c >= b[0].length) return false;
+if (b[r][c] != w.charAt(k)) return false;
+```
+
+* Kiểm tra **out-of-bounds** (vượt ngoài bảng).
+* Nếu ô hiện tại không khớp với ký tự `k` trong `word` → **không hợp lệ** → trả về `false`.
+
+---
+
+```java
+char saved = b[r][c];
+b[r][c] = '\0'; // mark visited
+```
+
+* Lưu giá trị ô hiện tại.
+* Đánh dấu ô này **đã đi qua** bằng ký tự đặc biệt (`\0`) để tránh **sử dụng lại ô trong cùng một đường đi**.
+
+---
+
+```java
+if (dfs(b, w, k + 1, r + 1, c) ||
+    dfs(b, w, k + 1, r - 1, c) ||
+    dfs(b, w, k + 1, r, c + 1) ||
+    dfs(b, w, k + 1, r, c - 1)) {
+    b[r][c] = saved;
+    return true;
+}
+```
+
+* **Đệ quy sang 4 hướng**: xuống, lên, phải, trái.
+* Nếu bất kỳ hướng nào trả về `true` → **tìm thấy từ** → khôi phục giá trị ô (`b[r][c] = saved`) → trả về `true`.
+
+---
+
+```java
+b[r][c] = saved; // restore
+return false;
+```
+
+* Nếu không có hướng nào hợp lệ → **không tìm thấy từ ở đường đi này**.
+* Khôi phục ô về trạng thái ban đầu.
+* Trả về `false`.
+
+---
+
+### **Tóm tắt thuật toán:**
+
+1. Kiểm tra điều kiện dừng: hết từ → `true`, hoặc out-of-bounds / không khớp → `false`.
+2. Đánh dấu ô hiện tại đã đi qua.
+3. Đệ quy sang 4 hướng.
+4. Nếu tìm thấy → trả về `true`. Nếu không → trả về `false`.
+5. Khôi phục ô trước khi rời khỏi hàm để đảm bảo các đường đi khác không bị ảnh hưởng.
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ minh họa bước DFS trên một bảng 3x3 với từ ví dụ** để bạn hình dung trực quan. Bạn có muốn không?
+Tuyệt, mình sẽ minh họa **bài Word Search** với **DFS** trên bảng 3x3.
+
+Giả sử bảng (board) là:
+
+```
+A B C
+D E F
+G H I
+```
+
+Và từ cần tìm là `"BEH"`.
+
+---
+
+### Bước 1: Khởi tạo DFS
+
+* Duyệt từng ô để tìm chữ cái đầu `"B"`:
+
+```
+(0,0) = 'A' → không khớp
+(0,1) = 'B' → khớp → bắt đầu DFS từ (0,1)
+```
+
+---
+
+### Bước 2: DFS từ (0,1)
+
+* `k = 0` → ký tự `"B"` đã khớp.
+* Đánh dấu `(0,1)` là đã đi qua (ví dụ đặt `#`):
+
+```
+A # C
+D E F
+G H I
+```
+
+* Bây giờ tìm ký tự tiếp theo `"E"` (`k = 1`) từ 4 hướng:
+
+1. **Xuống** `(1,1)` = 'E' → khớp → tiếp tục DFS (`k=2`)
+2. **Lên** `( -1,1)` → out-of-bounds → bỏ
+3. **Trái** `(0,0)` = 'A' → không khớp → bỏ
+4. **Phải** `(0,2)` = 'C' → không khớp → bỏ
+
+---
+
+### Bước 3: DFS từ (1,1)
+
+* `k = 2` → ký tự `"H"`
+* Đánh dấu `(1,1)`:
+
+```
+A # C
+D # F
+G H I
+```
+
+* Tìm `"H"` từ 4 hướng:
+
+1. **Xuống** `(2,1)` = 'H' → khớp → `k = 3` = độ dài từ → **tìm thấy từ** → trả về `true`.
+2. Các hướng khác không cần thử nữa vì đã tìm thấy.
+
+---
+
+### Bước 4: Quay lại
+
+* DFS trả về `true` ngược dần về hàm gọi ban đầu.
+* Các ô được khôi phục ký tự gốc, nhưng vì đã tìm thấy, thuật toán dừng.
+
+---
+
+### **Kết quả**
+
+* Từ `"BEH"` tồn tại trên bảng.
+
+---
+
+**Lưu ý:**
+
+* DFS đánh dấu ô đã đi qua để tránh đi vòng lặp.
+* Khi không tìm được → khôi phục lại để các đường đi khác vẫn dùng ô đó được.
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ hình minh họa trực quan bảng 3x3 với các bước DFS và đường đi bằng mũi tên**, nhìn sẽ dễ hiểu hơn.
+
+Bạn có muốn mình vẽ không?
+Tuyệt! Mình sẽ vẽ minh họa trực quan **DFS tìm từ "BEH"** trên bảng 3x3:
+
+```
+B  E  C
+D  E  F
+G  H  I
+```
+
+Giả sử bảng gốc là:
+
+```
+(0,0) B   (0,1) E   (0,2) C
+(1,0) D   (1,1) E   (1,2) F
+(2,0) G   (2,1) H   (2,2) I
+```
+
+---
+
+### Bước 1: Tìm chữ cái đầu `"B"`
+
+* DFS bắt đầu từ `(0,0)` = 'B'
+
+```
+[*B*] E  C
+ D    E  F
+ G    H  I
+```
+
+`[*B*]` là ô bắt đầu.
+
+---
+
+### Bước 2: Tìm chữ cái tiếp theo `"E"` (`k = 1`)
+
+* Từ `(0,0)`, 4 hướng:
+
+1. **Xuống** `(1,0)` = 'D' → không khớp
+2. **Phải** `(0,1)` = 'E' → khớp, đi tiếp
+
+```
+ B  [*E*]  C
+ D    E   F
+ G    H   I
+```
+
+`[*E*]` là ô thứ hai của từ.
+
+---
+
+### Bước 3: Tìm chữ cái tiếp theo `"H"` (`k = 2`)
+
+* Từ `(0,1)`, 4 hướng:
+
+1. **Xuống** `(1,1)` = 'E' → không khớp
+2. **Xuống tiếp** `(2,1)` = 'H' → khớp, đi tiếp → `k = 3` = độ dài từ → **tìm thấy**
+
+```
+ B  E  C
+ D  E  F
+ G [*H*] I
+```
+
+`[*H*]` là ô cuối cùng, hoàn tất từ `"BEH"`.
+
+---
+
+### **Đường đi DFS**
+
+```
+(0,0) B  → (0,1) E  → (2,1) H
+```
+
+* Ô được DFS đánh dấu khi đi qua, tránh đi vòng lặp.
+* Nếu DFS thất bại trên một hướng → khôi phục ô và thử hướng khác.
+
+---
+
+Mình có thể vẽ **bản đồ mũi tên minh họa rõ ràng hơn**, với các mũi tên chỉ đường đi từ ô này sang ô kia.
+
+Bạn có muốn mình vẽ bản đồ đó không?
+Đoạn code này là **bước cuối cùng trong thuật toán tìm từ trong bảng (Word Search)**. Mình sẽ giải thích chi tiết từng phần:
+
+```java
+for (int i = 0; i < m; i++) {           // Duyệt từng hàng của bảng
+    for (int j = 0; j < n; j++) {       // Duyệt từng cột của bảng
+        if (dfs(board, word, 0, i, j)) // Gọi DFS từ ô (i,j) với ký tự đầu tiên của từ
+            return true;                // Nếu DFS trả về true → tìm thấy từ → trả về true luôn
+    }
+}
+return false;                            // Nếu duyệt hết tất cả các ô mà không tìm thấy → trả về false
+```
+
+### Giải thích thuật toán
+
+1. **Duyệt toàn bộ bảng**:
+
+   * `i` từ `0` đến `m-1` (hàng)
+   * `j` từ `0` đến `n-1` (cột)
+
+2. **Gọi DFS từ mỗi ô**:
+
+   * `dfs(board, word, 0, i, j)` là đệ quy kiểm tra xem có thể tìm thấy từ bắt đầu từ ô `(i,j)` không.
+   * `0` là chỉ số ký tự hiện tại trong từ.
+
+3. **Kết quả DFS**:
+
+   * Nếu DFS trả về `true` → nghĩa là từ có thể được hình thành theo quy tắc đi lên/xuống/trái/phải → lập tức trả về `true`.
+   * Nếu tất cả DFS từ mọi ô trả về `false` → từ không tồn tại → trả về `false`.
+
+### Ý nghĩa tổng quát
+
+* Đây là **bước thử mọi điểm xuất phát** cho từ trên bảng.
+* Kết hợp với DFS, đảm bảo thuật toán **kiểm tra toàn bộ bảng** mà vẫn **dừng ngay khi tìm thấy từ**.
+
+Nếu bạn muốn, mình có thể vẽ **minh họa các bước duyệt DFS trên bảng 3x3** để dễ hình dung hơn.
+
+Bạn có muốn mình vẽ không?
+Trong đoạn code:
+
+```java
+dfs(board, word, 0, i, j)
+```
+
+* `0` → **chỉ số ký tự hiện tại trong từ `word`** mà DFS đang kiểm tra. Ban đầu là `0` vì bắt đầu từ ký tự đầu tiên của từ.
+* `i` → **hàng** trong bảng (`board[i][j]`) mà DFS bắt đầu kiểm tra.
+* `j` → **cột** trong bảng (`board[i][j]`) mà DFS bắt đầu kiểm tra.
+
+Nói cách khác, `dfs(board, word, 0, i, j)` nghĩa là:
+
+> “Hãy thử tìm từ `word` bắt đầu từ ô `(i, j)` trong bảng, bắt đầu từ ký tự thứ `0` của từ.”
+
+Ví dụ:
+
+Bảng:
+
+```
+A B C
+D E F
+G H I
+```
+
+* `i = 1, j = 2` → ô `(1,2)` là ký tự `'F'`.
+* `0` → kiểm tra ký tự đầu tiên của từ (`word.charAt(0)`).
+
+DFS sẽ thử xem có thể hình thành từ bắt đầu từ `'F'` theo các hướng lên/xuống/trái/phải hay không.
+
+Bạn có muốn mình minh họa **cách DFS đi qua các ô trên bảng** không?
+Đúng rồi. Trong hàm `dfs(board, word, 0, i, j)`:
+
+* `board` → **bảng ký tự** (mảng 2D `char[][]`) để DFS biết đi qua các ô nào.
+* `word` → **từ cần tìm** để DFS so sánh ký tự hiện tại với ký tự ở ô `(i,j)`.
+
+Hai tham số này **không thay đổi trong quá trình đệ quy**, chỉ có:
+
+* `k` (chỉ số ký tự của từ) tăng dần,
+* `r` và `c` (hàng và cột) thay đổi khi DFS đi sang các ô xung quanh.
+
+Nói cách khác: `board` và `word` là **dữ liệu cố định** mà DFS dùng để tham chiếu, còn `0, i, j` là **vị trí và ký tự bắt đầu** cho lần kiểm tra hiện tại.
+
+Nếu muốn, mình có thể vẽ **minh họa sơ đồ DFS trên bảng chữ cái** để bạn dễ hình dung cách `r` và `c` di chuyển. Bạn có muốn mình làm không?

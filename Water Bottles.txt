@@ -1,0 +1,208 @@
+ Water Bottles
+
+class Solution {
+    public int numWaterBottles(int numBottles, int numExchange) {
+        int total = numBottles; // số chai uống được ban đầu
+        int empty = numBottles; // số vỏ chai hiện có sau khi uống
+
+        // khi còn đủ vỏ để đổi
+        while (empty >= numExchange) {
+            int newBottles = empty / numExchange; // số chai mới đổi được
+            total += newBottles;                  // cộng thêm vào tổng số chai đã uống
+            empty = empty % numExchange + newBottles; // vỏ còn dư + vỏ từ chai mới
+        }
+
+        return total;
+    }
+}
+
+Hay câu hỏi 👍, mình giải thích rõ nhé:
+
+Trong code:
+
+```java
+int total = numBottles;
+int empty = numBottles;
+```
+
+---
+
+### 1. `total = numBottles`
+
+* `total` là tổng số chai **đã uống được**.
+* Ban đầu bạn có `numBottles` chai nước đầy.
+* Bạn uống hết tất cả chúng ngay từ đầu → tổng số chai đã uống lúc đầu chính là `numBottles`.
+  👉 Vì vậy `total` khởi tạo bằng `numBottles`.
+
+---
+
+### 2. `empty = numBottles`
+
+* Sau khi uống hết `numBottles` chai nước ban đầu, bạn có `numBottles` cái **vỏ chai**.
+* `empty` dùng để lưu số vỏ đang có để đem đi đổi.
+  👉 Nên ngay sau khi uống hết số chai ban đầu, số vỏ = `numBottles`.
+
+---
+
+### Tóm lại
+
+* `total = numBottles` → vì bạn đã uống hết tất cả chai ban đầu.
+* `empty = numBottles` → vì số vỏ chai bạn thu được sau khi uống hết đúng bằng số chai ban đầu.
+
+---
+
+Bạn có muốn mình vẽ một **bảng mô phỏng từng bước** (total và empty thay đổi ra sao) với ví dụ `numBottles=9, numExchange=3` để nhìn dễ hơn không?
+Rồi 👍 mình giải thích vì sao lại có phép chia ở đây nhé:
+
+---
+
+### Ngữ cảnh
+
+* Bạn có `empty` cái vỏ.
+* Quy tắc: cứ **`numExchange` cái vỏ** thì đổi được **1 chai nước mới**.
+
+---
+
+### Tại sao lại chia?
+
+```java
+int newBottles = empty / numExchange;
+```
+
+* Dùng phép chia nguyên (`/`) để biết **đổi được bao nhiêu chai mới**.
+* Vì:
+
+  * Nếu bạn có `empty = 9` cái vỏ, và `numExchange = 3`.
+  * Mỗi 3 vỏ đổi 1 chai → bạn đổi được `9 / 3 = 3` chai.
+
+---
+
+### Sau đó
+
+```java
+total += newBottles;
+```
+
+* Cộng số chai vừa đổi vào tổng số chai đã uống.
+
+```java
+empty = empty % numExchange + newBottles;
+```
+
+* `empty % numExchange`: số vỏ còn dư không đủ để đổi.
+* `+ newBottles`: số vỏ mới sinh ra sau khi uống các chai mới.
+
+---
+
+👉 Nói ngắn gọn: **chia để biết đổi được bao nhiêu chai mới từ số vỏ hiện có**.
+
+---
+
+Bạn có muốn mình làm một ví dụ chi tiết (từng bước) với `numBottles = 15, numExchange = 4` để thấy phép chia này hoạt động ra sao không?
+Chuẩn rồi 👍 đây là chỗ “cập nhật số vỏ” sau mỗi vòng, mình giải thích kỹ:
+
+```java
+empty = empty % numExchange + newBottles;
+```
+
+---
+
+### 1. `empty % numExchange`
+
+* Đây là số **vỏ dư** còn lại **sau khi đã đổi**.
+* Ví dụ: nếu bạn có `empty = 10` và `numExchange = 3`
+
+  * Bạn đổi được `10 / 3 = 3` chai mới
+  * Còn dư `10 % 3 = 1` cái vỏ.
+
+---
+
+### 2. `+ newBottles`
+
+* Mỗi chai mới mà bạn đổi được (ở `newBottles`) sau khi uống xong → lại cho ra đúng **1 cái vỏ mới**.
+* Vì vậy sau khi uống hết `newBottles` chai, số vỏ tăng thêm `newBottles`.
+
+---
+
+### 3. Tổng hợp
+
+* Sau một vòng:
+
+  * Số vỏ dư từ lần đổi trước (`empty % numExchange`)
+
+  - Số vỏ mới sinh ra từ các chai mới (`newBottles`)
+    = **tổng số vỏ hiện có để tiếp tục vòng lặp**.
+
+---
+
+### Ví dụ nhỏ
+
+`empty = 9, numExchange = 3`
+
+1. Đổi được `9 / 3 = 3` chai mới.
+2. Còn dư `9 % 3 = 0` vỏ.
+3. Sau khi uống 3 chai mới → thêm 3 vỏ.
+   👉 `empty = 0 + 3 = 3`.
+
+---
+
+Bạn có muốn mình vẽ hẳn **bảng trạng thái (total, empty, newBottles)** theo từng vòng lặp để thấy rõ công thức này chạy như thế nào không?
+Ok, mình sẽ đi **cực chậm, từng bước một**, để bạn thấy rõ `empty = empty % numExchange + newBottles` có nghĩa gì.
+
+---
+
+### Giả sử:
+
+* Bạn có `empty = 10` cái vỏ.
+* Quy tắc đổi: `numExchange = 3` vỏ → 1 chai mới.
+
+---
+
+### Bước 1: Tính chai mới đổi được
+
+```java
+newBottles = empty / numExchange = 10 / 3 = 3
+```
+
+👉 Bạn đổi được **3 chai mới**.
+
+---
+
+### Bước 2: Tính số vỏ còn dư sau khi đổi
+
+```java
+empty % numExchange = 10 % 3 = 1
+```
+
+👉 Bạn còn **1 cái vỏ dư** (không đủ để đổi thêm).
+
+---
+
+### Bước 3: Sau khi uống 3 chai mới
+
+* 3 chai mới bạn vừa đổi → sau khi uống hết, bạn lại có thêm **3 cái vỏ**.
+
+---
+
+### Bước 4: Cập nhật `empty`
+
+```java
+empty = empty % numExchange + newBottles
+       = 1 (vỏ dư) + 3 (vỏ mới từ chai mới)
+       = 4
+```
+
+👉 Sau vòng lặp, bạn có **4 cái vỏ** để tiếp tục đổi ở vòng sau.
+
+---
+
+### Tóm lại
+
+Công thức này gộp **hai việc**:
+
+1. Giữ lại số vỏ dư từ lần đổi trước (`empty % numExchange`).
+2. Cộng thêm số vỏ mới sinh ra từ các chai mới (`newBottles`).
+
+---
+
+📌 Bạn có muốn mình lấy ví dụ đầy đủ với `numBottles = 9, numExchange = 3` và lập bảng chi tiết (từng vòng lặp giá trị của `total`, `empty`, `newBottles`) để bạn thấy rõ hơn không?

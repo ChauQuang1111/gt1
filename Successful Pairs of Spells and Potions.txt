@@ -1,0 +1,388 @@
+2300. Successful Pairs of Spells and Potions
+
+class Solution {
+    public int[] successfulPairs(int[] spells, int[] potions, long success) {
+        int m = spells.length;
+        int n = potions.length;
+        int max = 0;
+        int[] res = new int[m];
+        for(int i=0; i<n; i++){
+            max = Math.max(max, potions[i]);
+        }
+        int[] map = new int[max+1];
+        for(int i=0; i<n; i++){
+            map[potions[i]]++;
+        }
+        int sum = 0;
+        for(int i=max; i>=0; i--){
+            sum+=map[i];
+            map[i] = sum;
+        }
+        for(int i=0; i<m; i++){
+            int spell = spells[i];
+            long index = (success + spell -1)/spell;
+            if(index <= max){
+                res[i] = map[(int) index];
+            } 
+        }
+        return res;
+    }
+}
+
+Rất hay — dòng này là **một bước quan trọng** trong thuật toán 💡
+
+---
+
+### 🧩 Mục đích:
+
+```java
+for (int i = 0; i < n; i++) {
+    max = Math.max(max, potions[i]);
+}
+```
+
+👉 Dòng này **tìm giá trị lớn nhất trong mảng `potions`**, rồi lưu vào biến `max`.
+
+---
+
+### 🧠 Lý do cần làm:
+
+Sau này, ta sẽ tạo mảng `map` có kích thước `max + 1`:
+
+```java
+int[] map = new int[max + 1];
+```
+
+Mảng `map` này sẽ dùng để đếm **số lượng potions có giá trị cụ thể**, ví dụ:
+
+* `map[1]` = số potion có giá trị 1
+* `map[2]` = số potion có giá trị 2
+* v.v.
+
+➡️ Vì vậy, **ta cần biết giá trị lớn nhất trong `potions`** để:
+
+1. Biết kích thước tối đa cần thiết của mảng `map`
+2. Tránh cấp phát dư thừa (nếu dùng `map[100000]` mà giá trị lớn nhất chỉ là 10 thì rất lãng phí)
+
+---
+
+### 🔍 Ví dụ:
+
+Giả sử:
+
+```java
+potions = [1, 3, 2, 3]
+```
+
+👉 Khi chạy vòng for:
+
+| i | potions[i] | max (sau khi so sánh) |
+| - | ---------- | --------------------- |
+| 0 | 1          | 1                     |
+| 1 | 3          | 3                     |
+| 2 | 2          | 3                     |
+| 3 | 3          | 3                     |
+
+➡️ Kết quả cuối: `max = 3`
+⇒ Ta chỉ cần `map = new int[4]` (từ 0 đến 3).
+
+---
+
+### ✅ Kết luận:
+
+Dòng này giúp:
+
+* **Tìm giá trị lớn nhất trong potions**
+* **Giúp xác định kích thước hợp lý cho mảng map** (tránh tràn hoặc tốn bộ nhớ thừa)
+* Là **bước chuẩn bị cần thiết** để tạo bảng tần suất và cộng dồn sau đó.
+# Giải thích chi tiết từng dòng
+
+Mình sẽ giải thích **từng dòng** của đoạn mã này, kèm ví dụ cụ thể để dễ hình dung:
+
+```java
+for (int i = 0; i < n; i++) {
+    map[potions[i]]++;
+}
+int sum = 0;
+for (int i = max; i >= 0; i--) {
+    sum += map[i];
+    map[i] = sum;
+}
+```
+
+---
+
+## Vòng 1 — đếm tần suất từng giá trị potion
+
+```java
+for (int i = 0; i < n; i++) {
+    map[potions[i]]++;
+}
+```
+
+1. `for (int i = 0; i < n; i++) {`
+
+   * Lặp qua **từng phần tử** trong mảng `potions`. `n` là số lượng potions.
+
+2. `map[potions[i]]++;`
+
+   * `potions[i]` là giá trị của potion hiện tại (ví dụ 2, 5, 8...).
+   * `map[v]` ban đầu là số lần xuất hiện giá trị `v`. Dòng này **tăng 1** số lượng potion có giá trị `v`.
+   * Kết quả sau vòng này: `map[x]` = **số potion có độ mạnh đúng bằng `x`**.
+
+> **Tiền điều kiện**: mảng `map` phải có kích thước ≥ `max+1` (trong mã của bạn trước đó, `max` là giá trị lớn nhất trong `potions`), nên chỉ số `map[potions[i]]` luôn hợp lệ.
+
+### Ví dụ nhỏ (sau vòng 1)
+
+`potions = [1, 3, 2, 3]`, `max = 3`
+ban đầu `map = [0,0,0,0]`
+
+* đọc 1 → `map[1]++` → `[0,1,0,0]`
+* đọc 3 → `map[3]++` → `[0,1,0,1]`
+* đọc 2 → `map[2]++` → `[0,1,1,1]`
+* đọc 3 → `map[3]++` → `[0,1,1,2]`
+
+---
+
+## Vòng 2 — biến `map` thành mảng cộng dồn (số lượng potion ≥ i)
+
+```java
+int sum = 0;
+for (int i = max; i >= 0; i--) {
+    sum += map[i];
+    map[i] = sum;
+}
+```
+
+1. `int sum = 0;`
+
+   * Khởi tạo biến `sum` để tích lũy tổng số potion đã gặp khi duyệt từ phải sang trái.
+
+2. `for (int i = max; i >= 0; i--) {`
+
+   * Duyệt **ngược** từ `i = max` xuống `i = 0`. Duyệt ngược vì ta muốn biết *số potion có giá trị **lớn hơn hoặc bằng** mỗi `i`*.
+
+3. `sum += map[i];`
+
+   * Cộng số potion **có đúng giá trị `i`** vào tổng tích lũy `sum`. Ở lần lặp đầu `i = max`, `sum` sẽ bằng `map[max]` (số potion giá trị max). Ở lần tiếp theo `i = max-1`, `sum` = số potion giá trị `max` + số potion giá trị `max-1`, v.v.
+
+4. `map[i] = sum;`
+
+   * Ghi lại `sum` vào `map[i]`. Sau cập nhật này, `map[i]` không còn là “số potion = i” nữa; mà là **số potion có giá trị ≥ i**.
+
+### Tiếp ví dụ trên (vòng 2 chi tiết)
+
+Bắt đầu `map` từ vòng 1: `[0,1,1,2]` (max = 3), `sum = 0`
+
+* i = 3: `sum = 0 + map[3](=2) = 2` → `map[3] = 2`
+  (có 2 potion ≥ 3)
+* i = 2: `sum = 2 + map[2](=1) = 3` → `map[2] = 3`
+  (có 3 potion ≥ 2)
+* i = 1: `sum = 3 + map[1](=1) = 4` → `map[1] = 4`
+  (có 4 potion ≥ 1)
+* i = 0: `sum = 4 + map[0](=0) = 4` → `map[0] = 4`
+  (có 4 potion ≥ 0, tức toàn bộ potions)
+
+Kết quả cuối: `map = [4,4,3,2]`.
+
+---
+
+## Vì sao làm vậy?
+
+* Mục tiêu của thuật toán là **trả lời nhanh** cho mỗi phép thuật (`spell`) xem có bao nhiêu potion thỏa `spell * potion >= success`.
+* Với cách này, nếu bạn tính được `index = ceil(success / spell)` (mức potion tối thiểu cần thiết), thì **số potion đủ mạnh** chính là `map[index]` (vì `map[index]` = số potion có giá trị ≥ `index`).
+* Tra cứu `map[index]` là **O(1)**, rất nhanh.
+
+---
+
+## Lưu ý / Ưu nhược
+
+* **Ưu điểm:** rất nhanh để trả lời nhiều truy vấn spells (không cần sort hoặc binary search cho mỗi spell).
+* **Nhược điểm:** nếu `max` rất lớn (ví dụ potions có giá trị ~1e9), thì `map` sẽ chiếm nhiều bộ nhớ (không khả thi). Giải pháp khi `max` quá lớn là dùng cách sort + binary search thay vì mảng tần suất.
+
+---
+
+Nếu bạn muốn mình, mình có thể:
+
+* Viết lại đoạn này kèm **comment ở từng dòng** trong code Java, hoặc
+* Chạy một ví dụ khác bằng tay (bảng từng bước) để minh họa cho một bộ dữ liệu khác. Bạn muốn phần nào?
+Tuyệt — mình sẽ **giải thích chi tiết từng dòng** của đoạn code bạn đưa (bằng tiếng Việt), kèm **ví dụ minh hoạ** và một vài lưu ý an toàn kiểu dữ liệu.
+
+Đoạn code:
+
+```java
+for(int i=0; i<m; i++){
+    int spell = spells[i];
+    long index = (success + spell -1)/spell;
+    if(index <= max){
+        res[i] = map[(int) index];
+    } 
+}
+return res;
+```
+
+---
+
+### Giải thích từng dòng
+
+1. `for(int i=0; i<m; i++){`
+
+* Duyệt tất cả các phép thuật (spells).
+* `m` ở đây là số lượng phần tử trong mảng `spells` (thường đã gán trước đó: `int m = spells.length;`).
+
+2. `int spell = spells[i];`
+
+* Lấy giá trị `spell` hiện tại — sức mạnh phép thuật tại chỉ số `i`.
+* Dùng biến `spell` để tính ngưỡng potion cần thiết cho phép thuật này.
+
+3. `long index = (success + spell -1)/spell;`
+
+* Mục đích: tính **giá trị nhỏ nhất của potion** sao cho `spell * potion >= success`.
+* Toán học: `potion_min = ceil(success / spell)`.
+* Công thức nguyên: `ceil(a / b) = (a + b - 1) // b` (khi a, b là số nguyên dương).
+* Ở đây `a = success` (kiểu `long`), `b = spell` (kiểu `int`), nên viết `(success + spell - 1) / spell`.
+* Kết quả gán vào `index` kiểu `long` (phòng trường hợp `success` là `long` lớn).
+* Ví dụ nhỏ:
+
+  * `success = 16`, `spell = 3` → `(16 + 3 - 1)/3 = 18/3 = 6` → cần potion ≥ 6.
+  * `success = 7`, `spell = 5` → `(7 + 5 -1)/5 = 11/5 = 2` → cần potion ≥ 2.
+
+4. `if(index <= max){`
+
+* Kiểm tra xem `index` có nằm trong phạm vi mà `map` đang lưu không.
+* `max` là giá trị lớn nhất xuất hiện trong `potions` (đã tính trước khi tạo `map`).
+* Nếu `index > max` thì không có potion nào có giá trị ≥ `index` (vì `max` là lớn nhất), nên kết quả cho spell này là `0` (mặc định trong `res`).
+
+5. `res[i] = map[(int) index];`
+
+* Nếu `index <= max`, lấy trực tiếp `map[index]` — theo cấu trúc `map` của bạn, sau bước tiền xử lý `map[x]` = **số lượng potion có giá trị ≥ x**.
+* Gán số lượng đó vào `res[i]`.
+* Lưu ý ép kiểu `(int) index` vì `map` nhận chỉ số int.
+
+6. `}` (đóng for)
+
+7. `return res;`
+
+* Trả về mảng kết quả, `res[i]` là số lượng potion thỏa điều kiện với `spells[i]`.
+
+---
+
+### Ví dụ minh hoạ (từ đầu đến cuối, giả sử map đã chuẩn bị)
+
+Giả sử:
+
+* `potions = [2, 5, 8]` → sau tiền xử lý `map` có thể là: `map[0]=3, map[1]=3, map[2]=3, map[3]=2, map[4]=2, map[5]=2, map[6]=1, map[7]=1, map[8]=1` (tức map[x] = số potion ≥ x).
+* `max = 8`.
+* `spells = [3, 5, 1]`, `success = 16`.
+
+Duyệt:
+
+* i=0, `spell=3` → `index = (16+3-1)/3 = 6` → `index <= max` → `res[0] = map[6] = 1`.
+* i=1, `spell=5` → `index = (16+5-1)/5 = 4` → `res[1] = map[4] = 2`.
+* i=2, `spell=1` → `index = (16+1-1)/1 = 16` → `index > max` → `res[2]` giữ 0.
+
+Kết quả `res = [1,2,0]`.
+
+---
+
+### Một vài lưu ý quan trọng
+
+* **Kiểu dữ liệu**: `success` được dùng là `long` để tránh tràn khi success lớn. Việc lưu `index` vào `long` trước khi ép về `int` khi truy cập `map` là hợp lý.
+* **Chia cho 0**: algorithm giả định `spell > 0`. Nếu `spell == 0` sẽ gây chia cho 0 — theo đề bài `spells[i] >= 1` nên an toàn.
+* **Kiểm tra biên**: `if (index <= max)` đảm bảo không truy cập ngoài mảng `map`. Nếu `index` nhỏ hơn 0 (không xảy ra khi success ≥ 0 và spell > 0) thì cần xử lý, nhưng trong bài này không cần.
+* **Giá trị map[0]**: nếu `index == 0` thì `map[0]` = tổng số potions (tức mọi potion thỏa), nên code xử lý tốt trường hợp này.
+
+---
+
+### Độ phức tạp
+
+* Vòng `for` này chạy `O(m)` (m = số spells).
+* Mỗi lần truy xuất `map` là `O(1)`.
+* Tổng thời gian cho phần này: `O(m)` (phần tiền xử lý map đã làm trước đó).
+
+---
+
+Nếu bạn muốn mình **viết thêm comment trực tiếp vào code** (từng dòng) hoặc chạy một ví dụ khác theo tay để bạn dễ so sánh, mình làm luôn nhé.
+Câu hỏi rất hay 👏
+Giờ ta giải thích kỹ đoạn này:
+
+```java
+long index = (success + spell - 1) / spell;
+```
+
+---
+
+### 🎯 Mục tiêu
+
+Dòng này **tính ngưỡng nhỏ nhất của potion** cần có để phép `spell` đạt hoặc vượt qua `success`.
+Tức là ta cần tìm **giá trị nhỏ nhất của potion** sao cho:
+[
+spell \times potion \ge success
+]
+
+---
+
+### 💡 Giải thích toán học
+
+Ta có:
+[
+potion \ge \frac{success}{spell}
+]
+
+Tuy nhiên, vì `potion` là **số nguyên**, ta cần **làm tròn lên** kết quả này (ceiling division).
+Ví dụ:
+
+* Nếu `success = 10` và `spell = 3`
+  → potion cần ≥ 3.333...
+  → potion nhỏ nhất = **4**
+
+---
+
+### ⚙️ Trong code Java
+
+Vì Java không có hàm chia làm tròn lên cho số nguyên, ta dùng mẹo:
+
+```java
+(success + spell - 1) / spell
+```
+
+Đây là **cách làm tròn lên bằng số nguyên** (integer ceiling division).
+
+---
+
+### 📘 Cách hoạt động của công thức
+
+Giả sử:
+
+```
+success = 10, spell = 3
+```
+
+➡️ Nếu chia bình thường:
+
+```
+10 / 3 = 3 (do chia nguyên)
+```
+
+→ Sai, vì 3 * 3 = 9 < 10
+
+➡️ Nhưng với `(success + spell - 1) / spell`:
+
+```
+(10 + 3 - 1) / 3 = 12 / 3 = 4 ✅
+```
+
+→ Đúng, vì 3 * 4 = 12 ≥ 10
+
+---
+
+### ✅ Kết luận
+
+`(success + spell - 1) / spell` là **mẹo để chia lấy trần (ceil)** trong số nguyên.
+Nó đảm bảo rằng ta không bị làm tròn xuống, giúp tìm đúng **giá trị potion nhỏ nhất** cần thiết để đạt `success`.
+
+---
+
+👉 **Tóm lại:**
+
+* `-1` trong `(success + spell - 1)` giúp **làm tròn lên** thay vì làm tròn xuống khi chia nguyên.

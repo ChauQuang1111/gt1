@@ -1,0 +1,233 @@
+Atlantic Water Flow
+from typing import List
+class Solution:
+    def pacificAtlantic(self, heights: List[List[int]]) -> List[List[int]]:
+        if not heights or not heights[0]:
+            return []
+
+        m, n = len(heights), len(heights[0])
+
+        # Hai tập hợp lưu các ô có thể chảy đến từng đại dương
+        pacific, atlantic = set(), set()
+
+        # DFS: duyệt lan từ một ô ra 4 hướng
+        def dfs(i, j, visited, prev_height):
+            # Dừng nếu ra ngoài biên, đã thăm, hoặc độ cao thấp hơn ô trước
+            if (
+                i < 0 or j < 0 or i >= m or j >= n or
+                (i, j) in visited or
+                heights[i][j] < prev_height
+            ):
+                return
+
+            visited.add((i, j))  # đánh dấu đã thăm
+
+            # DFS 4 hướng
+            dfs(i + 1, j, visited, heights[i][j])
+            dfs(i - 1, j, visited, heights[i][j])
+            dfs(i, j + 1, visited, heights[i][j])
+            dfs(i, j - 1, visited, heights[i][j])
+
+        # Bắt đầu DFS từ biên Thái Bình Dương (trên và trái)
+        for i in range(m):
+            dfs(i, 0, pacific, heights[i][0])      # cột đầu
+            dfs(i, n - 1, atlantic, heights[i][n - 1])  # cột cuối
+        for j in range(n):
+            dfs(0, j, pacific, heights[0][j])      # hàng đầu
+            dfs(m - 1, j, atlantic, heights[m - 1][j])  # hàng cuối
+
+        # Giao giữa hai tập hợp là các ô có thể chảy đến cả hai đại dương
+        result = list(map(list, pacific & atlantic))
+        return result
+	
+	
+Rất hay 👍 — dòng này:
+
+```python
+if not heights or not heights[0]:
+    return []
+```
+
+là **bước kiểm tra đầu vào (input validation)** trong hàm `pacificAtlantic`.
+Mình giải thích chi tiết nhé 👇
+
+---
+
+## 🧠 Ý nghĩa tổng quát
+
+Câu lệnh này có nghĩa là:
+
+> Nếu **ma trận `heights` rỗng** (không có dữ liệu)
+> hoặc **ma trận có 0 cột** (các hàng rỗng)
+> thì **không cần làm gì nữa**, trả về `[]` (danh sách rỗng).
+
+---
+
+## 🧩 Cụ thể từng phần:
+
+### 1️⃣ `not heights`
+
+* Biểu thức này đúng (`True`) nếu biến `heights` là **rỗng**.
+* Ví dụ:
+
+  ```python
+  heights = []    # không có hàng nào
+  ```
+
+  → `not heights` = `True`.
+
+Điều này xảy ra khi input không có dữ liệu hoặc bị lỗi định dạng (ví dụ `[]`).
+
+---
+
+### 2️⃣ `not heights[0]`
+
+* Kiểm tra hàng đầu tiên có **phần tử nào không**.
+  Ví dụ:
+
+  ```python
+  heights = [[]]   # có 1 hàng, nhưng không có cột
+  ```
+
+  → `heights[0]` = `[]`
+  → `not heights[0]` = `True`.
+
+Nghĩa là ma trận có 0 cột (không có độ cao nào trong hàng đầu tiên).
+
+---
+
+### 3️⃣ `return []`
+
+Nếu **một trong hai điều kiện** trên đúng
+→ chương trình **không thể chạy DFS được** (vì ma trận trống),
+nên trả về `[]` (danh sách rỗng) để báo là **không có ô nào hợp lệ**.
+
+---
+
+## ✅ Ví dụ minh họa
+
+### Trường hợp 1: ma trận trống
+
+```python
+heights = []
+```
+
+→ `not heights` = True → return []
+
+---
+
+### Trường hợp 2: có hàng nhưng không có cột
+
+```python
+heights = [[]]
+```
+
+→ `heights[0] = []` → `not heights[0]` = True → return []
+
+---
+
+### Trường hợp 3: ma trận hợp lệ
+
+```python
+heights = [[1,2,3],[4,5,6]]
+```
+
+→ Cả hai điều kiện đều False → tiếp tục chạy bình thường.
+
+---
+
+👉 Tóm lại:
+
+> Dòng `if not heights or not heights[0]: return []`
+> là **bước kiểm tra an toàn** để tránh lỗi **"IndexError: list index out of range"** khi truy cập `heights[0][0]` trong ma trận rỗng.
+Câu hỏi rất hay 💡 — đây chính là **trọng tâm của bài “Pacific Atlantic Water Flow”** (LeetCode 417).
+Mình sẽ giải thích kỹ tại sao **giao giữa hai tập hợp** là kết quả đúng nhé 👇
+
+---
+
+## 🎯 Mục tiêu của bài toán
+
+Ta có một ma trận `heights[i][j]`, mỗi ô là độ cao địa hình.
+Nước có thể **chảy từ ô cao xuống ô thấp hoặc bằng** theo 4 hướng: ⬆️ ⬇️ ⬅️ ➡️
+
+* **Bờ Thái Bình Dương (Pacific)**: nằm ở **trên và bên trái** ma trận.
+* **Bờ Đại Tây Dương (Atlantic)**: nằm ở **dưới và bên phải** ma trận.
+
+> Ta cần tìm **các ô mà nước có thể chảy tới được cả hai đại dương**.
+
+---
+
+## 💧 Cách nước chảy
+
+Nước chỉ **chảy từ ô cao → ô thấp hoặc bằng**,
+nên nếu ta muốn biết ô nào “**có thể chảy đến đại dương**”,
+ta có thể **đảo ngược tư duy** như sau:
+
+👉 Thay vì để nước “chảy xuống biển”,
+ta tưởng tượng **nước từ biển lan ngược vào đất liền**
+(chỉ lan tới những ô **cao hơn hoặc bằng** nó).
+
+---
+
+## ⚙️ Cách làm trong code
+
+### 1️⃣ DFS từ 2 đại dương:
+
+* Từ **Thái Bình Dương** (bờ trên + bờ trái), ta chạy DFS để đánh dấu tất cả ô mà nước **có thể chảy ra biển này**.
+  → Lưu vào tập `pacific`.
+
+* Từ **Đại Tây Dương** (bờ dưới + bờ phải), ta cũng chạy DFS tương tự.
+  → Lưu vào tập `atlantic`.
+
+---
+
+## 💡 Tại sao phải lấy *giao nhau (intersection)*?
+
+* Một ô `(i, j)` **nằm trong `pacific`**
+  ⟹ Nước từ ô đó có thể chảy đến Thái Bình Dương.
+
+* Một ô `(i, j)` **nằm trong `atlantic`**
+  ⟹ Nước từ ô đó có thể chảy đến Đại Tây Dương.
+
+→ Nếu ô đó **xuất hiện trong cả hai tập**,
+nghĩa là nước từ ô đó **có thể chảy đến cả hai đại dương**.
+
+---
+
+## ✅ Ví dụ minh họa
+
+Giả sử có ma trận:
+
+```
+[ [1, 2, 2, 3, 5],
+  [3, 2, 3, 4, 4],
+  [2, 4, 5, 3, 1],
+  [6, 7, 1, 4, 5],
+  [5, 1, 1, 2, 4] ]
+```
+
+* DFS từ **Pacific (trên + trái)** → tìm được các ô `P` nước chảy ra được biển Thái Bình Dương.
+* DFS từ **Atlantic (dưới + phải)** → tìm được các ô `A` nước chảy ra được biển Đại Tây Dương.
+
+Một vài ô nằm **trong cả hai nhóm (P ∩ A)**,
+chính là các ô nước **chảy được tới cả hai đại dương**.
+
+---
+
+## 🧮 Trong code:
+
+```python
+result = list(map(list, pacific & atlantic))
+```
+
+* `pacific & atlantic` = **giao nhau giữa hai tập hợp**.
+* `map(list, ...)` = chuyển từ tuple `(i, j)` → list `[i, j]`.
+* `result` là danh sách các tọa độ đáp ứng điều kiện.
+
+---
+
+👉 **Tóm tắt lại ngắn gọn:**
+
+> Một ô chảy đến cả hai đại dương
+> ⇔ Nước từ ô đó đi được đến bờ Pacific **và** bờ Atlantic
+> ⇔ Ô đó nằm trong **giao giữa hai tập hợp** `pacific` và `atlantic`.

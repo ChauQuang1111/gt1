@@ -1,0 +1,327 @@
+Design Task Manager(18/09/2025)
+class TaskManager:
+
+    def __init__(self, tasks: List[List[int]]):
+        self.tasks = []
+        self.valid = {}
+
+        for user, task, priority in tasks:
+            t = (-priority, -task, user)
+            self.tasks.append(t)
+            self.valid[-task] = t
+        
+        heapify(self.tasks)
+       
+
+    def add(self, userId: int, taskId: int, priority: int) -> None:
+        t = (-priority, -taskId, userId)
+        self.valid[-taskId] = t
+        heappush(self.tasks, t)
+        
+
+    def edit(self, taskId: int, newPriority: int) -> None:
+        old_pri, old_task, old_user = self.valid[-taskId]
+        t = (-newPriority, old_task, old_user)
+        self.valid[-taskId] = t
+        heappush(self.tasks, t)
+
+    def rmv(self, taskId: int) -> None:
+        del self.valid[-taskId]
+
+    def execTop(self) -> int:
+      
+        while self.tasks:
+            pri, tsk, usr = heappop(self.tasks)
+
+            if tsk not in self.valid:
+                continue
+            
+           
+            if self.valid[tsk][0] != pri or self.valid[tsk][2] != usr:
+                continue
+            
+            del self.valid[tsk]
+            return usr
+            Ok, mình giải thích chi tiết hàm **`execTop`** nhé 👇
+
+---
+
+### 🔹 Code
+
+```python
+def execTop(self) -> int:
+    while self.tasks:
+        pri, tsk, usr = heappop(self.tasks)
+
+        if tsk not in self.valid:
+            continue
+        
+        if self.valid[tsk][0] != pri or self.valid[tsk][2] != usr:
+            continue
+        
+        del self.valid[tsk]
+        return usr
+            
+    return -1
+```
+
+---
+
+### 🔹 Ý tưởng chính
+
+`execTop` lấy **task ưu tiên cao nhất hợp lệ** ra khỏi hệ thống và trả về **userId** của task đó.
+
+Heap (`self.tasks`) có thể chứa nhiều bản ghi **trùng taskId** (do `edit` thêm bản ghi mới mà không xoá bản ghi cũ). Vì vậy ta phải lọc bỏ những bản ghi đã lỗi thời hoặc đã bị xóa (`rmv`).
+
+---
+
+### 🔹 Giải thích từng bước
+
+1. **`pri, tsk, usr = heappop(self.tasks)`**
+
+   * Lấy phần tử ưu tiên cao nhất từ heap.
+   * Do ta lưu dưới dạng `(-priority, -taskId, userId)`, nên heap cho ta bản ghi có priority lớn nhất trước.
+
+---
+
+2. **`if tsk not in self.valid:`**
+
+   * Nếu `taskId` này đã bị xoá bằng `rmv`, nó sẽ không còn trong `valid`.
+   * → Bỏ qua, tiếp tục lấy task khác.
+
+---
+
+3. **`if self.valid[tsk][0] != pri or self.valid[tsk][2] != usr:`**
+
+   * So sánh bản ghi vừa lấy từ heap với bản ghi hiện tại trong `valid`.
+   * Nếu không khớp → nghĩa là đây là bản ghi **cũ** (ví dụ sau khi `edit`, priority thay đổi).
+   * → Bỏ qua, tiếp tục lấy task khác.
+
+---
+
+4. **`del self.valid[tsk]`**
+
+   * Khi gặp task hợp lệ nhất, xóa khỏi `valid` để tránh dùng lại.
+   * Vì task này đã được "executed" xong rồi.
+
+---
+
+5. **`return usr`**
+
+   * Trả về `userId` của task vừa được xử lý.
+
+---
+
+6. **`return -1`**
+
+   * Nếu heap rỗng, không còn task nào hợp lệ → trả `-1`.
+
+---
+
+### 🔹 Tóm gọn
+
+Hàm `execTop`:
+
+* Dùng heap để lấy task ưu tiên cao nhất.
+* Kiểm tra xem task này có còn hợp lệ không (bằng `valid`).
+* Nếu hợp lệ → xoá khỏi hệ thống và trả `userId`.
+* Nếu không → bỏ qua và thử tiếp.
+* Nếu không còn gì → trả `-1`.
+
+---
+
+👉 Bạn có muốn mình làm một **ví dụ chạy từng bước** (add → edit → rmv → execTop) để minh hoạ rõ cách `heap` và `valid` thay đổi không?
+
+        return -1
+Ok, mình giải thích chi tiết đoạn Python này nhé:
+
+```python
+for user, task, priority in tasks:
+    t = (-priority, -task, user)
+    self.tasks.append(t)
+    self.valid[-task] = t
+
+heapify(self.tasks)
+```
+
+---
+
+### 🔎 Giải thích từng bước:
+
+1. **`for user, task, priority in tasks:`**
+
+   * Vòng lặp lấy từng bộ 3 `(userId, taskId, priority)` từ danh sách `tasks`.
+
+---
+
+2. **`t = (-priority, -task, user)`**
+
+   * Ở đây, mỗi task được biểu diễn bằng một tuple `t`.
+   * **Dùng số âm**:
+
+     * Trong Python, `heapq` mặc định là **min-heap** (lấy phần tử nhỏ nhất trước).
+     * Để mô phỏng **max-heap** (lấy task có priority cao nhất), người ta lưu **`-priority`** thay vì `priority`.
+     * Khi so sánh, priority lớn → `-priority` nhỏ → sẽ được ưu tiên trong min-heap.
+   * **`-task`** cũng được đảo dấu để xử lý ràng buộc: nếu nhiều task có cùng priority, thì lấy task có **ID lớn hơn** trước.
+     (Ví dụ: priority = 50, taskId = 10 và 20 → `-10` vs `-20`, thì `-20` nhỏ hơn → taskId=20 được ưu tiên).
+   * Cuối cùng giữ lại `user` để khi `execTop()` có thể trả về đúng `userId`.
+
+---
+
+3. **`self.tasks.append(t)`**
+
+   * Lưu task tuple vào danh sách `self.tasks`.
+
+---
+
+4. **`self.valid[-task] = t`**
+
+   * `valid` là một dictionary dùng để kiểm tra xem một task hiện tại có còn hợp lệ không (đã bị xoá hay chỉnh sửa chưa).
+   * Dùng **`-task`** làm key (đồng bộ với tuple lưu trong heap).
+   * Giá trị là chính tuple `t` (priority, taskId, user) để đối chiếu.
+
+---
+
+5. **`heapify(self.tasks)`**
+
+   * Chuyển danh sách `self.tasks` thành **heap hợp lệ** để sau này có thể `heappop` hoặc `heappush`.
+   * Sau bước này, `self.tasks[0]` sẽ là task có priority cao nhất (do ta lưu bằng số âm).
+
+---
+
+### ✅ Tóm lại
+
+* `(-priority, -task, user)` là cách để biến **min-heap của Python** thành một **max-heap** theo thứ tự:
+
+  1. Ưu tiên priority cao nhất.
+  2. Nếu priority bằng nhau → ưu tiên taskId lớn hơn.
+* `self.valid` giúp theo dõi xem task hiện trong heap có còn đúng hay đã bị thay đổi.
+* `heapify` tổ chức lại toàn bộ để đảm bảo heap hoạt động chính xác.
+
+---
+
+👉 Bạn có muốn mình viết thêm phần **mô phỏng ví dụ** (ví dụ có 3 task với priority khác nhau thì heap lưu như thế nào) cho dễ hình dung không?
+Ok, mình phân tích chi tiết đoạn code `edit` này nhé 👇
+
+```python
+def edit(self, taskId: int, newPriority: int) -> None:
+    old_pri, old_task, old_user = self.valid[-taskId]
+    t = (-newPriority, old_task, old_user)
+    self.valid[-taskId] = t
+    heappush(self.tasks, t)
+```
+
+---
+
+### 🔎 Giải thích từng dòng:
+
+1. **`old_pri, old_task, old_user = self.valid[-taskId]`**
+
+   * Lấy thông tin cũ của task từ dictionary `valid`.
+   * `valid[-taskId]` chứa tuple dạng `(-priority, -taskId, user)`.
+   * Giải nén ra:
+
+     * `old_pri` = `-priority cũ`
+     * `old_task` = `-taskId`
+     * `old_user` = `userId`
+
+---
+
+2. **`t = (-newPriority, old_task, old_user)`**
+
+   * Tạo tuple mới với **priority mới**.
+   * Vẫn giữ nguyên `old_task` (chính là `-taskId`) và `old_user`.
+   * Lưu dưới dạng `(-newPriority, -taskId, userId)`.
+
+---
+
+3. **`self.valid[-taskId] = t`**
+
+   * Cập nhật dictionary `valid` với tuple mới.
+   * Như vậy, lần sau khi kiểm tra taskId này, hệ thống biết rằng **priority hiện tại** phải là `newPriority`.
+
+---
+
+4. **`heappush(self.tasks, t)`**
+
+   * Đẩy tuple mới `t` vào heap.
+   * Lúc này heap có thể chứa nhiều bản ghi cùng `taskId`, nhưng chỉ bản ghi trùng với `valid[-taskId]` mới là **hợp lệ**.
+   * Các bản ghi cũ (priority cũ) khi bị `heappop` ra sẽ bị bỏ qua (do so sánh với `valid` không khớp).
+
+---
+
+### ⚡ Vì sao không xoá bản ghi cũ trong heap?
+
+* Trong Python, `heapq` **không hỗ trợ xoá phần tử tuỳ ý** (chỉ xoá được root bằng `heappop`).
+* Do đó, cách làm phổ biến là **lazy deletion**:
+
+  * Khi chỉnh sửa, cứ thêm phiên bản mới vào heap.
+  * Khi lấy task (`execTop`), nếu tuple trong heap không trùng với `valid` → bỏ qua (coi như bản ghi cũ, không còn hợp lệ).
+
+---
+
+### ✅ Tóm lại
+
+Hàm `edit` thực hiện:
+
+* Lấy ra thông tin task cũ từ `valid`.
+* Tạo bản ghi mới với `newPriority`.
+* Cập nhật `valid` để chỉ công nhận bản ghi mới.
+* Thêm bản ghi mới vào heap (cũ thì tự bị bỏ qua sau này).
+
+---
+
+👉 Bạn có muốn mình viết thêm đoạn **minh hoạ bằng ví dụ số cụ thể** (edit một task từ priority=10 thành 50 thì heap và valid thay đổi thế nào) cho dễ hình dung không?
+Ok 👍 mình giải thích cả **`edit`** và **`rmv`** luôn nhé:
+
+---
+
+### 🔹 Hàm `edit`
+
+```python
+def edit(self, taskId: int, newPriority: int) -> None:
+    old_pri, old_task, old_user = self.valid[-taskId]
+    t = (-newPriority, old_task, old_user)
+    self.valid[-taskId] = t
+    heappush(self.tasks, t)
+```
+
+* **`old_pri, old_task, old_user = self.valid[-taskId]`**
+  Lấy thông tin bản ghi cũ từ `valid`.
+  Trong đó: `valid[-taskId]` chứa tuple dạng `(-priority, -taskId, userId)`.
+
+* **`t = (-newPriority, old_task, old_user)`**
+  Tạo bản ghi mới với priority mới (`newPriority`), giữ nguyên `taskId` và `userId`.
+
+* **`self.valid[-taskId] = t`**
+  Cập nhật `valid`, nghĩa là từ giờ chỉ **công nhận** bản ghi mới này.
+
+* **`heappush(self.tasks, t)`**
+  Đẩy bản ghi mới vào heap.
+  Heap giờ có thể chứa bản ghi cũ + bản ghi mới, nhưng chỉ bản ghi mới còn hợp lệ (cũ thì bị bỏ qua khi `execTop`).
+
+👉 Đây gọi là **lazy update**: không xoá trực tiếp trong heap mà chèn thêm, sau đó kiểm tra hợp lệ bằng `valid`.
+
+---
+
+### 🔹 Hàm `rmv`
+
+```python
+def rmv(self, taskId: int) -> None:
+    del self.valid[-taskId]
+```
+
+* Xoá taskId khỏi dictionary `valid`.
+* Nghĩa là từ bây giờ, **bản ghi của taskId đó bị coi là không hợp lệ**.
+* Heap vẫn còn bản ghi cũ, nhưng khi `execTop` lấy ra thì sẽ bỏ qua, vì `tsk not in self.valid`.
+
+---
+
+### ⚡ Tóm gọn:
+
+* `edit`: thêm một bản ghi mới với priority mới, cập nhật `valid` để công nhận bản ghi mới.
+* `rmv`: xoá khỏi `valid`, coi như taskId đó đã bị loại bỏ, dù heap vẫn chứa bản ghi cũ.
+
+---
+
+👉 Bạn có muốn mình vẽ **timeline ví dụ nhỏ** (ban đầu add → edit → rmv → execTop) để thấy rõ cách heap và `valid` thay đổi không?

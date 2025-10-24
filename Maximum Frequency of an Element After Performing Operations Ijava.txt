@@ -1,0 +1,800 @@
+Maximum Frequency of an Element After Performing Operations I
+class Solution {
+    public int maxFrequency(int[] nums, int k, int numOps) {
+        int maxVal = Arrays.stream(nums).max().getAsInt() + k + 2;
+        int[] count = new int[maxVal];
+
+        for (int v : nums)
+            count[v]++;
+
+        for (int i = 1; i < maxVal; i++)
+            count[i] += count[i - 1];
+
+        int res = 0;
+        for (int i = 0; i < maxVal; i++) {
+            int left = Math.max(0, i - k);
+            int right = Math.min(maxVal - 1, i + k);
+            int total = count[right] - (left > 0 ? count[left - 1] : 0);
+            int freq = count[i] - (i > 0 ? count[i - 1] : 0);
+            res = Math.max(res, freq + Math.min(numOps, total - freq));
+        }
+
+        return res;
+    }
+}
+Giải thích chi tiết hai dòng này trong Java 👇
+
+```java
+int maxVal = Arrays.stream(nums).max().getAsInt() + k + 2;
+int[] count = new int[maxVal];
+```
+
+---
+
+### 🔹 1️⃣ `int maxVal = Arrays.stream(nums).max().getAsInt() + k + 2;`
+
+* `Arrays.stream(nums)` → tạo một **luồng (stream)** từ mảng `nums`.
+* `.max()` → tìm **giá trị lớn nhất** trong mảng `nums`.
+* `.getAsInt()` → lấy giá trị kiểu `int` từ `OptionalInt` (kết quả của `.max()`).
+
+👉 `Arrays.stream(nums).max().getAsInt()` = **giá trị lớn nhất trong mảng `nums`**.
+
+Sau đó cộng thêm `k + 2` để tạo một biên an toàn.
+Lý do:
+
+* Vì trong quá trình thuật toán, ta có thể cần xét **các giá trị lớn hơn phần tử tối đa của mảng đến `+k`** (vì mỗi phần tử có thể được tăng thêm tối đa `k` đơn vị).
+* Cộng thêm `2` để tránh lỗi tràn chỉ số mảng (`ArrayIndexOutOfBounds`) khi tính toán ở biên.
+
+✅ Ví dụ:
+
+```
+nums = [2, 5, 6], k = 3
+→ max(nums) = 6
+→ maxVal = 6 + 3 + 2 = 11
+```
+
+→ Nghĩa là ta cần mảng `count` có kích thước đủ để chứa các giá trị từ `0` đến `11`.
+
+---
+
+### 🔹 2️⃣ `int[] count = new int[maxVal];`
+
+* Tạo mảng `count` có `maxVal` phần tử, ban đầu toàn 0.
+* Dùng `count[v]` để **đếm tần suất** của giá trị `v` trong mảng `nums`.
+
+Sau đó trong code có:
+
+```java
+for (int v : nums)
+    count[v]++;
+```
+
+👉 Mỗi lần gặp giá trị `v` trong `nums`, ta tăng `count[v]` lên 1.
+
+---
+
+✅ **Tóm lại:**
+
+* `maxVal` giúp xác định kích thước cần thiết của mảng đếm, có đủ chỗ cho các giá trị biến đổi trong khoảng `[0, max(nums) + k]`.
+* `count` là mảng **đếm tần suất xuất hiện** của từng giá trị (kiểu “frequency array”), phục vụ cho việc tính toán nhanh trong phần sau của thuật toán.
+Rất tốt 👍 — ba dòng này là **phần khởi tạo dữ liệu tần suất và mảng tích lũy (prefix sum)**, mình giải thích từng phần nhé:
+
+---
+
+### 🧩 **1️⃣ Vòng lặp đầu tiên**
+
+```java
+for (int v : nums)
+    count[v]++;
+```
+
+* Mục đích: **đếm tần suất xuất hiện của mỗi giá trị** trong mảng `nums`.
+* `count[v]` tăng 1 mỗi khi giá trị `v` xuất hiện.
+
+👉 Sau vòng này,
+`count[x]` = **số lần giá trị x xuất hiện trong mảng**.
+
+🧠 **Ví dụ:**
+
+```
+nums = [1, 3, 3, 5]
+→ count[1] = 1
+→ count[3] = 2
+→ count[5] = 1
+Các phần tử còn lại = 0
+```
+
+---
+
+### 🧩 **2️⃣ Vòng lặp thứ hai**
+
+```java
+for (int i = 1; i < maxVal; i++)
+    count[i] += count[i - 1];
+```
+
+* Đây là bước **chuyển mảng `count` thành mảng prefix sum (tổng tích lũy)**.
+* Sau khi thực hiện:
+
+  ```
+  count[i] = tổng số phần tử ≤ i trong mảng nums
+  ```
+
+📘 **Ý tưởng:**
+Bằng cách lưu tổng tích lũy, ta có thể nhanh chóng tính được **số phần tử nằm trong một khoảng [L, R]** bằng công thức:
+
+```
+count[R] - count[L - 1]
+```
+
+mà không cần duyệt qua từng phần tử — rất nhanh (O(1)).
+
+🧠 **Ví dụ tiếp tục:**
+
+```
+count ban đầu: [0,1,0,2,0,1]   (giả sử maxVal=6)
+Sau vòng lặp prefix sum:
+count = [0,1,1,3,3,4]
+→ Nghĩa là có:
+  1 phần tử ≤ 1
+  1 phần tử ≤ 2
+  3 phần tử ≤ 3
+  4 phần tử ≤ 5
+```
+
+---
+
+### 🧩 **3️⃣ `int res = 0;`**
+
+* `res` là **biến lưu kết quả lớn nhất (maximum frequency)** mà ta tìm được.
+* Trong các bước sau, ta sẽ duyệt qua từng giá trị `i` và cập nhật:
+
+  ```java
+  res = Math.max(res, …)
+  ```
+* Cuối cùng `res` sẽ là **tần suất lớn nhất của một phần tử** sau khi thực hiện các phép biến đổi cho phép.
+
+---
+
+✅ **Tóm lại:**
+
+| Dòng code                                                    | Mục đích                                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `for (int v : nums) count[v]++;`                             | Đếm tần suất từng giá trị                                    |
+| `for (int i = 1; i < maxVal; i++) count[i] += count[i - 1];` | Tạo prefix sum để truy vấn nhanh số phần tử trong một khoảng |
+| `int res = 0;`                                               | Khởi tạo biến lưu kết quả tần suất tối đa                    |
+
+---
+
+Nếu bạn muốn, mình có thể tiếp tục giải thích **vòng lặp chính** phía sau (`for (int i = 0; i < maxVal; i++)`) — nơi tính toán frequency tối đa thực tế. Bạn muốn mình giải luôn phần đó không?
+Tốt lắm 👍 — đây là **phần quan trọng nhất** của thuật toán (vòng lặp chính), nơi tính **tần suất tối đa có thể đạt được** cho từng giá trị `i`.
+Cùng phân tích chi tiết từng dòng nhé 👇
+
+---
+
+### 🧩 **1️⃣ Vòng lặp qua tất cả giá trị khả thi**
+
+```java
+for (int i = 0; i < maxVal; i++) {
+```
+
+👉 Duyệt qua mọi **giá trị có thể** của phần tử (từ `0` đến `maxVal - 1`).
+Mục tiêu: giả định ta muốn **biến nhiều phần tử nhất thành giá trị `i`**, rồi xem tần suất tối đa đạt được là bao nhiêu.
+
+---
+
+### 🧩 **2️⃣ Xác định phạm vi có thể biến đổi**
+
+```java
+int left = Math.max(0, i - k);
+int right = Math.min(maxVal - 1, i + k);
+```
+
+* Mỗi phần tử có thể được **tăng hoặc giảm tối đa `k`**.
+* Nghĩa là:
+
+  * Các giá trị từ `i - k` đến `i + k` **có thể biến đổi thành `i`** sau khi thực hiện phép cộng/trừ ≤ `k`.
+* `Math.max` và `Math.min` giúp đảm bảo không bị tràn chỉ số (giới hạn trong mảng).
+
+📘 Ví dụ:
+Nếu `i = 5`, `k = 2` → phạm vi `[3, 7]`.
+Các số trong khoảng này có thể biến thành 5.
+
+---
+
+### 🧩 **3️⃣ Tính tổng số phần tử nằm trong phạm vi đó**
+
+```java
+int total = count[right] - (left > 0 ? count[left - 1] : 0);
+```
+
+* `count[x]` (sau khi làm prefix sum) chứa **số phần tử ≤ x**.
+* Vậy:
+
+  ```
+  count[right] - count[left - 1]
+  ```
+
+  → là **số phần tử có giá trị trong khoảng [left, right]**.
+
+⚠️ Trường hợp `left == 0` thì không trừ `count[left - 1]` (vì chỉ số âm).
+
+👉 Kết quả: `total` = tổng số phần tử **có thể biến đổi thành i** (trong ±k).
+
+---
+
+### 🧩 **4️⃣ Lấy tần suất gốc của chính giá trị i**
+
+```java
+int freq = count[i] - (i > 0 ? count[i - 1] : 0);
+```
+
+* Đây là cách tính **số phần tử gốc bằng đúng i** (giống như `pre[i]` trong phiên bản Python).
+* Dùng công thức prefix sum tương tự:
+
+  ```
+  count[i] - count[i - 1] = số phần tử == i
+  ```
+
+👉 `freq` là **tần suất ban đầu của i**, chưa biến đổi gì cả.
+
+---
+
+### 🧩 **5️⃣ Tính tần suất tối đa có thể đạt được tại giá trị i**
+
+```java
+res = Math.max(res, freq + Math.min(numOps, total - freq));
+```
+
+Giải thích sâu hơn:
+
+* `total - freq` → là **số phần tử khác (≠ i)** nhưng nằm trong phạm vi có thể biến thành `i`.
+* Ta chỉ có thể thực hiện tối đa `numOps` phép biến đổi,
+  nên ta chỉ có thể thêm tối đa `min(numOps, total - freq)` phần tử vào nhóm `i`.
+
+➡️ Tổng cộng số phần tử bằng `i` sau khi biến đổi:
+
+```
+freq + min(numOps, total - freq)
+```
+
+Cuối cùng, lấy `Math.max` để lưu **tần suất lớn nhất** qua các giá trị `i`.
+
+---
+
+### 🧩 **6️⃣ Kết quả cuối cùng**
+
+```java
+return res;
+```
+
+`res` chính là **tần suất tối đa của bất kỳ phần tử nào** sau khi thực hiện tối đa `numOps` phép biến đổi (mỗi phép biến đổi có giới hạn ±k).
+
+---
+
+### ✅ **Tóm tắt toàn bộ ý tưởng:**
+
+| Biến            | Ý nghĩa                                                 |
+| --------------- | ------------------------------------------------------- |
+| `left`, `right` | Phạm vi ±k quanh `i`                                    |
+| `total`         | Tổng số phần tử nằm trong phạm vi có thể biến thành `i` |
+| `freq`          | Số phần tử gốc bằng `i`                                 |
+| `numOps`        | Số phép biến đổi cho phép                               |
+| `res`           | Kết quả lớn nhất qua mọi giá trị `i`                    |
+
+---
+
+### 🧠 Ví dụ nhỏ:
+
+```
+nums = [2, 3, 4], k = 1, numOps = 1
+```
+
+* Khi `i = 3`:
+
+  * `left = 2`, `right = 4`
+  * `total = 3` (các phần tử 2, 3, 4 đều nằm trong khoảng)
+  * `freq = 1` (chỉ 1 phần tử gốc = 3)
+  * `total - freq = 2` (có thể biến thêm 2 phần tử)
+  * `min(numOps, total - freq) = min(1, 2) = 1`
+  * → Tổng tần suất = `1 + 1 = 2`
+
+➡️ `res = 2`
+
+---
+
+👉 **Kết luận:**
+Vòng lặp này duyệt qua mọi giá trị `i`, tìm xem giá trị nào có thể “gom” nhiều phần tử nhất về nó (với giới hạn ±k và numOps),
+và `res` giữ lại **tần suất tối đa có thể đạt được**.
+Rất hay — đây là hai dòng quan trọng để **xác định phạm vi mà giá trị `i` có thể “thu hút” các phần tử khác về phía nó**.
+Mình sẽ giải thích cực dễ hiểu nhé 👇
+
+---
+
+### 💡 Ý tưởng tổng quát:
+
+Ta có ba tham số:
+
+* `i`: giá trị hiện tại mà ta đang xét (ta muốn biến các phần tử khác thành giá trị này).
+* `k`: độ chênh lệch tối đa mà mỗi phần tử có thể tăng hoặc giảm.
+
+👉 Có nghĩa là:
+
+> Mỗi phần tử trong mảng có thể **tăng tối đa k hoặc giảm tối đa k** để trở thành giá trị `i`.
+
+---
+
+### 🧩 Giải thích từng dòng:
+
+#### 🔹 Dòng 1:
+
+```java
+int left = Math.max(0, i - k);
+```
+
+* `i - k` là **giá trị nhỏ nhất** có thể tăng lên được thành `i`.
+  → Vì nếu bạn có một số `x`, chỉ cần `x + k ≥ i` thì có thể biến `x` thành `i`.
+  ⇒ `x ≥ i - k`.
+
+* Tuy nhiên, nếu `i - k` < 0 thì chỉ số mảng `count` không hợp lệ.
+  Vì vậy ta dùng `Math.max(0, i - k)` để đảm bảo **chỉ số không âm**.
+
+🧠 **Ví dụ:**
+
+```
+i = 5, k = 2 → left = 5 - 2 = 3
+Nghĩa là: chỉ các phần tử ≥ 3 mới có thể tăng thành 5.
+```
+
+Nếu `i = 1, k = 3` → `i - k = -2`,
+→ nên lấy `Math.max(0, -2) = 0`.
+
+---
+
+#### 🔹 Dòng 2:
+
+```java
+int right = Math.min(maxVal - 1, i + k);
+```
+
+* `i + k` là **giá trị lớn nhất** có thể giảm xuống được thành `i`.
+  → Nếu `x ≤ i + k`, thì chỉ cần giảm `x` đi một chút (≤ k) là được `i`.
+
+* Dùng `Math.min(maxVal - 1, …)` để đảm bảo không vượt quá kích thước mảng `count`.
+
+🧠 **Ví dụ:**
+
+```
+i = 5, k = 2 → right = 5 + 2 = 7
+Nghĩa là: các phần tử ≤ 7 có thể giảm xuống thành 5.
+```
+
+Nếu `maxVal = 10`, `i = 9`, `k = 3`
+→ `i + k = 12`, nhưng `maxVal - 1 = 9`
+→ `Math.min(9, 12) = 9`
+→ ta chỉ lấy tới biên mảng (an toàn, không tràn).
+
+---
+
+### ✅ Tóm lại:
+
+Hai dòng này xác định **phạm vi [left, right]** sao cho:
+
+> Bất kỳ phần tử nào trong phạm vi `[i - k, i + k]` đều có thể được biến đổi thành `i` bằng cách tăng/giảm ≤ k.
+
+| Biến    | Ý nghĩa                                                                  |
+| ------- | ------------------------------------------------------------------------ |
+| `left`  | Cận trái của khoảng có thể biến thành `i` (≥ i - k, không nhỏ hơn 0)     |
+| `right` | Cận phải của khoảng có thể biến thành `i` (≤ i + k, không vượt quá mảng) |
+
+---
+
+🧠 **Ví dụ trực quan:**
+
+```
+nums = [1, 3, 4, 6], k = 2
+```
+
+Khi `i = 4`:
+
+```
+left = 4 - 2 = 2
+right = 4 + 2 = 6
+→ phạm vi [2, 6]
+```
+
+=> Các số từ 2 đến 6 (tức là 3, 4, 6 trong mảng) đều có thể biến đổi thành 4.
+
+---
+
+👉 Tóm gọn lại:
+
+> `left` và `right` định nghĩa “vùng ảnh hưởng” của `i`,
+> tức là **những giá trị trong vùng này có thể được biến đổi để trở thành `i`**.
+Rất hay 👏 — hai dòng này chính là chỗ dùng **mảng prefix sum `count[]`** để đếm **số phần tử trong một khoảng** và **tần suất của giá trị i**.
+Mình sẽ giải thích từ gốc, cực dễ hiểu nhé 👇
+
+---
+
+## 🧩 1️⃣ Nhắc lại — `count[]` là gì?
+
+Ở phần trước ta có đoạn:
+
+```java
+for (int v : nums)
+    count[v]++;
+
+for (int i = 1; i < maxVal; i++)
+    count[i] += count[i - 1];
+```
+
+→ Sau hai vòng lặp này:
+`count[x]` **không còn là số lần xuất hiện của x nữa**,
+mà là **tổng số phần tử ≤ x** trong mảng `nums`.
+
+Ví dụ:
+
+```
+nums = [1, 3, 3, 5]
+→ count sau khi tích lũy = [0,1,1,3,3,4,...]
+```
+
+Giải nghĩa:
+
+* `count[1] = 1`  → có 1 phần tử ≤ 1
+* `count[3] = 3`  → có 3 phần tử ≤ 3
+* `count[5] = 4`  → có 4 phần tử ≤ 5
+
+---
+
+## 🧩 2️⃣ Dòng đầu tiên — Tính tổng phần tử trong khoảng [left, right]
+
+```java
+int total = count[right] - (left > 0 ? count[left - 1] : 0);
+```
+
+👉 Công thức chuẩn của **prefix sum**:
+
+> Số phần tử trong khoảng [L, R] = count[R] - count[L - 1]
+
+* `count[right]` = số phần tử ≤ `right`
+* `count[left - 1]` = số phần tử ≤ `left - 1`
+  => Hiệu của hai giá trị này chính là **số phần tử nằm trong đoạn [left, right]**
+
+⚠️ Nhưng nếu `left == 0` thì `left - 1` = -1 (không hợp lệ),
+nên ta dùng điều kiện `(left > 0 ? count[left - 1] : 0)`
+→ nghĩa là nếu `left > 0` thì trừ `count[left - 1]`,
+còn nếu `left == 0` thì trừ 0.
+
+🧠 **Ví dụ:**
+
+```
+nums = [1, 3, 3, 5], k = 2, i = 3
+→ left = 1, right = 5
+→ total = count[5] - count[0]
+= 4 - 0 = 4
+=> Có 4 phần tử trong khoảng [1, 5]
+```
+
+=> Tức là 4 phần tử có thể biến thành giá trị 3 (vì đều nằm trong ±k).
+
+---
+
+## 🧩 3️⃣ Dòng thứ hai — Tính số phần tử gốc bằng đúng i
+
+```java
+int freq = count[i] - (i > 0 ? count[i - 1] : 0);
+```
+
+Công thức này giống hệt cách trên, nhưng chỉ tính **riêng giá trị i**.
+
+> Vì `count[i]` = số phần tử ≤ i
+> `count[i - 1]` = số phần tử ≤ i - 1
+> → Hiệu của hai giá trị này = **số phần tử = i**
+
+⚠️ Nếu `i = 0`, không có `count[-1]`, nên trừ 0.
+
+🧠 **Ví dụ:**
+
+```
+nums = [1, 3, 3, 5]
+→ count[3] = 3, count[2] = 1
+→ freq = 3 - 1 = 2
+=> Có 2 phần tử bằng 3.
+```
+
+---
+
+## ✅ Tóm lại:
+
+| Biến    | Ý nghĩa                                                             | Ví dụ                                            |
+| ------- | ------------------------------------------------------------------- | ------------------------------------------------ |
+| `total` | Tổng số phần tử trong khoảng `[i - k, i + k]` có thể biến thành `i` | Nếu `i=3, k=2` → các phần tử 1..5 có thể thành 3 |
+| `freq`  | Số phần tử gốc bằng đúng `i`                                        | Nếu có 2 phần tử là 3 thì `freq=2`               |
+
+---
+
+## 🔍 Mục đích:
+
+Sau đó ta dùng:
+
+```java
+res = Math.max(res, freq + Math.min(numOps, total - freq));
+```
+
+→ Dựa trên:
+
+* `freq`: số phần tử vốn đã bằng `i`
+* `total - freq`: số phần tử có thể biến đổi thành `i`
+* `numOps`: số phép biến đổi cho phép
+  để tính xem **tối đa có thể làm bao nhiêu phần tử bằng `i`**.
+
+---
+
+👉 Tóm gọn lại:
+
+> * `total` → đếm số phần tử “trong tầm ảnh hưởng” của `i`
+> * `freq` → đếm số phần tử “đã là `i`”
+> * Dùng 2 giá trị này để tính số phần tử có thể biến đổi thành `i`.
+Rất hay — đây là đoạn **trọng tâm** trong thuật toán, nên mình sẽ giải thích thật dễ hiểu nhé 👇
+
+---
+
+### ✅ Bối cảnh:
+
+Ta có mảng `count[]`, trong đó:
+
+* `count[x]` = tổng số phần tử **≤ x** trong mảng `nums`.
+  → tức là **prefix sum** (tổng tích lũy).
+
+Ví dụ:
+
+```
+nums = [1, 2, 2, 4]
+count = [0, 1, 3, 3, 4]  
+          ↑  ↑  ↑  ↑  ↑
+          0  1  2  3  4
+```
+
+👉 Giải thích:
+
+* `count[1] = 1` → có 1 phần tử ≤ 1
+* `count[2] = 3` → có 3 phần tử ≤ 2
+* `count[4] = 4` → có 4 phần tử ≤ 4
+
+---
+
+### ✅ Dòng này:
+
+```java
+int total = count[right] - (left > 0 ? count[left - 1] : 0);
+```
+
+Có nghĩa là:
+
+> Đếm **số phần tử trong khoảng [left, right]** của mảng `nums`.
+
+Cách hoạt động:
+
+* `count[right]`: tổng phần tử ≤ `right`
+* `count[left - 1]`: tổng phần tử ≤ `left - 1`
+  → Hiệu của 2 giá trị này chính là **số phần tử trong [left, right]**.
+
+---
+
+### 🧠 Ví dụ minh họa:
+
+Giả sử:
+
+```
+nums = [1, 2, 2, 4]
+count = [0, 1, 3, 3, 4]
+```
+
+và ta có `left = 2`, `right = 4`
+
+Khi đó:
+
+```
+total = count[4] - count[1]
+      = 4 - 1
+      = 3
+```
+
+→ Có **3 phần tử nằm trong đoạn [2,4]** (chính là [2,2,4]).
+
+---
+
+### ✅ Tổng kết:
+
+```java
+int total = count[right] - (left > 0 ? count[left - 1] : 0);
+```
+
+🔹 Mục đích: Tính **tổng số phần tử trong đoạn [i - k, i + k]**
+🔹 Dùng prefix sum (`count[]`) để tính nhanh chỉ với **O(1)** thời gian.
+
+---
+
+Bạn có muốn mình minh họa lại toàn bộ vòng `for` với ví dụ cụ thể (ví dụ `nums = [1,2,3,4], k=1, numOps=2`) không?
+Mình có thể vẽ bảng biến `left, right, total, freq, res` để bạn thấy rõ cách nó chạy từng vòng.
+Rất tốt — đây là phần rất quan trọng 👇
+Dòng này:
+
+```java
+int freq = count[i] - (i > 0 ? count[i - 1] : 0);
+```
+
+---
+
+### ✅ Ý nghĩa:
+
+Câu lệnh này **tính tần suất xuất hiện (frequency)** của **giá trị `i`** trong mảng `nums`.
+
+---
+
+### ✅ Giải thích chi tiết:
+
+Như mình nói ở trên:
+
+* `count[x]` là **tổng số phần tử ≤ x** trong `nums` (tức là prefix sum).
+* Nên để biết **có bao nhiêu phần tử bằng đúng `i`**, ta chỉ cần lấy hiệu giữa:
+
+  * `count[i]`: số phần tử ≤ `i`
+  * `count[i - 1]`: số phần tử ≤ `i - 1`
+
+→ Hiệu này chính là **số phần tử bằng i**.
+
+---
+
+### 🧠 Ví dụ cụ thể:
+
+Giả sử:
+
+```
+nums = [1, 2, 2, 4]
+count = [0, 1, 3, 3, 4]
+          ↑  ↑  ↑  ↑  ↑
+          0  1  2  3  4
+```
+
+Tính `freq` cho từng `i`:
+
+| i | count[i] | count[i-1] | freq = count[i] - count[i-1] |
+| - | -------- | ---------- | ---------------------------- |
+| 1 | 1        | 0          | 1                            |
+| 2 | 3        | 1          | 2                            |
+| 3 | 3        | 3          | 0                            |
+| 4 | 4        | 3          | 1                            |
+
+✅ Kết quả:
+
+* Có 1 số `1`
+* Có 2 số `2`
+* Có 0 số `3`
+* Có 1 số `4`
+
+---
+
+### ✅ Trường hợp đặc biệt:
+
+Nếu `i == 0`, thì không có `count[-1]`,
+→ nên ta dùng điều kiện:
+
+```java
+(i > 0 ? count[i - 1] : 0)
+```
+
+để tránh lỗi và lấy giá trị `0` khi `i = 0`.
+
+---
+
+### ✅ Tóm lại:
+
+```java
+int freq = count[i] - (i > 0 ? count[i - 1] : 0);
+```
+
+➡️ Tính **số lần xuất hiện của giá trị i trong mảng nums**,
+bằng cách **lấy hiệu của tổng tích lũy** trước và sau vị trí i.
+
+---
+
+Bạn có muốn mình giải thích luôn phần cuối:
+
+```java
+res = Math.max(res, freq + Math.min(numOps, total - freq));
+```
+
+để thấy cách `freq` được dùng trong kết quả cuối không?
+Rồi, mình giải thích rõ ràng từng phần của dòng này nhé 👇
+
+---
+
+### 💡 Dòng code:
+
+```java
+res = Math.max(res, freq + Math.min(numOps, total - freq));
+```
+
+---
+
+### ✅ Mục tiêu của bài toán:
+
+Ta được phép **thực hiện tối đa `numOps` phép tăng hoặc giảm giá trị** của các phần tử trong mảng (mỗi lần ±1, tối đa k bước), để **tăng tần suất xuất hiện của một số nào đó**.
+
+Ta muốn biết — sau khi làm tốt nhất có thể — **tần suất cao nhất của bất kỳ phần tử nào** là bao nhiêu.
+
+---
+
+### ✅ Các biến liên quan:
+
+* `freq`: số lượng phần tử **hiện tại** có giá trị **bằng `i`**
+* `total`: số lượng phần tử có giá trị trong **khoảng [i - k, i + k]**
+  → tức là các phần tử có thể được **chuyển thành i** sau khi thay đổi (vì chênh lệch ≤ k)
+* `numOps`: số lần thay đổi tối đa bạn được phép thực hiện
+
+---
+
+### ✅ Giải thích biểu thức:
+
+```java
+freq + Math.min(numOps, total - freq)
+```
+
+* `freq`: đã có sẵn bao nhiêu phần tử bằng `i`
+* `total - freq`: là số phần tử **gần với i** (trong khoảng `[i - k, i + k]`)
+  mà ta **có thể biến thành i**
+* `Math.min(numOps, total - freq)`: ta chỉ có thể dùng tối đa `numOps` phép biến đổi
+  → nên lấy **ít nhất giữa số phép còn lại và số phần tử có thể đổi**
+
+✅ Tổng lại:
+
+> `freq + Math.min(numOps, total - freq)`
+> = “Tổng số phần tử có thể trở thành `i` sau khi thực hiện tốt nhất numOps phép biến đổi”.
+
+---
+
+### ✅ Cuối cùng:
+
+```java
+res = Math.max(res, ...);
+```
+
+Giữ lại **kết quả lớn nhất** qua mọi giá trị `i`, vì ta muốn tần suất cao nhất có thể.
+
+---
+
+### 🧠 Ví dụ minh họa nhỏ:
+
+```
+nums = [1, 2, 3, 4]
+k = 1, numOps = 2
+```
+
+Giả sử ta đang xét `i = 3`
+→ các phần tử trong [2,4] là `[2,3,4]` ⇒ total = 3
+→ có 1 phần tử bằng 3 ⇒ freq = 1
+→ `total - freq = 2` (tức là 2 số [2,4] có thể đổi thành 3)
+→ `min(numOps, total - freq) = min(2, 2) = 2`
+
+→ tổng: `freq + 2 = 3`
+
+→ nghĩa là **có thể làm 3 phần tử bằng 3 sau khi thực hiện 2 phép biến đổi**.
+
+---
+
+### ✅ Tóm tắt dễ nhớ:
+
+| Thành phần                       | Ý nghĩa                                  |
+| -------------------------------- | ---------------------------------------- |
+| `freq`                           | số phần tử **đang là i**                 |
+| `total - freq`                   | số phần tử **gần i** có thể biến thành i |
+| `numOps`                         | số lần thay đổi cho phép                 |
+| `Math.min(numOps, total - freq)` | số phần tử **thực sự có thể đổi**        |
+| `freq + ...`                     | tổng số phần tử có thể trở thành i       |
+| `Math.max(...)`                  | chọn kết quả lớn nhất qua mọi i          |
+
+---
+
+Bạn có muốn mình vẽ sơ đồ mũi tên (như kiểu `2 → 3`, `4 → 3`) để bạn dễ hình dung cách `k` và `numOps` ảnh hưởng không?

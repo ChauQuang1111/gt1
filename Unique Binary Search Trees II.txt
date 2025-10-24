@@ -1,0 +1,251 @@
+Unique Binary Search Trees II
+class Solution {
+    public List<TreeNode> generateTrees(int n) {
+        dp = (ArrayList<TreeNode>[]) new ArrayList[256];
+        return gen(n, '\0');
+    }
+
+    private ArrayList<TreeNode>[] dp;
+
+    private ArrayList<TreeNode> gen(int n, char conf) {
+        ArrayList<TreeNode> res = dp[conf];
+        if(res != null) return res;
+        res = new ArrayList<>();
+        for(char i=0; i<n; i++) if((conf & (1 << i)) == 0) {
+            ArrayList<TreeNode> lefts = gen(n, (char) (conf | ('ÿ' << i) & 'ÿ')),
+                rights = gen(n, (char) (conf | ('ÿ' >> (7-i)) & 'ÿ'));
+            for(TreeNode left : lefts) for(TreeNode right : rights)
+                res.add(new TreeNode(i+1, left, right));
+        }
+        if(res.isEmpty()) res.add(null);
+        dp[conf] = res;
+        return res;
+    }
+}
+Ok 👍 mình sẽ giải thích chi tiết code này. Đây là bài **LeetCode 95. Unique Binary Search Trees II** (Sinh ra tất cả BST khác nhau từ 1 → n).
+Nhưng code của bạn viết khá "dị", sử dụng `char` và `conf` để làm bitmask thay cho boolean array.
+
+---
+
+### Ý tưởng tổng quát
+
+* Mỗi cây BST được xây dựng bằng cách chọn **một node làm root**.
+* Các node **nhỏ hơn root** nằm bên **trái**, các node **lớn hơn root** nằm bên **phải**.
+* Dùng **đệ quy + memoization** để sinh tất cả các cấu hình cây có thể.
+
+---
+
+### Giải thích từng phần:
+
+#### 1. Mảng `dp`
+
+```java
+dp = (ArrayList<TreeNode>[]) new ArrayList[256];
+```
+
+* `dp` là một mảng lưu kết quả trung gian (memoization).
+* Mỗi phần tử ứng với một `conf` (configuration = bitmask biểu diễn node nào đã được chọn).
+* Kích thước `256` tức là chỉ chạy được với `n ≤ 8` (vì 2^8 = 256 trạng thái).
+
+---
+
+#### 2. Hàm `gen(int n, char conf)`
+
+```java
+private ArrayList<TreeNode> gen(int n, char conf) {
+    ArrayList<TreeNode> res = dp[conf];
+    if(res != null) return res;
+    res = new ArrayList<>();
+```
+
+* `conf` là một bitmask dạng `char` (8-bit).
+* `conf & (1 << i)` kiểm tra xem node `i+1` đã được dùng chưa.
+* Nếu `res` đã có trong `dp[conf]`, trả về ngay (memoization).
+
+---
+
+#### 3. Vòng lặp sinh cây
+
+```java
+for(char i=0; i<n; i++) if((conf & (1 << i)) == 0) {
+    ArrayList<TreeNode> lefts = gen(n, (char) (conf | ('ÿ' << i) & 'ÿ')),
+        rights = gen(n, (char) (conf | ('ÿ' >> (7-i)) & 'ÿ'));
+    for(TreeNode left : lefts) for(TreeNode right : rights)
+        res.add(new TreeNode(i+1, left, right));
+}
+```
+
+* `for (i = 0; i < n; i++)` → chọn `i+1` làm root.
+* `(conf & (1 << i)) == 0` → nếu node `i+1` chưa được chọn, thì có thể làm root.
+
+Sau đó:
+
+* `lefts = gen(...)` → sinh tất cả cây con bên trái.
+* `rights = gen(...)` → sinh tất cả cây con bên phải.
+* Kết hợp từng cây trái với từng cây phải để tạo node gốc `i+1`.
+
+👉 Ở đây `'ÿ'` thực ra là ký tự có giá trị `255` (`0xFF`). Họ dùng nó để tạo mask bit cho `char`.
+
+* `(conf | ('ÿ' << i) & 'ÿ')` → đánh dấu các node nhỏ hơn root đã chọn cho cây bên trái.
+* `(conf | ('ÿ' >> (7-i)) & 'ÿ')` → đánh dấu các node lớn hơn root cho cây bên phải.
+
+Cách này khá hacky, thay vì truyền `start, end` như cách chuẩn, họ encode bằng bitmask.
+
+---
+
+#### 4. Base case
+
+```java
+if(res.isEmpty()) res.add(null);
+```
+
+* Nếu không có node nào để sinh, thì trả về `[null]` (nghĩa là cây rỗng).
+
+---
+
+#### 5. Lưu vào `dp`
+
+```java
+dp[conf] = res;
+return res;
+```
+
+* Lưu kết quả để lần sau gọi lại thì dùng luôn (memoization).
+
+---
+
+### Tóm gọn:
+
+* **`conf`** là bitmask biểu diễn những node đã dùng.
+* **`gen(n, conf)`** sinh tất cả cây BST hợp lệ với trạng thái `conf`.
+* Với mỗi node chưa dùng → chọn làm root → sinh cây trái, cây phải → ghép lại.
+* Memoization (`dp`) giúp giảm số lần tính toán.
+
+---
+
+👉 Nhưng cách code này hơi rắc rối, bình thường người ta sẽ làm dễ hơn bằng:
+
+```java
+generate(start, end) {
+    if (start > end) return [null];
+    for root in [start..end]:
+        lefts = generate(start, root-1)
+        rights = generate(root+1, end)
+        ghép lại
+}
+```
+
+Cách đó dễ hiểu và không cần `char conf` hack.
+
+---
+
+Bạn có muốn mình viết lại version **ngắn gọn, dễ hiểu** (dùng `start, end`) để so sánh với code trên không?
+Ok 👍 mình viết lại version **dễ hiểu** hơn cho bài này, không dùng `char conf` hack nữa.
+
+---
+
+### Code chuẩn (Java)
+
+```java
+class Solution {
+    public List<TreeNode> generateTrees(int n) {
+        if (n == 0) return new ArrayList<>();
+        return generate(1, n);
+    }
+
+    private List<TreeNode> generate(int start, int end) {
+        List<TreeNode> res = new ArrayList<>();
+
+        // base case: nếu không còn node nào thì trả về [null]
+        if (start > end) {
+            res.add(null);
+            return res;
+        }
+
+        // chọn từng node làm root
+        for (int root = start; root <= end; root++) {
+            // sinh cây con bên trái từ [start .. root-1]
+            List<TreeNode> lefts = generate(start, root - 1);
+            // sinh cây con bên phải từ [root+1 .. end]
+            List<TreeNode> rights = generate(root + 1, end);
+
+            // ghép tất cả left + right vào root
+            for (TreeNode left : lefts) {
+                for (TreeNode right : rights) {
+                    TreeNode node = new TreeNode(root);
+                    node.left = left;
+                    node.right = right;
+                    res.add(node);
+                }
+            }
+        }
+        return res;
+    }
+}
+```
+
+---
+
+### Giải thích
+
+1. **`generateTrees(n)`** → sinh BST từ `1..n`.
+2. **`generate(start, end)`**:
+
+   * Nếu `start > end` → không còn cây → trả về `[null]`.
+   * Với mỗi `root` trong `[start..end]`:
+
+     * Sinh tất cả cây bên trái bằng `generate(start, root-1)`.
+     * Sinh tất cả cây bên phải bằng `generate(root+1, end)`.
+     * Ghép mọi cặp `(left, right)` vào một root mới.
+3. Trả về toàn bộ danh sách cây.
+
+---
+
+👉 Cách này **dễ đọc, dễ debug** hơn code bạn đưa (vốn encode node đã chọn bằng bitmask `char conf`).
+Kết quả cuối cùng là tất cả BST hợp lệ từ `1..n`.
+
+---
+
+Bạn có muốn mình thêm ví dụ **n = 3** → vẽ ra toàn bộ 5 cây BST để minh họa không?
+À, đoạn này chính là **entry point** của chương trình. Mình giải thích từng dòng nhé 👇
+
+```java
+public List<TreeNode> generateTrees(int n) {
+    dp = (ArrayList<TreeNode>[]) new ArrayList[256];
+    return gen(n, '\0');
+}
+```
+
+---
+
+### 1. `dp = (ArrayList<TreeNode>[]) new ArrayList[256];`
+
+* `dp` là một mảng cache (memoization).
+* Mỗi phần tử trong `dp` lưu danh sách các cây BST ứng với **một trạng thái `conf`**.
+* `256` ở đây nghĩa là chỉ dùng được khi `n ≤ 8`, vì mỗi trạng thái `conf` là một **bitmask 8 bit** (`char` có 0..255 giá trị).
+
+  * Ví dụ: `conf = 00000101` (nhị phân) nghĩa là node 1 và 3 đã được chọn.
+* `(ArrayList<TreeNode>[])` là ép kiểu, vì Java không cho tạo generic array trực tiếp.
+
+👉 Nói ngắn gọn: `dp` là bảng nhớ kết quả để không phải tính lại.
+
+---
+
+### 2. `return gen(n, '\0');`
+
+* `'\0'` là ký tự có giá trị số nguyên `0`.
+* Nó được dùng để biểu diễn **trạng thái ban đầu** (chưa có node nào được chọn).
+* Hàm `gen(n, conf)` sẽ đệ quy để sinh ra tất cả BST hợp lệ.
+
+👉 Gọi `gen(n, '\0')` tức là bắt đầu với **trạng thái rỗng** → xây dựng toàn bộ BST từ `1..n`.
+
+---
+
+✅ Tóm lại:
+
+* Dòng đầu tiên **khởi tạo cache `dp`** để lưu các trạng thái cây.
+* Dòng thứ hai **bắt đầu sinh BST** từ trạng thái trống (`conf = 0`).
+
+---
+
+Bạn có muốn mình so sánh chi tiết sự khác nhau giữa cách này (**bitmask `conf`**) và cách chuẩn (**`start..end`**) không?

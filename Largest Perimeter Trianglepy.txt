@@ -1,0 +1,227 @@
+Largest Perimeter Triangle
+class Solution:
+    def largestPerimeter(self, nums: List[int]) -> int:
+        nums = [-num for num in nums]
+        heapq.heapify(nums)
+
+        while len(nums) >= 3:
+            a = -heapq.heappop(nums)
+            b = -heapq.heappop(nums)
+            c = -nums[0]
+
+            if b + c > a:
+                return a + b + c
+            
+            heapq.heappush(nums, -b)
+        
+        return 0
+
+
+Ok mình giải thích chi tiết đoạn này trong Python nhé 👇
+
+---
+
+### 📌 Code
+
+```python
+nums = [-num for num in nums]
+heapq.heapify(nums)
+```
+
+---
+
+### 🔎 Giải thích từng dòng
+
+#### 1. `nums = [-num for num in nums]`
+
+* Python `heapq` **mặc định là min-heap** (luôn trả về phần tử nhỏ nhất).
+* Nhưng bài toán cần **lấy số lớn nhất nhanh nhất** (max-heap).
+* Cách xử lý: đổi dấu tất cả các phần tử.
+
+  * Nếu số gốc là `10`, ta lưu thành `-10`.
+  * Khi lấy từ heap, số nhỏ nhất trong heap (ví dụ `-10`) sẽ tương ứng với số lớn nhất ban đầu (`10`).
+
+👉 Đây là **thủ thuật biến min-heap thành max-heap**.
+
+---
+
+#### 2. `heapq.heapify(nums)`
+
+* Hàm `heapify` sẽ **biến danh sách `nums` thành một heap hợp lệ** trong **O(n)** thời gian.
+* Sau bước này:
+
+  * Ta có thể dùng `heapq.heappop(nums)` để lấy phần tử nhỏ nhất (tức là số lớn nhất ban đầu, do ta đã đổi dấu).
+  * Có thể chèn phần tử mới bằng `heapq.heappush(nums, value)` trong O(log n).
+
+---
+
+### 📌 Ví dụ minh họa
+
+Giả sử:
+
+```python
+nums = [3, 5, 2, 7]
+```
+
+Bước 1: đổi dấu
+
+```
+nums = [-3, -5, -2, -7]
+```
+
+Bước 2: heapify
+
+```
+nums (heap) = [-7, -5, -2, -3]
+```
+
+Bây giờ:
+
+```python
+a = -heapq.heappop(nums)  # lấy ra -(-7) = 7 (số lớn nhất ban đầu)
+```
+
+---
+
+✅ Kết luận:
+Đoạn code này giúp **dùng heapq như max-heap**, để ta luôn rút ra được cạnh lớn nhất trong bài toán tìm tam giác có chu vi lớn nhất.
+
+---
+
+Bạn có muốn mình viết lại toàn bộ lời giải **Largest Perimeter Triangle** bằng heap và thêm chú thích từng dòng để dễ hiểu hơn không?
+c chưa mất, nên không cần push lại.
+
+Hay, mình đi chậm lại nhé 👇
+
+Code đang giải quyết bài **"chu vi tam giác lớn nhất"**.
+
+---
+
+### 1. Vì sao **`a` (cạnh lớn nhất)** loại vĩnh viễn?
+
+* Điều kiện tam giác: **b + c > a**.
+* Nếu ngay cả **hai cạnh lớn nhì và lớn ba** (b, c) mà **cộng lại không lớn hơn a**,
+  thì với **bất kỳ cạnh nào nhỏ hơn c**, bất đẳng thức càng **không thể thỏa mãn**.
+
+👉 Nghĩa là: khi điều kiện sai, **cạnh lớn nhất `a` chắc chắn vô dụng**, nên bỏ luôn.
+
+---
+
+### 2. Vì sao **`c` không cần push lại?**
+
+* `c = -nums[0]` chỉ là **peek** phần tử lớn thứ 3, nó **chưa pop ra**.
+* Vì chưa bị lấy khỏi heap, `c` vẫn còn nằm trong heap → không cần đẩy lại.
+
+---
+
+### 3. Vì sao chỉ push lại **`b`**?
+
+* `b` đã pop ra cùng với `a`, nhưng khác với `a`, nó vẫn có khả năng tạo tam giác với các cạnh khác nhỏ hơn `c`.
+* Nên ta **phải đưa `b` quay lại heap** để thử lại ở vòng lặp sau.
+
+---
+
+🔎 Tóm gọn:
+
+* `a`: quá lớn, loại luôn.
+* `b`: vẫn có thể hữu ích, push lại.
+* `c`: chưa mất, còn trong heap.
+
+---
+
+Bạn có muốn mình lấy **một ví dụ chạy cụ thể từng bước** (ví dụ `nums = [2, 3, 4, 10]`) để thấy tại sao `a` bỏ luôn, còn `c` thì không cần push lại không?
+Đúng rồi, bạn hỏi rất hay 👌. Mình giải thích kỹ hơn:
+
+---
+
+### Khi lấy ra `a` và `b`
+
+```python
+a = -heapq.heappop(nums)   # pop cạnh lớn nhất
+b = -heapq.heappop(nums)   # pop cạnh lớn nhì
+c = -nums[0]               # nhìn cạnh lớn ba (peek, chưa pop)
+```
+
+* **`a` và `b`** đã bị **lấy ra khỏi heap**.
+* **`c`** vẫn còn trong heap, vì ta **chỉ nhìn (`peek`) chứ không hề pop**.
+
+---
+
+### Tại sao **chưa dùng `c` trực tiếp?**
+
+* Mỗi vòng lặp ta chỉ kiểm tra bộ ba `(a, b, c)` để xem có tạo được tam giác không.
+* Nếu **thành công**, return luôn chu vi.
+* Nếu **thất bại** (`b + c <= a`):
+
+  * `a` chắc chắn **vô dụng** → bỏ luôn.
+  * `b` vẫn có khả năng kết hợp với cạnh nhỏ hơn `c` → push lại.
+  * `c` vẫn còn nằm trong heap (chưa hề bị pop), nên nó **tự động trở thành ứng viên ở vòng sau**.
+
+👉 Vậy nên nhìn thì tưởng như không "dùng `c`", nhưng thật ra `c` **được giữ nguyên trong heap** để xét tiếp.
+
+---
+
+### Ví dụ: `nums = [2, 3, 4, 10]`
+
+1. Heap: `[10, 4, 3, 2]`
+
+   * pop → `a=10`, `b=4`, peek `c=3`.
+   * check: `4+3 > 10` ❌ sai.
+   * bỏ `10`, push lại `4`. Heap bây giờ: `[4, 3, 2]`.
+
+2. Heap: `[4, 3, 2]`
+
+   * pop → `a=4`, `b=3`, peek `c=2`.
+   * check: `3+2 > 4` ✅ đúng → return `9`.
+
+👉 Thấy không? `c=3` ở bước 1 **không mất**, vẫn nằm trong heap và được dùng ở bước 2.
+
+---
+
+✅ Kết luận:
+
+* **`c` không pop nên "chưa mất"**.
+* Vòng sau khi heap nhỏ đi, `c` sẽ được xét cùng với các cạnh khác.
+
+---
+
+Bạn có muốn mình vẽ sơ đồ minh họa heap thay đổi qua từng bước để trực quan hơn không?
+Chuẩn rồi 👍. Mình phân tích kỹ chỗ này cho bạn:
+
+---
+
+### Trong code:
+
+```python
+c = -nums[0]
+```
+
+* `nums[0]` ở đây **chính là phần tử gốc của heap** (cạnh lớn thứ 3, vì ta đã pop 2 lần trước đó).
+* Quan trọng: ta **không gọi** `heapq.heappop(nums)` cho `c`.
+* Nghĩa là `c` **vẫn còn nguyên trong heap**, chưa bị lấy ra.
+* Do đó heap **chưa thay đổi gì** khi đọc `c`.
+
+👉 Hành động này gọi là **peek** (nhìn giá trị mà không loại bỏ khỏi heap).
+
+---
+
+### Vậy tại sao làm thế?
+
+* Ta cần **3 cạnh lớn nhất** để kiểm tra điều kiện tam giác.
+* `a` và `b` phải lấy ra (pop) thì mới xác định chắc chắn là lớn nhất, nhì.
+* `c` chỉ cần "xem thử" để kiểm tra bất đẳng thức, không cần lấy hẳn ra.
+
+Nếu tam giác hợp lệ → return ngay, không quan trọng heap nữa.
+Nếu không hợp lệ → chỉ `a` bị loại bỏ, `b` push lại, còn `c` vốn dĩ chưa pop thì vẫn nằm trong heap → sẽ được xét tiếp ở vòng sau.
+
+---
+
+📌 Tóm gọn:
+
+* `a`: pop hẳn → bị loại vĩnh viễn.
+* `b`: pop ra nhưng có thể push lại.
+* `c`: chỉ peek → **không mất**, nên không cần push lại.
+
+---
+
+Bạn có muốn mình viết lại phiên bản tương tự nhưng dùng **pop luôn cả `c` rồi push lại** để bạn thấy sự khác biệt rõ hơn không?

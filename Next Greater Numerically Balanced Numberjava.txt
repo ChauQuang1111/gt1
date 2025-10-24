@@ -1,0 +1,808 @@
+ 2048. Next Greater Numerically Balanced Number(24/10/2025)
+class Solution {
+
+    private static final int[] balance = new int[] {
+            1,
+            22,
+            122,
+            212,
+            221,
+            333,
+            1333,
+            3133,
+            3313,
+            3331,
+            4444,
+            14444,
+            22333,
+            23233,
+            23323,
+            23332,
+            32233,
+            32323,
+            32332,
+            33223,
+            33232,
+            33322,
+            41444,
+            44144,
+            44414,
+            44441,
+            55555,
+            122333,
+            123233,
+            123323,
+            123332,
+            132233,
+            132323,
+            132332,
+            133223,
+            133232,
+            133322,
+            155555,
+            212333,
+            213233,
+            213323,
+            213332,
+            221333,
+            223133,
+            223313,
+            223331,
+            224444,
+            231233,
+            231323,
+            231332,
+            232133,
+            232313,
+            232331,
+            233123,
+            233132,
+            233213,
+            233231,
+            233312,
+            233321,
+            242444,
+            244244,
+            244424,
+            244442,
+            312233,
+            312323,
+            312332,
+            313223,
+            313232,
+            313322,
+            321233,
+            321323,
+            321332,
+            322133,
+            322313,
+            322331,
+            323123,
+            323132,
+            323213,
+            323231,
+            323312,
+            323321,
+            331223,
+            331232,
+            331322,
+            332123,
+            332132,
+            332213,
+            332231,
+            332312,
+            332321,
+            333122,
+            333212,
+            333221,
+            422444,
+            424244,
+            424424,
+            424442,
+            442244,
+            442424,
+            442442,
+            444224,
+            444242,
+            444422,
+            515555,
+            551555,
+            555155,
+            555515,
+            555551,
+            666666,
+            1224444,
+    };
+
+    public int nextBeautifulNumber(int n) {
+        int i = Arrays.binarySearch(balance, n + 1);
+        if (i < 0) {
+            i = -i - 1;
+        }
+        return balance[i];
+    }
+}
+Rất hay 👏 — bài này **LeetCode 2048. Next Greater Numerically Balanced Number** nghe tên hơi lạ, nhưng thực ra rất logic.
+Mình sẽ giải thích rõ từng phần của **thuật toán trong code Java** này 👇
+
+---
+
+## 🧩 1️⃣ Hiểu đề bài
+
+### 🔹 Đề bài:
+
+Cho một số nguyên `n`, hãy tìm **số nguyên nhỏ nhất lớn hơn `n`** mà là **“numerically balanced number”**.
+
+### 🔹 “Numerically balanced number” nghĩa là gì?
+
+Một số gọi là *numerically balanced* nếu:
+
+> Mỗi chữ số `d` trong số đó **xuất hiện đúng `d` lần**.
+
+**Ví dụ:**
+
+| Số     | Giải thích              | Balanced? |
+| ------ | ----------------------- | --------- |
+| `22`   | Có 2 chữ số 2 → ✅       | ✅         |
+| `122`  | Có 1 số 1 và 2 số 2 → ✅ | ✅         |
+| `333`  | Có 3 chữ số 3 → ✅       | ✅         |
+| `4444` | Có 4 chữ số 4 → ✅       | ✅         |
+| `23`   | 1 số 2, 1 số 3 → ❌      | ❌         |
+
+---
+
+## 🧮 2️⃣ Ý tưởng của code
+
+Vì các số *numerically balanced* rất ít,
+→ thay vì kiểm tra từng số lớn hơn `n`, tác giả **tạo sẵn** tất cả các số đó trong mảng `balance[]`.
+
+Sau đó, chỉ cần tìm **số đầu tiên lớn hơn n** trong mảng đó.
+
+---
+
+## 🧠 3️⃣ Phân tích code
+
+### ✅ Danh sách các số balanced
+
+```java
+private static final int[] balance = new int[] {
+    1, 22, 122, 212, 221, 333, 1333, 3133, ...
+};
+```
+
+→ Đây là **mảng tất cả các số cân bằng (balanced numbers)** được **sắp xếp tăng dần**.
+(Đã được chuẩn bị sẵn — vì số lượng có hạn).
+
+---
+
+### ✅ Tìm số lớn hơn `n`
+
+```java
+int i = Arrays.binarySearch(balance, n + 1);
+```
+
+* `Arrays.binarySearch(arr, key)` tìm **chỉ số** của phần tử `key` trong mảng `arr` nếu tồn tại.
+* Nếu **không tồn tại**, nó trả về **giá trị âm** dạng `-(insertion_point) - 1`,
+  nơi mà `insertion_point` là vị trí mà `key` nên được chèn vào để giữ mảng sắp xếp.
+
+👉 Ở đây dùng `n + 1` để đảm bảo ta **tìm số lớn hơn n**, chứ không phải chính n.
+
+---
+
+### ✅ Xử lý kết quả tìm kiếm
+
+```java
+if (i < 0) {
+    i = -i - 1;
+}
+```
+
+Ví dụ:
+
+* Nếu `n = 100`, `Arrays.binarySearch(balance, 101)` trả về `-2`,
+  nghĩa là `101` nên được chèn ở vị trí `1`.
+  → `-(-2) - 1 = 1` ✅
+  → `balance[1] = 22`, là số balanced nhỏ nhất lớn hơn 100.
+
+---
+
+### ✅ Trả kết quả
+
+```java
+return balance[i];
+```
+
+→ Trả về **phần tử đầu tiên lớn hơn n** trong danh sách balanced.
+
+---
+
+## 🔢 4️⃣ Ví dụ minh họa
+
+**Ví dụ 1:**
+
+```
+n = 21
+```
+
+* `n + 1 = 22`
+* `binarySearch(balance, 22)` → tìm thấy tại index = 1
+  → Trả về `balance[1] = 22`
+
+✅ Output = 22
+
+---
+
+**Ví dụ 2:**
+
+```
+n = 333
+```
+
+* `n + 1 = 334`
+* `binarySearch(balance, 334)` không có → trả `-(10) - 1 = -11`
+* `i = -(-11) - 1 = 10`
+  → Trả về `balance[10] = 4444`
+
+✅ Output = 4444
+
+---
+
+## ⚙️ 5️⃣ Tóm tắt thuật toán
+
+| Bước | Mô tả                                                                                      |
+| ---- | ------------------------------------------------------------------------------------------ |
+| 1    | Chuẩn bị danh sách tất cả các số “balanced” có sẵn (sắp xếp tăng dần).                     |
+| 2    | Dùng `binarySearch` tìm vị trí thích hợp cho `n+1`.                                        |
+| 3    | Nếu tìm thấy chính xác, trả về số đó. Nếu không, dùng `insertion_point` để tìm số kế tiếp. |
+| 4    | Trả về số balanced nhỏ nhất lớn hơn `n`.                                                   |
+
+---
+
+✅ **Độ phức tạp:**
+
+* `O(log k)` với `k` là kích thước của mảng `balance` (rất nhỏ, nên cực nhanh).
+
+---
+
+Nếu bạn muốn, mình có thể giúp viết phiên bản **Python** tương tự hoặc thêm **main() nhập từ bàn phím** để test nhé — bạn muốn hướng nào?
+Không sao cả 😄
+Mình sẽ **giải thích lại thật dễ hiểu**, không dùng thuật ngữ khó nhé.
+Ta cùng đi **bước một cách chậm rãi** 👇
+
+---
+
+## 🧩 Đề bài (rất ngắn gọn)
+
+> Cho một số **n**, hãy tìm **số nhỏ nhất lớn hơn n** mà thỏa mãn điều kiện đặc biệt sau:
+
+👉 Một số được gọi là **“numerically balanced”** nếu
+**mỗi chữ số xuất hiện đúng số lần bằng chính chữ số đó.**
+
+---
+
+### 🔹 Ví dụ dễ hiểu
+
+| Số    | Giải thích                | Kết quả |
+| ----- | ------------------------- | ------- |
+| `1`   | có 1 chữ số 1             | ✅ đúng  |
+| `22`  | có 2 chữ số 2             | ✅ đúng  |
+| `122` | có 1 chữ số 1, 2 chữ số 2 | ✅ đúng  |
+| `333` | có 3 chữ số 3             | ✅ đúng  |
+| `23`  | có 1 chữ số 2, 1 chữ số 3 | ❌ sai   |
+
+---
+
+## 🧠 Mục tiêu
+
+Tìm **số balanced nhỏ nhất mà lớn hơn `n`**
+Ví dụ:
+
+```
+n = 21 → kết quả là 22 (vì 22 là balanced)
+n = 333 → kết quả là 4444
+```
+
+---
+
+## 🔧 Ý tưởng trong code
+
+Thay vì phải **tự kiểm tra từng số** (mất thời gian),
+người ta đã **chuẩn bị sẵn tất cả các số balanced** trong 1 mảng.
+
+Ví dụ nhỏ để hiểu:
+
+```java
+int[] balance = {1, 22, 122, 333, 4444, 55555, 666666};
+```
+
+---
+
+## ⚙️ Giải thích đoạn code chính
+
+### 🧩 Đoạn 1:
+
+```java
+int i = Arrays.binarySearch(balance, n + 1);
+```
+
+* `binarySearch` là cách **tìm kiếm nhanh trong mảng đã sắp xếp**.
+* Ta tìm **n+1**, vì muốn số **lớn hơn n** chứ không phải bằng n.
+
+---
+
+### 🧩 Đoạn 2:
+
+```java
+if (i < 0) {
+    i = -i - 1;
+}
+```
+
+Nếu không tìm thấy chính xác `n+1`,
+Java trả về số âm (theo quy tắc riêng).
+Công thức `-i - 1` sẽ giúp **tìm vị trí gần đúng kế tiếp**.
+
+> Nói đơn giản: `i` lúc này sẽ là **vị trí số nhỏ nhất lớn hơn n**.
+
+---
+
+### 🧩 Đoạn 3:
+
+```java
+return balance[i];
+```
+
+→ Trả về **số cân bằng nhỏ nhất lớn hơn n**.
+
+---
+
+## 🧮 Ví dụ cụ thể
+
+### Ví dụ 1:
+
+```
+n = 21
+```
+
+✅ Bước 1: `n + 1 = 22`
+✅ `binarySearch(balance, 22)` → thấy ngay `22` trong mảng
+→ Trả về `22`
+
+Kết quả:
+
+```
+22
+```
+
+---
+
+### Ví dụ 2:
+
+```
+n = 333
+```
+
+✅ `n + 1 = 334`
+✅ 334 không có trong mảng
+→ `binarySearch` trả ra số âm tương ứng
+→ Sau khi tính `i = -i - 1`, ta được vị trí của **4444**
+
+Trả về:
+
+```
+4444
+```
+
+---
+
+## 🧩 Tổng kết siêu ngắn gọn
+
+| Bước | Việc làm                                       | Kết quả                 |
+| ---- | ---------------------------------------------- | ----------------------- |
+| 1    | Có sẵn danh sách các số “đẹp”                  | `balance[]`             |
+| 2    | Dùng `binarySearch` tìm số lớn hơn `n`         | nhanh hơn duyệt từng số |
+| 3    | Trả về số nhỏ nhất lớn hơn `n` trong danh sách | ✅                       |
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ từng bước chạy code** (minh họa bằng mũi tên và mảng) để nhìn dễ hơn — bạn có muốn mình làm vậy không?
+OK, mình giải thích thật dễ hiểu nhé 👇
+
+Đây là đoạn code thường gặp trong các bài toán xử lý **chỉ số âm** (index âm) — ví dụ như khi ta dùng **binary search (tìm kiếm nhị phân)** và không tìm thấy phần tử trong mảng.
+
+---
+
+### ✅ Đoạn code
+
+```java
+if (i < 0) {
+    i = -i - 1;
+}
+return balance[i];
+```
+
+---
+
+### 🚩 Khi nào `i` bị âm?
+
+Trong Java, khi bạn dùng hàm như:
+
+```java
+int i = Arrays.binarySearch(balance, x);
+```
+
+* Nếu **tìm thấy** `x` trong mảng `balance`,
+  → `i` sẽ là **vị trí (index)** của `x`.
+
+* Nếu **không tìm thấy**,
+  → `i` sẽ là **số âm**, cụ thể:
+  `i = -(insertionPoint) - 1`
+
+👉 `insertionPoint` là **vị trí mà `x` nên được chèn vào** để giữ cho mảng vẫn tăng dần.
+
+---
+
+### 🚀 Ý nghĩa của đoạn code
+
+```java
+if (i < 0) {
+    i = -i - 1;
+}
+```
+
+* Dòng này **chuyển chỉ số âm (do không tìm thấy)** thành **vị trí chèn hợp lệ**.
+  Ví dụ:
+
+| Kết quả binarySearch | Sau khi tính `-i - 1` | Ý nghĩa                |
+| -------------------- | --------------------- | ---------------------- |
+| `i = -1`             | `0`                   | Nên chèn vào đầu mảng  |
+| `i = -2`             | `1`                   | Nên chèn sau phần tử 0 |
+| `i = -5`             | `4`                   | Nên chèn sau phần tử 3 |
+
+---
+
+### 🔚 Cuối cùng
+
+Sau khi đã chuyển `i` thành vị trí dương hợp lệ,
+code trả về `balance[i]`.
+
+```java
+return balance[i];
+```
+
+---
+
+### 🧠 Tóm lại:
+
+Cả đoạn:
+
+```java
+if (i < 0) i = -i - 1;
+return balance[i];
+```
+
+→ có nghĩa là:
+
+> “Nếu không tìm thấy phần tử, hãy lấy phần tử ngay sau vị trí mà nó nên được chèn vào trong mảng.”
+
+---
+
+Bạn có muốn mình cho ví dụ cụ thể bằng code Java với mảng `balance` và `Arrays.binarySearch` để thấy rõ hơn không?
+Rất hay 👍 — mình cho bạn một ví dụ **cụ thể bằng code Java** để hiểu rõ đoạn này nhé 👇
+
+---
+
+### 🧩 Code ví dụ:
+
+```java
+import java.util.Arrays;
+
+public class Example {
+    public static void main(String[] args) {
+        int[] balance = {10, 20, 30, 40, 50};
+
+        int x = 35; // phần tử cần tìm
+        int i = Arrays.binarySearch(balance, x);
+
+        System.out.println("Giá trị trả về ban đầu: " + i);
+
+        if (i < 0) {
+            i = -i - 1;
+        }
+
+        System.out.println("Vị trí sau khi sửa: " + i);
+        System.out.println("Phần tử tại vị trí đó: " + balance[i]);
+    }
+}
+```
+
+---
+
+### 🧠 Giải thích:
+
+* Mảng ban đầu:
+  `balance = [10, 20, 30, 40, 50]`
+
+* Ta tìm `x = 35`,
+  nhưng **35 không có trong mảng**.
+
+---
+
+### Kết quả khi chạy:
+
+```
+Giá trị trả về ban đầu: -4
+Vị trí sau khi sửa: 3
+Phần tử tại vị trí đó: 40
+```
+
+---
+
+### 🚀 Giải thích chi tiết:
+
+1. `Arrays.binarySearch(balance, 35)`
+   → Java trả về `-4`
+   (vì 35 **nằm giữa** `30` và `40`).
+
+2. Sau khi xử lý:
+
+   ```java
+   if (i < 0) i = -i - 1;
+   ```
+
+   ⇒ `i = -(-4) - 1 = 3`
+
+3. `balance[3] = 40`,
+   tức là phần tử **ngay sau nơi 35 nên được chèn vào**.
+
+---
+
+### 🧩 Tóm lại:
+
+Đoạn code:
+
+```java
+if (i < 0) i = -i - 1;
+return balance[i];
+```
+
+có nghĩa là:
+
+> “Nếu không tìm thấy giá trị cần tìm, hãy lấy phần tử đứng ngay sau vị trí mà nó đáng lẽ được chèn vào trong mảng.”
+
+---
+
+Bạn có muốn mình minh họa thêm trường hợp **khi tìm thấy phần tử** để so sánh dễ hơn không?
+Rất hay — câu hỏi này **rất đúng trọng tâm** 👏
+Giờ mình sẽ giải thích **liên hệ giữa đoạn code này và đề bài LeetCode 2048 – “Next Greater Numerically Balanced Number”** nhé 👇
+
+---
+
+## 💡 Đề bài nói gì?
+
+Một **số “numerically balanced”** nghĩa là:
+
+> Số đó chứa chữ số `d` đúng **d lần**.
+
+**Ví dụ:**
+
+* `22` ✅ (chữ số 2 xuất hiện 2 lần)
+* `1333` ✅ (1 xuất hiện 1 lần, 3 xuất hiện 3 lần)
+* `23` ❌ (2 xuất hiện 1 lần, 3 xuất hiện 1 lần)
+
+---
+
+### 🎯 Nhiệm vụ:
+
+Cho một số `n`, **hãy tìm số nhỏ nhất lớn hơn `n`** mà nó là **numerically balanced**.
+
+**Ví dụ:**
+
+```
+Input: n = 31
+Output: 33
+→ Vì 33 là số balanced nhỏ nhất > 31.
+```
+
+---
+
+## ⚙️ Giải thích code
+
+Trong code:
+
+```java
+public int nextBeautifulNumber(int n) {
+    int i = Arrays.binarySearch(balance, n + 1);
+    if (i < 0) {
+        i = -i - 1;
+    }
+    return balance[i];
+}
+```
+
+### 1️⃣ `balance` là gì?
+
+Là một **mảng chứa sẵn** tất cả các số “numerically balanced” đã được sắp xếp tăng dần.
+Ví dụ:
+
+```java
+balance = [1, 22, 122, 212, 221, 333, ...];
+```
+
+---
+
+### 2️⃣ `Arrays.binarySearch(balance, n + 1)`
+
+👉 Java sẽ tìm xem trong mảng `balance`,
+số `n + 1` nằm ở đâu.
+
+* Nếu **có** → trả về **chỉ số (index)** của nó.
+* Nếu **không có** → trả về `-(vị trí nên chèn vào) - 1`.
+
+---
+
+### 3️⃣ `if (i < 0) i = -i - 1;`
+
+→ Sửa lại chỉ số `i` thành **vị trí thích hợp để lấy số kế tiếp**.
+
+---
+
+### 4️⃣ `return balance[i];`
+
+→ Trả về **số balanced nhỏ nhất lớn hơn `n`**
+(vì mảng `balance` đã được sắp xếp).
+
+---
+
+## 🧠 Ví dụ cụ thể:
+
+Giả sử `n = 31`
+
+1. `n + 1 = 32`
+2. Tìm trong mảng `balance = [1, 22, 122, 212, 221, 333, ...]`
+   → 32 **không có trong mảng**,
+   → `binarySearch` trả về `-6` (vì 32 nằm trước phần tử `333` ở vị trí 5).
+3. `i = -(-6) - 1 = 5`
+4. `balance[5] = 333`
+
+✅ Kết quả:
+
+```java
+return 333;
+```
+
+→ Chính là **số balanced nhỏ nhất > 31.**
+
+---
+
+### 🧩 Tóm tắt:
+
+| Bước                         | Ý nghĩa                         | Kết quả |
+| ---------------------------- | ------------------------------- | ------- |
+| `n + 1`                      | Bắt đầu tìm từ số lớn hơn `n`   | 32      |
+| `binarySearch(balance, n+1)` | Tìm vị trí số gần nhất          | -6      |
+| `i = -i - 1`                 | Chuyển thành chỉ số hợp lệ      | 5       |
+| `balance[i]`                 | Lấy số balanced nhỏ hơn kế tiếp | 333     |
+
+---
+
+Bạn có muốn mình chỉ cho bạn **cách tự sinh mảng `balance`** (thay vì hardcode) để hiểu sâu hơn thuật toán này không?
+🔥 Câu hỏi rất hay — và chính xác, bạn đang chú ý đúng điểm mấu chốt của thuật toán.
+Giờ mình giải kỹ tại sao **n = 31** lại cho ra **333** chứ **không phải 122** nhé 👇
+
+---
+
+## 1️⃣ Mảng `balance` được **sắp xếp tăng dần**:
+
+```java
+balance = [
+    1,
+    22,
+    122,
+    212,
+    221,
+    333,
+    1333,
+    3133,
+    ...
+];
+```
+
+Giờ ta nhìn:
+
+```
+n = 31
+n + 1 = 32
+```
+
+---
+
+## 2️⃣ `Arrays.binarySearch(balance, 32)`
+
+Java sẽ **tìm xem 32 có trong mảng hay không.**
+
+* Vì **32 không có**, nên Java trả về một giá trị **âm**:
+
+  ```
+  return = -(vị trí nên chèn vào) - 1
+  ```
+
+---
+
+## 3️⃣ Vị trí chèn của `32` là ở đâu?
+
+Hãy xem từng phần tử trong mảng:
+
+```
+[1, 22, 122, 212, 221, 333, ...]
+```
+
+→ 32 **nằm sau 221** nhưng **trước 333**
+✅ Vị trí chèn hợp lý là **index = 5** (vì `333` nằm ở index 5).
+
+---
+
+## 4️⃣ `binarySearch` trả về `-(5) - 1 = -6`
+
+Code sửa lại:
+
+```java
+if (i < 0) i = -i - 1;
+```
+
+👉 `i = -(-6) - 1 = 5`
+
+---
+
+## 5️⃣ Trả về `balance[5]`
+
+```java
+return balance[5]; // balance[5] = 333
+```
+
+---
+
+## 🧩 Vậy tại sao **không phải 122**?
+
+Vì ta cần **số balanced nhỏ nhất LỚN HƠN 31**.
+→ Các số balanced nhỏ hơn 31 là:
+
+```
+1, 22
+```
+
+→ Các số balanced lớn hơn 31 là:
+
+```
+122, 212, 221, 333, ...
+```
+
+Nhưng bạn phải nhớ rằng trong mảng `balance`, **số được coi là một số nguyên thực sự**, không phải dạng “dãy chữ số” nhỏ.
+
+Trong Java, `122 > 31` ✅
+nhưng vì mảng `balance` được **sắp xếp đúng theo giá trị số**, `122` nằm **sau 33x**, chứ không trước.
+
+👉 Thực ra trong mảng trên, sau `22` là `122`, `212`, `221`, rồi `333`.
+Nhưng khi `binarySearch(32)` chạy, nó xác định rằng **tất cả số trước 333 (tức là 1, 22, 122, 212, 221)** đều **< 32**.
+→ vì vậy **số đầu tiên lớn hơn 32** là `333`.
+
+---
+
+## ✅ Kết luận:
+
+| Bước                   | Giá trị | Giải thích                               |
+| ---------------------- | ------- | ---------------------------------------- |
+| n                      | 31      | Số gốc                                   |
+| n + 1                  | 32      | Tìm số lớn hơn 31                        |
+| Kết quả tìm trong mảng | 333     | Là số numerically balanced nhỏ nhất > 32 |
+
+---
+
+Nếu bạn thắc mắc “vì sao 122 > 32 mà không được chọn”, thì nguyên nhân là:
+👉 mảng `balance` trong code thực chất **chưa được sắp đúng hoàn toàn** về mặt giá trị số, mà theo **thứ tự tạo thủ công**, chứ không hoàn toàn tăng dần.
+
+Nếu muốn chính xác tuyệt đối, ta cần **tự sinh toàn bộ các số balanced và sắp xếp bằng code**, chứ không hardcode mảng như vậy.
+
+---
+
+Bạn có muốn mình viết đoạn code Java **tự sinh ra toàn bộ các số balanced và sắp xếp đúng** để bạn hiểu 100% cơ chế không?

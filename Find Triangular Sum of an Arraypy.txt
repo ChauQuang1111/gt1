@@ -1,0 +1,84 @@
+2221. Find Triangular Sum of an Array
+class Solution:
+    def triangularSum(self, nums: List[int]) -> int:
+        n=len(nums)-1
+        ans, A=nums[0], 1
+        for k in range(1, n+1):
+            A=A*(n-k+1)//k
+            ans=(ans+nums[k]*A)%10
+        return ans
+		
+Ok, mình sẽ giải thích chi tiết từng dòng trong **vòng lặp Python** bạn đưa, đây là **cách nhanh để tính triangular sum trực tiếp modulo 10** bằng tổ hợp.
+
+---
+
+### 1️⃣ Vòng lặp
+
+```python
+for k in range(1, n+1):
+    A = A * (n - k + 1) // k
+    ans = (ans + nums[k] * A) % 10
+```
+
+* `n = len(nums)-1` → cấp của tổ hợp (tương đương N trong Java)
+* `ans` → kết quả cuối cùng
+* `A` → **C(n, k)**, tổ hợp hiện tại
+
+---
+
+### 2️⃣ Dòng: `A = A * (n - k + 1) // k`
+
+* Đây là **công thức đệ quy tính tổ hợp liên tiếp**:
+
+[
+C(n, k) = C(n, k-1) \cdot \frac{n-k+1}{k}
+]
+
+* Giải thích:
+
+  * Bắt đầu với `C(n,0) = 1` → `A` ban đầu = 1
+  * Mỗi vòng lặp `k` → tính C(n,k) từ C(n,k-1)
+  * Tránh phải tính factorial lớn → **tiết kiệm thời gian và tránh overflow**
+
+* Ví dụ: `n=4`
+
+```
+C(4,0)=1 → A=1
+k=1 → A = 1*(4-1+1)//1 = 4
+k=2 → A = 4*(4-2+1)//2 = 6
+k=3 → A = 6*(4-3+1)//3 = 4
+k=4 → A = 4*(4-4+1)//4 = 1
+```
+
+* Kết quả đúng với tổ hợp: [1,4,6,4,1]
+
+---
+
+### 3️⃣ Dòng: `ans = (ans + nums[k] * A) % 10`
+
+* Đây là **tổng tam giác modulo 10 theo công thức tổ hợp trực tiếp**:
+  [
+  \text{triangular sum} = \sum_{k=0}^{n} nums[k] \cdot C(n,k) \mod 10
+  ]
+
+* `A` = C(n,k) → hệ số nhân
+
+* `nums[k]` = giá trị của phần tử thứ k trong mảng
+
+* `%10` để tính **mod 10**, đúng yêu cầu đề bài
+
+---
+
+### 4️⃣ Tổng quan ý tưởng
+
+* **Không cần vòng lặp giảm mảng** (O(n²)) như phiên bản “slow”
+* Chỉ dùng **công thức tổ hợp tuyến tính** (O(n))
+* Tính **triangular sum modulo 10** trực tiếp:
+
+```
+ans = nums[0]*C(n,0) + nums[1]*C(n,1) + ... + nums[n]*C(n,n) (mod 10)
+```
+
+---
+
+Nếu bạn muốn, mình có thể vẽ **ví dụ minh họa triangular sum với nums=[1,2,3,4,5]** từng bước tính `A` và `ans` để trực quan hơn. Bạn có muốn mình làm không?

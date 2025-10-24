@@ -1,0 +1,33 @@
+PhoneFormatter
+
+ format_phone_10digits(s, country_code='1'):
+    if not s.isdigit() or len(s) != 10:
+        raise ValueError("Input must be exactly 10 digits")
+    area = s[0:3]
+    prefix = s[3:6]
+    line = s[6:10]
+    return f"+{country_code} ({area}) {prefix}-{line}"
+
+print(format_phone_10digits("1234567890"))  # +1 (123) 456-7890
+
+
+public class PhoneFormatter {
+    public static String formatPhoneNumber(String digits) {
+        // Kiểm tra input hợp lệ
+        if (digits == null || !digits.matches("\\d{10}")) {
+            throw new IllegalArgumentException("Input must be exactly 10 digits");
+        }
+
+        String area = digits.substring(0, 3);   // 3 số đầu
+        String prefix = digits.substring(3, 6); // 3 số tiếp theo
+        String line = digits.substring(6, 10);  // 4 số cuối
+
+        return "+1 (" + area + ") " + prefix + "-" + line;
+    }
+
+    public static void main(String[] args) {
+        String input = "1234567890";
+        String formatted = formatPhoneNumber(input);
+        System.out.println(formatted); // +1 (123) 456-7890
+    }
+}

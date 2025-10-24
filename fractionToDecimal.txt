@@ -1,0 +1,394 @@
+fractionToDecimal
+public static String fractionToDecimal(int numerator, int denominator) {
+        // B1: Convert sang long để tránh tràn số
+        long lnum = numerator, lden = denominator;
+
+        // B2: Nếu tử số = 0 → kết quả là "0"
+        if (lnum == 0) {
+            return "0";
+        }
+
+        // B3: Nếu chia hết → trả về số nguyên
+        if (lnum % lden == 0) {
+            return Long.toString(lnum / lden);
+        }
+
+        // B4: StringBuilder để xây kết quả
+        StringBuilder number = new StringBuilder();
+
+        // B5: Xử lý dấu (chỉ âm nếu đúng 1 số âm)
+        if ((lden < 0) ^ (lnum < 0)) {
+            number.append('-');
+        }
+
+        // B6: Lấy trị tuyệt đối tử và mẫu
+        lnum = Math.abs(lnum);
+        lden = Math.abs(lden);
+
+        // B7: Lấy phần nguyên
+        number.append(lnum / lden);
+        number.append('.'); // thêm dấu thập phân
+
+        // B8: Rút gọn phân số bằng GCD
+        long GCD = gcd(lnum, lden);
+        lnum /= GCD;
+        lden /= GCD;
+
+        // B9: Lấy phần dư ban đầu để bắt đầu chia tiếp
+        lnum %= lden;
+        lnum *= 10;
+
+        // B10: Kiểm tra mẫu chỉ có 2 và 5 → số thập phân hữu hạn
+        int twos = 0, fives = 0;
+        long temp = lden;
+
+        while (temp % 2 == 0) {
+            twos++;
+            temp /= 2;
+        }
+        while (temp % 5 == 0) {
+            fives++;
+            temp /= 5;
+        }
+
+        // B11: Nếu mẫu chỉ có 2 và/hoặc 5
+        if (temp == 1) {
+            while (lnum != 0) {
+                number.append(lnum / lden);
+                lnum = (lnum % lden) * 10;
+            }
+        } else {
+            // B12: Xử lý phần không lặp (do 2 và 5)
+            int nonRepLen = Math.max(twos, fives);
+            for (int i = 0; i < nonRepLen; i++) {
+                number.append(lnum / lden);
+                lnum = (lnum % lden) * 10;
+            }
+
+            // B13: Phát hiện chu kỳ bằng remainder
+            long initRem = lnum;
+            StringBuilder repeating = new StringBuilder();
+
+            do {
+                repeating.append(lnum / lden);
+                lnum = (lnum % lden) * 10;
+            } while (lnum != initRem);
+
+            // B14: Thêm ngoặc cho phần lặp
+            number.append('(').append(repeating.toString()).append(')');
+        }
+
+        // B15: Trả về kết quả cuối
+        return number.toString();
+    }
+
+    // Hàm GCD (Ước chung lớn nhất)
+    public static long gcd(long a, long b) {
+        return (b == 0) ? a : gcd(b, a % b);
+    }
+}
+
+À chỗ này rất hay 👍 mình giải thích rõ nhé:
+
+---
+
+### ❓ Tại sao chỉ kiểm tra 2 và 5?
+
+* Trong **hệ thập phân (cơ số 10)**, mẫu số (denominator) chỉ tạo ra **số thập phân hữu hạn** nếu nó **chỉ có các thừa số nguyên tố là 2 và/hoặc 5**.
+* Vì:
+
+  * 10 = 2 × 5
+  * Nên khi mẫu chỉ chứa 2 và 5 → ta có thể quy đồng mẫu thành một số dạng `10^k` → chia ra sẽ dừng.
+
+---
+
+### 📌 Ví dụ
+
+* `1/2 = 0.5` ✅ (hữu hạn, vì mẫu chỉ có thừa số 2)
+* `1/4 = 0.25` ✅ (mẫu = 2²)
+* `1/5 = 0.2` ✅ (mẫu = 5)
+* `1/8 = 0.125` ✅ (mẫu = 2³)
+* `1/20 = 0.05` ✅ (mẫu = 2² × 5)
+
+Nhưng:
+
+* `1/3 = 0.(3)` ❌ (mẫu có thừa số nguyên tố 3, khác 2 và 5 → thập phân vô hạn lặp)
+* `1/7 = 0.(142857)` ❌ (mẫu có thừa số nguyên tố 7)
+
+---
+
+### 📖 Giải thích code
+
+```java
+int twos = 0, fives = 0;
+long temp = lden;
+
+// Đếm số lần mẫu chia hết cho 2
+while (temp % 2 == 0) {
+    twos++;
+    temp /= 2;
+}
+
+// Đếm số lần mẫu chia hết cho 5
+while (temp % 5 == 0) {
+    fives++;
+    temp /= 5;
+}
+```
+
+* Vòng while đầu tiên: **loại bỏ tất cả thừa số 2** trong mẫu.
+* Vòng while thứ hai: **loại bỏ tất cả thừa số 5** trong mẫu.
+* Sau khi xong, nếu `temp == 1` → tức mẫu ban đầu chỉ có thừa số 2 và/hoặc 5 ⇒ số thập phân **hữu hạn**.
+* Nếu `temp > 1` → còn thừa số khác ngoài 2 và 5 ⇒ số thập phân **vô hạn lặp**.
+
+---
+
+👉 Bạn có muốn mình viết 1 ví dụ Java chạy thực tế (ví dụ nhập `denominator = 8` và `denominator = 7`) để thấy `temp == 1` hay `temp > 1` không?
+Ok 👌 mình giải thích chi tiết B11 và B12 theo **toán học** nhé:
+
+---
+
+## 🔹 B11: Nếu mẫu chỉ có thừa số **2** và/hoặc **5**
+
+```java
+if (temp == 1) {
+    while (lnum != 0) {
+        number.append(lnum / lden);
+        lnum = (lnum % lden) * 10;
+    }
+}
+```
+
+👉 Nghĩa là: mẫu số **chỉ chứa 2 và 5** → phân số sẽ cho ra **số thập phân hữu hạn**.
+
+### Toán học:
+
+* Bất kỳ mẫu nào chỉ có 2 và 5 thì ta có thể quy đồng nó về dạng `10^k`.
+* Ví dụ:
+
+  * `1/2 = 0.5`
+  * `1/4 = 0.25`
+  * `3/20 = 0.15` (vì 20 = 2² × 5 = 100/5, có thể quy về mẫu 100).
+
+➡️ Trong code, vòng `while` tiếp tục chia và ghi kết quả cho đến khi **số dư (lnum) = 0**, tức là chia hết.
+
+---
+
+## 🔹 B12: Nếu mẫu **có thừa số khác ngoài 2 và 5**
+
+```java
+else {
+    // B12: Xử lý phần không lặp (do 2 và 5)
+    int nonRepLen = Math.max(twos, fives);
+    for (int i = 0; i < nonRepLen; i++) {
+        number.append(lnum / lden);
+        lnum = (lnum % lden) * 10;
+    }
+}
+```
+
+👉 Trường hợp này: phân số có **số thập phân vô hạn lặp**.
+Nhưng: trước khi lặp, thường sẽ có 1 đoạn **không lặp** (non-repeating part).
+
+### Toán học:
+
+* Độ dài đoạn **không lặp** chính bằng số mũ lớn nhất của 2 hoặc 5 trong mẫu số.
+* Vì sao? Vì khi ta nhân tử và mẫu để "khử" hết 2 hoặc 5 trong mẫu, phần đó sẽ tạo ra **số thập phân hữu hạn**, rồi mới đến phần **chu kỳ lặp**.
+
+### Ví dụ minh họa
+
+1. `1/6 = 0.1(6)`
+
+   * Mẫu = `2 × 3`.
+   * Chứa 2 (mũ = 1) → đoạn **không lặp dài 1** (`0.1`).
+   * Sau đó mới lặp (`6`).
+
+2. `1/28 = 1/(2² × 7)`
+
+   * Mẫu có `2²` → non-repeating part dài **2 số**.
+   * Rồi sau đó mới có phần lặp.
+
+➡️ Trong code:
+
+```java
+int nonRepLen = Math.max(twos, fives);
+```
+
+* Lấy số lớn hơn giữa số mũ của 2 và 5.
+* Vì phần **không lặp** phụ thuộc vào số lần cần nhân thêm 2 hoặc 5 để tạo thành một mẫu là `10^k`.
+
+---
+
+✅ Tóm lại:
+
+* **B11:** Nếu mẫu chỉ có 2 và 5 → số thập phân **hữu hạn** (kết thúc).
+* **B12:** Nếu mẫu có thêm thừa số khác → số thập phân **vô hạn lặp**, nhưng trước đó có 1 đoạn **không lặp** dài bằng `max(số mũ 2, số mũ 5)`.
+
+---
+
+👉 Bạn có muốn mình viết 1 ví dụ **chạy thực tế** trong Java, in ra kết quả `1/6` và `1/28` để thấy rõ phần **không lặp** và **lặp** không?
+
+Hay 👌 mình cho bạn ví dụ rõ ràng nhé:
+
+---
+
+### Ví dụ 1: $\frac{1}{6}$
+
+* Mẫu $6 = 2 \times 3$.
+* Số mũ của 2 = **1**, số mũ của 5 = **0**.
+* Lấy `max(1, 0) = 1`.
+  👉 Có **1 chữ số không lặp** trước khi chu kỳ bắt đầu.
+
+**Tính toán:**
+
+$$
+1 \div 6 = 0.1666...
+$$
+
+* Phần **0.1** là không lặp.
+* Sau đó **6** lặp vô hạn.
+
+---
+
+### Ví dụ 2: $\frac{1}{28}$
+
+* Mẫu $28 = 2^2 \times 7$.
+* Số mũ của 2 = **2**, số mũ của 5 = **0**.
+* Lấy `max(2, 0) = 2`.
+  👉 Có **2 chữ số không lặp** trước khi bắt đầu chu kỳ.
+
+**Tính toán:**
+
+$$
+1 \div 28 = 0.035714285714...
+$$
+
+* Phần **0.03** là không lặp (2 số).
+* Sau đó chu kỳ **571428** bắt đầu lặp.
+
+---
+
+### Ví dụ 3: $\frac{1}{40}$
+
+* Mẫu $40 = 2^3 \times 5$.
+* Số mũ của 2 = **3**, số mũ của 5 = **1**.
+* Lấy `max(3, 1) = 3`.
+  👉 Có **3 chữ số không lặp**.
+
+**Tính toán:**
+
+$$
+1 \div 40 = 0.025
+$$
+
+* Đây là **số hữu hạn**, coi như đoạn không lặp dài đúng 3 chữ số (`025`).
+
+---
+
+✅ Như vậy:
+
+* Số mũ 2 và 5 cho biết phải nhân bao nhiêu lần để biến mẫu thành $10^k$.
+* Phần **không lặp** có độ dài = `max(số mũ của 2, số mũ của 5)`.
+
+---
+
+👉 Bạn có muốn mình viết một đoạn **Java code nhỏ** để nhập mẫu số, rồi tự động in ra số mũ 2, số mũ 5, và độ dài phần không lặp cho dễ hình dung không?
+Ok mình giải thích thật kỹ đoạn **`Math.max(twos, fives)`** nhé:
+
+---
+
+### 1. Ý tưởng toán học
+
+Muốn biết **phần thập phân hữu hạn (không lặp)** dài bao nhiêu chữ số, ta phải xét mẫu số sau khi bỏ hết các ước chung với tử số.
+
+* Một phân số $\dfrac{a}{b}$ có **phần thập phân hữu hạn** nếu và chỉ nếu mẫu $b$ có dạng $2^m \cdot 5^n$.
+* Khi đó, số chữ số **không lặp** trong phần thập phân chính là số mũ lớn nhất giữa $m$ và $n$.
+
+  $$
+  \text{nonRepLen} = \max(m, n)
+  $$
+
+---
+
+### 2. Tại sao lấy max?
+
+Vì ta cần biến mẫu số thành **bội của $10^k$**.
+
+* Mà $10^k = 2^k \cdot 5^k$.
+* Nếu $b = 2^m \cdot 5^n$, thì để thành mẫu số là lũy thừa của 10, ta cần thêm thừa số cho bên thiếu.
+
+  * Nếu $m > n$, thì phải thêm $5^{m-n}$ để cân bằng. Lúc này $k = m$.
+  * Nếu $n > m$, thì phải thêm $2^{n-m}$. Lúc này $k = n$.
+  * Nói cách khác, $k = \max(m, n)$.
+
+---
+
+### 3. Ví dụ minh họa
+
+* $\dfrac{1}{8} = \dfrac{1}{2^3}$
+  → $m=3, n=0$.
+  → $k = \max(3, 0) = 3$.
+  → Kết quả: $1/8 = 0.125$ (3 chữ số không lặp).
+
+* $\dfrac{1}{40} = \dfrac{1}{2^3 \cdot 5^1}$
+  → $m=3, n=1$.
+  → $k = \max(3, 1) = 3$.
+  → Kết quả: $1/40 = 0.025$ (3 chữ số không lặp).
+
+* $\dfrac{1}{200} = \dfrac{1}{2^3 \cdot 5^2}$
+  → $m=3, n=2$.
+  → $k = \max(3, 2) = 3$.
+  → Kết quả: $1/200 = 0.005$ (3 chữ số không lặp).
+
+---
+
+👉 Vậy nên code mới dùng **`Math.max(twos, fives)`** để tính số chữ số **phần thập phân hữu hạn (không lặp)**.
+
+Bạn có muốn mình viết 1 đoạn code nhỏ Python minh họa, input mẫu số và nó in ra luôn `twos, fives, nonRepLen` để dễ thấy không?
+Rồi, mình giải thích chi tiết **B13–B15** và cái `do { … } while (…)` nhé:
+
+---
+
+### 1. Ý tưởng toán học (B13: phát hiện chu kỳ)
+
+Khi chia số thập phân vô hạn tuần hoàn, **chu kỳ bắt đầu lặp lại khi số dư (remainder) lặp lại**.
+
+* Giả sử ta đang tính $\dfrac{1}{7}$.
+* Ta lấy `lnum % lden` để lấy số dư.
+* Mỗi lần nhân số dư với 10 và chia tiếp, ta sinh ra 1 chữ số thập phân.
+* Nếu một số dư đã từng xuất hiện → từ đây trở đi dãy chữ số sẽ lặp lại y chang → phát hiện được chu kỳ.
+
+👉 Ở đây, code đơn giản hóa bằng cách:
+
+* Ghi nhớ `initRem = lnum` (số dư đầu tiên).
+* Sau đó chạy `do { … } while (lnum != initRem);`.
+* Khi remainder quay lại bằng **initRem** → tức là một vòng lặp đã hoàn tất → tìm ra được chu kỳ.
+
+---
+
+### 2. Vòng `do { … } while (…)` hoạt động thế nào?
+
+Khác với `while`, **`do … while` luôn chạy ít nhất một lần** trước khi kiểm tra điều kiện.
+
+Cụ thể ở đây:
+
+```java
+do {
+    repeating.append(lnum / lden);  // lấy chữ số thập phân tiếp theo
+    lnum = (lnum % lden) * 10;      // cập nhật remainder
+} while (lnum != initRem);
+```
+
+* Lần đầu tiên chắc chắn phải tính 1 chữ số thập phân từ remainder ban đầu.
+* Sau đó cứ tiếp tục cho tới khi remainder = remainder ban đầu (`initRem`).
+* Khi đó ta đã tìm xong **chu kỳ đầy đủ**.
+
+---
+
+### 3. B14: Thêm ngoặc cho phần lặp
+
+Sau khi xây dựng xong chu kỳ trong `repeating`, ta đóng gói lại dạng:
+
+```java
+number.append('('
+```

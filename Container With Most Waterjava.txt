@@ -1,0 +1,145 @@
+Container With Most Water 
+class Solution {
+    public int maxArea(int[] height) {
+        int i = 0;
+        int j = height.length -1;
+        int area = 0;
+        int maxArea = 0;
+        
+        while (i < j){
+            int min = Math.min(height[i], height[j]);
+            area = min * (j - i);
+            maxArea = Math.max(area, maxArea);
+            while(i < j && height[i] <= min) i++;
+            while(i < j && height[j] <= min) j--;
+        }
+        return maxArea;
+    }
+}
+Rất hay 👍 — đây là các **điểm quan trọng** trong thuật toán hai con trỏ của bài **Container With Most Water (LeetCode 11)**.
+Tui sẽ giải thích **từng phần cực kỳ rõ ràng và dễ hiểu** 👇
+
+---
+
+### 🔹 Toàn cảnh ý tưởng
+
+Bạn có một mảng `height[]`, mỗi phần tử là chiều cao của một cột.
+Mỗi cột đứng song song nhau, và ta chọn **2 cột** để tạo thành “bức tường chứa nước”.
+
+**Diện tích nước chứa được = chiều cao thấp hơn giữa hai cột × khoảng cách giữa hai cột.**
+
+→ Ta cần tìm **cặp cột (i, j)** sao cho diện tích đó lớn nhất.
+
+---
+
+### ✅ Giải thích từng phần trong đoạn code
+
+```java
+while (i < j) {
+```
+
+➡️ **Duyệt khi con trỏ trái (`i`) vẫn nhỏ hơn con trỏ phải (`j`)**
+
+* Vì khi `i >= j`, hai cột đã trùng hoặc cắt nhau → không thể chứa nước được nữa.
+* Ta bắt đầu từ hai đầu mảng, dần dần di chuyển vào giữa.
+
+---
+
+```java
+int min = Math.min(height[i], height[j]);
+```
+
+➡️ **Lấy chiều cao nhỏ hơn trong hai cột**
+
+* Nước chỉ có thể chứa cao **bằng chiều cao thấp hơn trong hai cột** — vì cột thấp sẽ làm tràn nước.
+  👉 Do đó dùng `Math.min()` để giới hạn chiều cao nước.
+
+---
+
+```java
+area = min * (j - i);
+```
+
+➡️ **Tính diện tích hình chữ nhật chứa nước**
+
+* Chiều cao: `min` (như vừa tính ở trên).
+* Chiều rộng: `(j - i)` là khoảng cách giữa hai cột.
+  → Diện tích nước = chiều cao × chiều rộng.
+
+---
+
+```java
+maxArea = Math.max(area, maxArea);
+```
+
+➡️ **Cập nhật diện tích lớn nhất**
+
+* Mỗi cặp `(i, j)` cho một giá trị `area`.
+* Dùng `Math.max()` để **lưu lại giá trị lớn nhất tìm được cho đến thời điểm hiện tại.**
+
+---
+
+```java
+while (i < j && height[i] <= min) i++;
+while (i < j && height[j] <= min) j--;
+```
+
+➡️ **Di chuyển con trỏ về phía trong** — đây là bước quan trọng nhất.
+
+**Vì sao làm vậy?**
+
+* Giả sử `height[i] < height[j]`:
+  → Cột trái thấp hơn, nên cột trái **giới hạn chiều cao nước**.
+  → Nếu ta giữ nguyên `i`, dù di chuyển `j`, thì chiều cao vẫn bị cột trái giới hạn.
+  ✅ Vì vậy, ta **di chuyển `i` sang phải** để tìm một cột cao hơn — có thể tăng diện tích.
+
+* Ngược lại, nếu `height[j] < height[i]`:
+  → Cột phải thấp hơn, ta **giảm `j`** để tìm cột cao hơn bên phải.
+
+* Cụ thể:
+
+  ```java
+  while (i < j && height[i] <= min) i++;
+  ```
+
+  ➜ Bỏ qua các cột bên trái **có chiều cao nhỏ hơn hoặc bằng** chiều cao thấp nhất hiện tại (`min`) vì chúng **chắc chắn không thể tạo diện tích lớn hơn**.
+
+  ```java
+  while (i < j && height[j] <= min) j--;
+  ```
+
+  ➜ Làm tương tự với phía phải.
+
+---
+
+### 🔹 Tóm tắt dễ hiểu
+
+| Biến / Điều kiện           | Ý nghĩa                          | Lý do dùng                             |
+| -------------------------- | -------------------------------- | -------------------------------------- |
+| `i < j`                    | 2 con trỏ chưa gặp nhau          | Khi gặp nhau → hết cặp hợp lệ          |
+| `j - i`                    | Khoảng cách giữa 2 cột (bề rộng) | Càng xa → diện tích càng lớn           |
+| `min`                      | Chiều cao thấp hơn trong 2 cột   | Nước chỉ cao bằng cột thấp             |
+| `maxArea`                  | Diện tích lớn nhất tìm được      | Giữ kết quả tối ưu                     |
+| `height[i] <= min` → `i++` | Bỏ cột trái thấp                 | Cột thấp hơn không giúp tăng diện tích |
+| `height[j] <= min` → `j--` | Bỏ cột phải thấp                 | Tương tự cho phía phải                 |
+
+---
+
+### 💧 Ví dụ minh họa
+
+Giả sử:
+`height = [1,8,6,2,5,4,8,3,7]`
+
+Lúc đầu:
+`i=0, j=8 → min=1, width=8, area=8`
+→ `maxArea=8`
+
+So sánh `height[i]=1`, `height[j]=7`
+→ Cột trái thấp hơn ⇒ di chuyển `i` sang phải.
+
+→ Sau nhiều lần cập nhật, ta tìm được diện tích lớn nhất là `49`.
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ từng bước i–j di chuyển** và diện tích thay đổi trực quan (bằng text hoặc ASCII art).
+Bạn có muốn mình làm không?

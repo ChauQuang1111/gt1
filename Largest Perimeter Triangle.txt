@@ -1,0 +1,347 @@
+976. Largest Perimeter Triangle(28/09/2025)
+class Solution {
+    public int largestPerimeter(int[] nums) {
+        int n = nums.length;
+
+        //Just find two largest elements. No need to sort the whole array
+        selectAndSwapMax(nums, n - 1);
+        selectAndSwapMax(nums, n - 2);
+
+        // Iterate backward from the end to the third element
+        for (int i = n - 1; i >= 2; i--) {
+
+            //Find third element inside the loop because of the inequality condition :
+            // Place the third max element in nums[0..i-2] at position i-2
+            selectAndSwapMax(nums, i - 2);
+
+            // Check the triangle inequality on the triplet
+            if (nums[i] < nums[i - 1] + nums[i - 2]) {
+                return nums[i] + nums[i - 1] + nums[i - 2];
+            }
+        }
+
+        // No valid triangle found
+        return 0;
+    }
+
+    // Selects the maximum element from nums[0..idx] and swaps it with nums[idx]
+    private void selectAndSwapMax(int[] nums, int idx) {
+        int maxValue = nums[0];
+        int maxIndex = 0;
+
+        // Find the max element and its index in nums[0..idx]
+        for (int i = 1; i <= idx; i++) {
+            if (nums[i] > maxValue) {
+                maxValue = nums[i];
+                maxIndex = i;
+            }
+        }
+
+        // Swap max element to the position idx
+        int temp = nums[idx];
+        nums[idx] = maxValue;
+        nums[maxIndex] = temp;
+    }
+}
+
+Ok 👌 mình sẽ giải thích chi tiết thuật toán bạn đang dùng:
+
+---
+
+### 🎯 Mục tiêu
+
+Tìm **chu vi lớn nhất** của một tam giác có thể tạo thành từ các cạnh trong mảng `nums`.
+Điều kiện để 3 cạnh tạo thành tam giác là:
+
+```
+a + b > c
+```
+
+(với `c` là cạnh lớn nhất trong bộ ba).
+
+---
+
+### 🚀 Ý tưởng chính
+
+* Không cần **sắp xếp cả mảng** (O(n log n)), chỉ cần **tìm dần các cạnh lớn nhất**.
+* Mỗi lần lấy ra 3 cạnh lớn nhất còn lại, kiểm tra xem có tạo thành tam giác không.
+* Nếu có → trả về ngay chu vi (vì chắc chắn đây là chu vi lớn nhất).
+
+---
+
+### 🔎 Giải thích từng bước code
+
+```java
+// Bước 1: tìm 2 cạnh lớn nhất trong mảng
+selectAndSwapMax(nums, n - 1); // đưa max1 về cuối mảng
+selectAndSwapMax(nums, n - 2); // đưa max2 về vị trí kế cuối
+```
+
+👉 Sau bước này, `nums[n-1]` và `nums[n-2]` lần lượt là **2 cạnh lớn nhất**.
+
+---
+
+```java
+// Bước 2: duyệt ngược từ cuối mảng về phía đầu
+for (int i = n - 1; i >= 2; i--) {
+```
+
+👉 `i` đại diện cho cạnh lớn nhất trong bộ 3 (tức `nums[i]`).
+
+---
+
+```java
+    // Bước 2a: tìm cạnh lớn thứ 3 trong nums[0..i-2]
+    selectAndSwapMax(nums, i - 2);
+```
+
+👉 Lấy cạnh lớn thứ 3 và đặt vào `nums[i-2]`.
+
+---
+
+```java
+    // Bước 2b: kiểm tra bất đẳng thức tam giác
+    if (nums[i] < nums[i - 1] + nums[i - 2]) {
+        return nums[i] + nums[i - 1] + nums[i - 2];
+    }
+```
+
+👉 Nếu 3 cạnh này thỏa điều kiện tam giác, thì đây là **chu vi lớn nhất** → trả về ngay.
+
+---
+
+```java
+// Nếu duyệt hết mà không tìm thấy tam giác hợp lệ
+return 0;
+```
+
+👉 Nghĩa là tất cả các bộ ba đều **không hợp lệ** → không có tam giác nào.
+
+---
+
+### 📌 Ví dụ minh họa
+
+Input:
+
+```
+nums = [2, 1, 2, 4, 3]
+```
+
+* Sau bước 1: `nums = [2,1,2,3,4]`
+  (`4` và `3` là 2 cạnh lớn nhất được đưa về cuối).
+
+* Lặp `i = 4`:
+
+  * Chọn thêm cạnh lớn thứ 3 (là `2`) → bộ ba = `(4,3,2)`.
+  * Kiểm tra: `4 < 3 + 2` ✅ đúng.
+  * Chu vi = `9`.
+
+→ Trả về kết quả `9`.
+
+---
+
+📊 **Độ phức tạp**:
+
+* Mỗi lần `selectAndSwapMax` tốn O(n).
+* Vòng lặp chạy tối đa n lần.
+* Tổng thể: **O(n²)**.
+
+---
+
+👉 Nhưng cách này có thể tối ưu xuống **O(n log n)** nếu bạn **sort mảng một lần** rồi duyệt từ cuối về.
+
+---
+
+Bạn có muốn mình viết lại phiên bản **tối ưu hơn dùng `Arrays.sort` (O(n log n))** không?
+Câu hỏi hay 👍
+
+Trong thuật toán này, **ta duyệt ngược (từ cuối mảng về đầu)** vì lý do sau:
+
+---
+
+### 1. Mảng sau khi xử lý (hoặc sort) thì **các cạnh lớn nhất nằm ở cuối**
+
+* Sau khi gọi `selectAndSwapMax`, ta đảm bảo **2 cạnh lớn nhất** nằm ở `nums[n-1]` và `nums[n-2]`.
+* Như vậy, khi bắt đầu xét từ `i = n-1`, ta luôn **xem xét tam giác có cạnh lớn nhất hiện tại**.
+
+---
+
+### 2. Mục tiêu là tìm **chu vi lớn nhất**
+
+* Chu vi tam giác phụ thuộc vào **3 cạnh lớn nhất có thể ghép được**.
+* Nếu ta duyệt từ **lớn → nhỏ** (ngược), thì:
+
+  * Bộ ba đầu tiên thỏa mãn bất đẳng thức tam giác chính là **chu vi lớn nhất**.
+  * Gặp tam giác hợp lệ thì trả về ngay → không cần xét tiếp (tối ưu).
+
+---
+
+### 3. Nếu duyệt xuôi (từ nhỏ → lớn) thì sao?
+
+* Ta sẽ phải kiểm tra **rất nhiều bộ ba không cần thiết**.
+* Ví dụ: với mảng `[2,3,4,5,10]`:
+
+  * Nếu duyệt xuôi, ta sẽ xét `(2,3,4)`, `(2,3,5)`, `(2,3,10)`… nhưng hầu hết sẽ không thỏa.
+  * Trong khi duyệt ngược, ta chỉ cần kiểm tra `(10,5,4)` trước. Nếu hợp lệ thì dừng ngay → nhanh hơn.
+
+---
+
+### 🔎 Kết luận
+
+👉 **Duyệt ngược để ưu tiên xét tam giác có cạnh lớn nhất trước**.
+
+* Nếu hợp lệ → chắc chắn đó là **chu vi lớn nhất**.
+* Nếu không → giảm dần cạnh lớn nhất rồi thử tiếp.
+
+---
+
+Bạn có muốn mình vẽ sơ đồ minh họa **tại sao duyệt ngược tìm được nhanh hơn duyệt xuôi** không?
+À chuẩn rồi 👌 bạn để ý kỹ: **code này không dùng `Arrays.sort()`**.
+Thay vào đó nó dùng **hàm `selectAndSwapMax`** để mô phỏng việc chọn phần tử lớn nhất.
+
+---
+
+### 🔎 Cách hoạt động
+
+1. **Bước 1:**
+
+```java
+selectAndSwapMax(nums, n - 1);
+selectAndSwapMax(nums, n - 2);
+```
+
+* Tìm **phần tử lớn nhất** trong mảng `nums[0..n-1]` rồi đặt vào `nums[n-1]`.
+* Tìm **phần tử lớn nhì** trong `nums[0..n-2]` rồi đặt vào `nums[n-2]`.
+
+👉 Kết quả: hai cạnh lớn nhất được đưa về cuối mảng.
+
+---
+
+2. **Bước 2:**
+
+```java
+for (int i = n - 1; i >= 2; i--) {
+    selectAndSwapMax(nums, i - 2);
+    if (nums[i] < nums[i - 1] + nums[i - 2]) {
+        return nums[i] + nums[i - 1] + nums[i - 2];
+    }
+}
+```
+
+* Với mỗi `i`, ta lại **tìm cạnh lớn thứ 3** trong `nums[0..i-2]` rồi đưa về `nums[i-2]`.
+* Khi đó, `nums[i], nums[i-1], nums[i-2]` luôn là **3 cạnh lớn nhất hiện tại**.
+
+👉 Không cần sắp xếp cả mảng, chỉ cần chọn dần **top 3 cạnh lớn nhất** là đủ để kiểm tra.
+
+---
+
+### 🧠 So sánh với sort
+
+* Nếu sort toàn bộ → O(n log n).
+* Cách này dùng `selectAndSwapMax` nhiều lần (mỗi lần O(n)), nên độ phức tạp là O(n²).
+* Nhưng ưu điểm là **không cần thay đổi cấu trúc mảng bằng sort**, mà vẫn tìm được tam giác lớn nhất.
+
+---
+
+Bạn có muốn mình viết lại phiên bản **dùng sort ngắn gọn hơn** để so sánh không?
+Ok, mình sẽ giải thích chi tiết hàm `selectAndSwapMax` nhé 👇
+
+---
+
+### 📌 Code
+
+```java
+private void selectAndSwapMax(int[] nums, int idx) {
+    int maxValue = nums[0];
+    int maxIndex = 0;
+
+    // Find the max element and its index in nums[0..idx]
+    for (int i = 1; i <= idx; i++) {
+        if (nums[i] > maxValue) {
+            maxValue = nums[i];
+            maxIndex = i;
+        }
+    }
+
+    // Swap max element to the position idx
+    int temp = nums[idx];
+    nums[idx] = maxValue;
+    nums[maxIndex] = temp;
+}
+```
+
+---
+
+### 🔎 Giải thích từng bước
+
+1. **Khởi tạo giá trị lớn nhất ban đầu:**
+
+```java
+int maxValue = nums[0];
+int maxIndex = 0;
+```
+
+* Giả sử phần tử đầu tiên `nums[0]` là lớn nhất.
+* Lưu vị trí (`maxIndex`) và giá trị (`maxValue`) tạm thời.
+
+---
+
+2. **Duyệt mảng từ `0..idx` để tìm số lớn nhất:**
+
+```java
+for (int i = 1; i <= idx; i++) {
+    if (nums[i] > maxValue) {
+        maxValue = nums[i];
+        maxIndex = i;
+    }
+}
+```
+
+* Với mỗi phần tử, nếu thấy số lớn hơn `maxValue` thì cập nhật:
+
+  * `maxValue` = giá trị mới.
+  * `maxIndex` = vị trí mới.
+
+👉 Sau vòng lặp, ta có được **giá trị lớn nhất trong đoạn `0..idx`**.
+
+---
+
+3. **Hoán đổi phần tử lớn nhất về cuối đoạn (vị trí `idx`):**
+
+```java
+int temp = nums[idx];
+nums[idx] = maxValue;
+nums[maxIndex] = temp;
+```
+
+* Lấy phần tử lớn nhất vừa tìm được và đưa nó về vị trí `idx`.
+* Đảm bảo `nums[idx]` chính là **giá trị lớn nhất trong `nums[0..idx]`**.
+
+---
+
+### 📌 Ví dụ minh họa
+
+Giả sử mảng:
+
+```
+nums = [3, 6, 2, 8, 4], idx = 4
+```
+
+* Tìm max trong `nums[0..4]` → max = 8 ở vị trí 3.
+* Hoán đổi `nums[4]` với `nums[3]`.
+
+Kết quả:
+
+```
+nums = [3, 6, 2, 4, 8]
+```
+
+👉 `nums[4]` bây giờ là lớn nhất.
+
+---
+
+➡️ Tóm lại: `selectAndSwapMax` giúp **chọn số lớn nhất trong đoạn 0..idx và đưa nó ra cuối đoạn**, giống như một bước trong **selection sort**.
+
+---
+
+Bạn có muốn mình giải thích thêm **vì sao dùng cách này thay vì sort toàn mảng** không?

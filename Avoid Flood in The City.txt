@@ -1,0 +1,555 @@
+Avoid Flood in The City
+class Solution {
+    public int[] avoidFlood(int[] rains) {
+        int n = rains.length;
+        int[] fa = new int[n + 1];
+        for (int i = 0; i <= n; i++) {
+            fa[i] = i;
+        }
+
+     int[] ans = new int[n];  // Mảng kết quả: -1 nghĩa là ngày mưa, >0 nghĩa là hút khô hồ nào
+Map<Integer, Integer> fullDay = new HashMap<>(); // Lưu hồ -> ngày nó bị đầy lần cuối
+
+for (int i = 0; i < n; i++) {
+    int lake = rains[i];
+    
+    if (lake == 0) { 
+        ans[i] = 1; // Ngày khô: tạm gán 1 (sẽ đổi sau nếu cần)
+        continue;
+    }
+
+    // Nếu hồ này đã bị đầy trước đó (chưa được hút)
+    Integer j = fullDay.get(lake);
+    if (j != null) {
+        // Cần tìm 1 ngày khô giữa j và i để hút hồ này
+        int dryDay = find(j + 1, fa);
+        if (dryDay >= i) {
+            return new int[]{}; // Không tìm được ngày khô hợp lệ -> ngập lụt
+        }
+
+        ans[dryDay] = lake; // Hút khô hồ này vào ngày dryDay
+        fa[dryDay] = find(dryDay + 1, fa); // Loại bỏ dryDay khỏi danh sách ngày khô (Union-Find)
+    }
+
+    ans[i] = -1;  // Ngày mưa, không hút được
+    fa[i] = i + 1; // Cập nhật UFDS: vị trí i đã xử lý
+    fullDay.put(lake, i); // Lưu ngày mà hồ này bị đầy
+}
+
+return ans;
+
+    }
+
+    private int find(int x, int[] fa) {
+        if (fa[x] != x) {
+            fa[x] = find(fa[x], fa);
+        }
+        return fa[x];
+    }
+}
+Rồi, để mình **giải thích thật dễ hiểu và từng bước** đoạn code này cho bạn nhé — vì đây là phần **cốt lõi của bài toán tránh lũ (Avoid Flood in The City)**.
+Mình sẽ diễn giải theo **cách trực quan** (ngày mưa, ngày khô, phải làm gì) kèm với giải thích ý nghĩa từng dòng code 👇
+
+---
+
+## 💡 Tóm tắt bài toán
+
+Bạn có 1 mảng `rains`:
+
+* `rains[i] > 0` → hôm đó **mưa ở hồ `lake = rains[i]`**, hồ đó **đầy nước**.
+* `rains[i] == 0` → hôm đó **trời khô**, bạn có thể **chọn 1 hồ đầy nước để hút khô**.
+
+Mục tiêu: sắp xếp cách hút nước sao cho **không có hồ nào bị ngập lụt** (nghĩa là mưa 2 lần vào cùng hồ mà giữa hai lần **không được hút khô**).
+
+---
+
+## 🧠 Giải thích từng dòng code
+
+```java
+int[] ans = new int[n];  // Kết quả cuối cùng: 
+// -1: ngày mưa (không hút nước được)
+// x>0: ngày khô và hút hồ x
+```
+
+```java
+Map<Integer, Integer> fullDay = new HashMap<>();  
+// Lưu hồ nào -> ngày nó bị đầy gần nhất.
+// Ví dụ: hồ 3 bị mưa lần đầu ở ngày 2 → fullDay.put(3, 2)
+```
+
+---
+
+### 🪣 Vòng lặp qua từng ngày
+
+```java
+for (int i = 0; i < n; i++) {
+    int lake = rains[i];
+```
+
+---
+
+### 🌞 Trường hợp 1: Ngày khô (`lake == 0`)
+
+```java
+if (lake == 0) {
+    ans[i] = 1; // Tạm thời gán 1 (sẽ đổi thành hồ thật sau)
+    continue;
+}
+```
+
+➡ Có nghĩa là hôm nay bạn có thể hút 1 hồ bất kỳ, nhưng **chưa biết hồ nào**, nên **gán tạm là 1**.
+
+---
+
+### 🌧️ Trường hợp 2: Ngày mưa (`lake > 0`)
+
+```java
+Integer j = fullDay.get(lake);
+```
+
+* Nếu hồ `lake` **chưa từng bị mưa trước đó**, thì `j == null`.
+  → Chưa cần làm gì, chỉ cần đánh dấu hôm nay là ngày hồ `lake` đầy.
+
+* Nếu hồ `lake` **đã đầy rồi (tức là đã có trong fullDay)**,
+  thì bây giờ mưa lại → **sẽ gây lụt nếu chưa hút khô!**
+
+---
+
+### 🚨 Nếu hồ đó đã đầy trước đó (`j != null`)
+
+```java
+int dryDay = find(j + 1, fa);
+```
+
+🔍 `find(j + 1, fa)` có nghĩa là:
+
+* **Tìm ngày khô sớm nhất sau ngày j**, còn trống (chưa được dùng để hút hồ nào).
+* Nếu không có ngày khô nào từ `j+1` đến `i-1`, thì **không thể tránh lụt**.
+
+---
+
+### ❌ Nếu không tìm được ngày khô hợp lệ
+
+```java
+if (dryDay >= i) {
+    return new int[]{}; // Không thể tránh lũ
+}
+```
+
+* Nếu `dryDay` ≥ `i`, nghĩa là từ lúc hồ đầy lần đầu (`j`) tới lúc mưa lại (`i`), **không có ngày khô nào** để hút nước.
+* → Không thể cứu được → trả về mảng rỗng `[]`.
+
+---
+
+### ✅ Nếu tìm được ngày khô hợp lệ
+
+```java
+ans[dryDay] = lake; // Dùng ngày dryDay để hút hồ "lake"
+fa[dryDay] = find(dryDay + 1, fa); // Xóa ngày dryDay khỏi danh sách ngày trống
+```
+
+* `ans[dryDay] = lake` → ghi nhận rằng **ngày dryDay sẽ hút hồ này**.
+* `fa[dryDay] = find(dryDay + 1, fa)` → dùng Union-Find để **đánh dấu dryDay đã được dùng** (không dùng lại nữa).
+
+---
+
+### 🗓️ Cập nhật thông tin của ngày mưa hiện tại
+
+```java
+ans[i] = -1;       // Hôm nay mưa, không hút được
+fa[i] = i + 1;     // Đánh dấu vị trí này đã xử lý trong Union-Find
+fullDay.put(lake, i); // Cập nhật: hồ này đầy vào ngày i
+```
+
+---
+
+### ✅ Kết thúc
+
+```java
+return ans;
+```
+
+---
+
+## 🧩 Ví dụ minh họa
+
+```
+rains = [1, 2, 0, 2, 3, 0, 1]
+
+Ngày 0: mưa hồ 1 -> fullDay = {1:0}
+Ngày 1: mưa hồ 2 -> fullDay = {1:0, 2:1}
+Ngày 2: khô -> tạm gán 1
+Ngày 3: mưa hồ 2 (đã từng đầy ở ngày 1)
+        → cần hút hồ 2 ở 1<day<3 → chọn ngày 2 → ans[2]=2
+        → cập nhật fullDay={1:0, 2:3}
+Ngày 4: mưa hồ 3 -> fullDay={1:0,2:3,3:4}
+Ngày 5: khô -> tạm gán 1
+Ngày 6: mưa hồ 1 (đầy lại) → hút hồ 1 ở 0<day<6 → chọn ngày 5 → ans[5]=1
+```
+
+**Kết quả cuối cùng:**
+
+```
+ans = [-1, -1, 2, -1, -1, 1, -1]
+```
+
+---
+
+## ⚙️ Tóm tắt ý nghĩa
+
+| Dòng code            | Ý nghĩa ngắn gọn                       |
+| -------------------- | -------------------------------------- |
+| `fullDay`            | Lưu hồ → ngày nó bị đầy gần nhất       |
+| `find()`             | Tìm ngày khô sớm nhất còn trống        |
+| `ans[dryDay] = lake` | Dùng ngày khô để hút hồ vừa bị mưa lại |
+| `ans[i] = -1`        | Hôm nay mưa                            |
+| `fa[i] = i+1`        | Union-Find: đánh dấu ngày đã dùng      |
+| `return new int[]{}` | Nếu không thể tránh lụt                |
+
+---
+
+Bạn có muốn mình **vẽ bảng mô phỏng từng ngày (kiểu timeline có cột: Ngày – rains – hành động – fullDay – ans)** để bạn dễ hình dung cách thuật toán hoạt động không?
+Rất hay — đây chính là **hàm `find()` trong cấu trúc Union-Find (Disjoint Set Union - DSU)**,
+và nó là phần **trọng tâm giúp giải thuật này chạy nhanh** trong bài “Avoid Flood in The City”.
+Mình sẽ giải thích **rõ ràng, từng dòng, và bằng ví dụ cụ thể** nhé 👇
+
+---
+
+## 🧠 Mục đích của hàm `find()`
+
+Hàm `find(x, fa)` có nhiệm vụ là:
+👉 **Tìm “ngày khô” sớm nhất (nhỏ nhất) còn trống từ vị trí `x` trở đi.**
+
+* `fa` là mảng **cha (parent array)** trong cấu trúc Union-Find.
+* Ban đầu, mỗi phần tử là **cha của chính nó**: `fa[i] = i`.
+* Khi 1 “ngày khô” đã được dùng (đã hút hồ nào đó), ta sẽ **nối (union)** nó với ngày kế tiếp (`fa[i] = i + 1`),
+  để lần sau bỏ qua ngày này.
+
+---
+
+## 🧩 Code đầy đủ
+
+```java
+private int find(int x, int[] fa) {
+    if (fa[x] != x) {
+        fa[x] = find(fa[x], fa);
+    }
+    return fa[x];
+}
+```
+
+---
+
+## 🔍 Giải thích từng dòng
+
+### 1️⃣ `if (fa[x] != x)`
+
+* Kiểm tra xem `x` có còn là **ngày trống (cha của chính nó)** hay không.
+* Nếu `fa[x] == x`, nghĩa là **ngày `x` vẫn còn trống**, ta có thể dùng nó.
+* Nếu `fa[x] != x`, nghĩa là **ngày `x` đã được dùng rồi**,
+  và nó đang **liên kết đến ngày trống tiếp theo** (`fa[x]` là cha của nó).
+
+---
+
+### 2️⃣ `fa[x] = find(fa[x], fa);`
+
+* Đây là bước **đệ quy** (recursion) để **tìm tiếp ngày trống kế tiếp**.
+* Đồng thời, gán lại `fa[x]` = kết quả tìm được → gọi là **đường nén (path compression)**.
+  → Giúp lần sau tìm nhanh hơn (chỉ cần 1 bước nhảy).
+
+---
+
+### 3️⃣ `return fa[x];`
+
+* Trả về **ngày trống sớm nhất còn dùng được**.
+
+---
+
+## 🧮 Ví dụ minh họa chi tiết
+
+Giả sử có 7 ngày (`n = 7`):
+
+```
+fa = [0, 1, 2, 3, 4, 5, 6]
+```
+
+Tất cả ngày đều trống ban đầu (mỗi ngày là cha của chính nó).
+
+---
+
+### Bước 1: Dùng ngày 2 để hút hồ nào đó
+
+```java
+fa[2] = find(2 + 1, fa);  // fa[2] = find(3, fa)
+```
+
+➡ Tức là **ngày 2 đã dùng**, nên ta **nối** nó với ngày kế tiếp (3).
+Kết quả:
+
+```
+fa = [0, 1, 3, 3, 4, 5, 6]
+```
+
+---
+
+### Bước 2: Gọi `find(2, fa)`
+
+Giờ ta thử tìm ngày trống sớm nhất sau ngày 2.
+
+* `fa[2] = 3`, và `fa[3] = 3`
+  → ngày 3 vẫn còn trống
+  → `find(2)` trả về `3`.
+
+---
+
+### Bước 3: Giả sử tiếp tục dùng ngày 3
+
+```java
+fa[3] = find(4, fa);
+```
+
+➡ Giờ `fa[3] = 4`, tức là ngày 3 bị “bỏ qua”, nối với ngày 4.
+
+Khi gọi `find(2)`:
+
+* `fa[2] = 3` → `fa[3] = 4`
+  → `find(2)` = 4 (ngày 4 là trống gần nhất).
+  Và nhờ “path compression”, sau lời gọi này:
+
+```
+fa[2] = 4; // nén đường
+```
+
+---
+
+## ⚙️ Tóm lại — cơ chế hoạt động
+
+| Tình huống            | Kết quả         | Ý nghĩa                                       |
+| --------------------- | --------------- | --------------------------------------------- |
+| `fa[x] == x`          | trả về `x`      | ngày này còn trống                            |
+| `fa[x] != x`          | đệ quy tìm tiếp | ngày này đã dùng, nhảy đến ngày trống kế tiếp |
+| `fa[x] = find(fa[x])` | nén đường       | tối ưu cho lần tìm tiếp theo                  |
+
+---
+
+## 🚀 Tác dụng trong bài toán Avoid Flood
+
+* Khi 1 hồ **bị mưa lần đầu**, ta lưu lại `fullDay[lake] = ngày`.
+* Khi **mưa lại cùng hồ**, ta cần tìm 1 “ngày khô” nằm **sau ngày đó nhưng trước hôm nay**.
+
+  ```java
+  int dryDay = find(j + 1, fa);
+  ```
+
+  → `find()` giúp nhanh chóng tìm ra **ngày khô trống gần nhất** (O(α(n)) thời gian gần như O(1)).
+
+---
+
+👉 **Tóm gọn dễ hiểu:**
+
+> `find()` là một công cụ “nhảy nhanh” để bỏ qua những ngày khô đã dùng,
+> và tìm đến ngày khô còn trống sớm nhất — cực kỳ quan trọng để tránh tràn hồ kịp thời 💧
+
+---
+
+Bạn có muốn mình **vẽ hình minh họa mảng `fa` và cách nó thay đổi sau từng bước `find` + `union`** để thấy rõ quá trình “nén đường” hoạt động không?
+Tốt lắm 👍
+Giờ mình sẽ **vẽ hình minh họa mảng `fa` (Union-Find)** và mô phỏng cách nó **thay đổi dần** trong quá trình tìm ngày khô (`find`) và “nén đường” (`path compression`).
+Mình sẽ đi **bước từng bước**, cực dễ hiểu luôn 👇
+
+---
+
+## 🧱 Khởi tạo ban đầu
+
+Giả sử ta có **7 ngày (0 → 6)**,
+ban đầu **chưa dùng ngày nào để hút nước**, nên mỗi ngày là **cha của chính nó**:
+
+```
+fa = [0, 1, 2, 3, 4, 5, 6]
+```
+
+(ngày `i` là “ngày khô” trống, chưa bị chiếm)
+
+---
+
+## 🎯 Tình huống mô phỏng
+
+Ta có các ngày và mưa như sau (chỉ để ví dụ):
+
+```
+rains = [1, 2, 0, 2, 0, 1, 0]
+```
+
+* 0 → trời khô (có thể hút nước)
+* > 0 → mưa ở hồ đó
+
+Mình sẽ mô phỏng quá trình cập nhật `fa` nhé.
+
+---
+
+## 🧩 Bước 1:
+
+Ngày 0 — mưa hồ 1
+➡ Không có gì đặc biệt, chỉ cập nhật `fullDay[1] = 0`.
+
+```
+fa = [0, 1, 2, 3, 4, 5, 6]
+```
+
+---
+
+## 🧩 Bước 2:
+
+Ngày 1 — mưa hồ 2
+➡ Cập nhật `fullDay[2] = 1`.
+
+```
+fa = [0, 1, 2, 3, 4, 5, 6]
+```
+
+---
+
+## 🧩 Bước 3:
+
+Ngày 2 — khô (rains[2] = 0)
+➡ Ngày 2 **có thể dùng để hút nước**, ta **chưa biết hồ nào**, tạm để trống.
+
+```
+fa = [0, 1, 2, 3, 4, 5, 6]
+```
+
+---
+
+## 🧩 Bước 4:
+
+Ngày 3 — mưa lại hồ 2 (hồ 2 từng đầy ở ngày 1)
+
+➡ Phải tìm **ngày khô** sau `j=1` → `find(2, fa)`
+→ `fa[2] = 2` (trống) → trả về `2`.
+
+✅ Dùng ngày 2 để hút hồ 2:
+
+```java
+fa[2] = find(3, fa); // fa[2] = 3
+```
+
+→ Đánh dấu **ngày 2 đã dùng**, **nối với ngày kế tiếp (3)**.
+
+**Kết quả:**
+
+```
+fa = [0, 1, 3, 3, 4, 5, 6]
+```
+
+Hình minh họa:
+
+```
+Ngày 2 ──▶ Ngày 3
+```
+
+(Tức là khi gọi `find(2)`, ta sẽ nhảy qua 3 luôn)
+
+---
+
+## 🧩 Bước 5:
+
+Ngày 4 — khô (`rains[4] = 0`)
+➡ Thêm 1 ngày khô mới.
+
+```
+fa = [0, 1, 3, 3, 4, 5, 6]
+```
+
+---
+
+## 🧩 Bước 6:
+
+Ngày 5 — mưa lại hồ 1 (lần đầu ở ngày 0)
+
+➡ Cần hút hồ 1 giữa ngày 0 và 5
+→ `find(1, fa)` tìm ngày khô sớm nhất **sau ngày 0**.
+
+Bắt đầu từ `find(1)`:
+
+```
+fa[1] = 1 → trống
+```
+
+Nhưng hôm 1 mưa, không phải khô → bỏ qua → ta thử `find(2)`
+`fa[2] = 3` (vì 2 đã nối đến 3 rồi)
+→ trả về `3` là ngày khô trống sớm nhất.
+
+✅ Dùng ngày 3 để hút hồ 1:
+
+```java
+fa[3] = find(4, fa); // fa[3] = 4
+```
+
+**Cập nhật mảng `fa`:**
+
+```
+fa = [0, 1, 3, 4, 4, 5, 6]
+```
+
+Bây giờ:
+
+* Ngày 2 → nhảy sang 3
+* Ngày 3 → nhảy sang 4
+  → `find(2)` giờ tự động trả về `4` (nhờ nén đường).
+
+---
+
+## 🔄 Path Compression (Nén đường)
+
+Giờ nếu ta gọi `find(2, fa)` lần nữa:
+
+1. `fa[2] = 3`
+2. `fa[3] = 4`
+3. `fa[4] = 4` → dừng lại, kết quả = 4
+4. Nén đường: gán `fa[2] = 4`, `fa[3] = 4`
+
+Kết quả sau nén:
+
+```
+fa = [0, 1, 4, 4, 4, 5, 6]
+```
+
+🌀 Giờ chỉ cần 1 bước là `find(2)` ra `4` ngay, không phải nhảy từng bước.
+
+---
+
+## 🧭 Hình minh họa tổng quát
+
+Trước nén đường:
+
+```
+2 → 3 → 4
+```
+
+Sau nén đường:
+
+```
+2 → 4
+```
+
+---
+
+## ⚙️ Ý nghĩa thực tế
+
+| Tình huống              | Hành động           | Giải thích                                     |
+| ----------------------- | ------------------- | ---------------------------------------------- |
+| Dùng ngày 2 để hút nước | `fa[2] = 3`         | Đánh dấu “ngày 2 đã dùng”, nối với ngày 3      |
+| Gọi `find(2)`           | Trả về `3` hoặc `4` | Tìm ngày khô kế tiếp có thể dùng               |
+| Nén đường               | `fa[2] = 4`         | Tối ưu lần tìm kế tiếp, bỏ qua bước trung gian |
+
+---
+
+## 🧩 Tóm lại
+
+* `fa` lưu mối quan hệ giữa các **ngày khô**: ngày nào đã dùng thì trỏ đến ngày khô kế tiếp.
+* `find(x)` dùng để **nhảy qua các ngày khô đã dùng** để tới ngày còn trống.
+* “Nén đường” (`fa[x] = find(fa[x])`) giúp **tối ưu** tốc độ tìm kiếm.
+
+---
+
+Bạn có muốn mình **vẽ lại mô phỏng này dạng bảng (Ngày – Rains – Hành động – Mảng fa – fullDay – ans)** để bạn nhìn thấy toàn quá trình chạy thật không?

@@ -1,0 +1,808 @@
+Design Movie Rental System
+class MovieRentingSystem {
+    private static class Node {
+        final int shop;
+        final int movie;
+        final int price;
+        Node(int shop, int movie, int price) {
+            this.shop = shop;
+            this.movie = movie;
+            this.price = price;
+        }
+    }
+
+    // Order: price ↑, shop ↑, movie ↑  (strict: never returns 0 for distinct nodes)
+    private static final Comparator<Node> CMP =
+        (a, b) -> {
+            int c = Integer.compare(a.price, b.price);
+            if (c != 0) return c;
+            c = Integer.compare(a.shop, b.shop);
+            if (c != 0) return c;
+            return Integer.compare(a.movie, b.movie);
+        };
+
+    // Available copies grouped by movie
+    private final Map<Integer, TreeSet<Node>> availableByMovie = new HashMap<>();
+    // All currently rented copies
+    private final TreeSet<Node> rentedSet = new TreeSet<>(CMP);
+    // Quick lookup from (shop, movie) -> Node
+    private final Map<Long, Node> byPair = new HashMap<>();
+
+    private static long key(int shop, int movie) {
+        return (((long) shop) << 32) ^ (movie & 0xffffffffL);
+    }
+Ok 👌 mình giải thích chi tiết từng phần đoạn code này nhé.
+
+Đây là cấu trúc dữ liệu dùng để quản lý **hệ thống thuê phim** (kiểu bài toán “Movie Renting System” – LeetCode 1912).
+
+---
+
+### 📌 Các biến
+
+```java
+// Available copies grouped by movie
+private final Map<Integer, TreeSet<Node>> availableByMovie = new HashMap<>();
+```
+
+* `availableByMovie`:
+
+  * Map từ `movieId` ➝ `TreeSet<Node>`.
+  * Với mỗi bộ phim (`movie`), lưu một `TreeSet` chứa tất cả bản copy của phim đó (từ các cửa hàng khác nhau).
+  * `TreeSet` được sắp xếp theo `Comparator CMP` (ưu tiên `price`, rồi `shop`, rồi `movie`).
+  * Dùng để nhanh chóng tìm ra cửa hàng rẻ nhất đang cho thuê một bộ phim.
+
+---
+
+```java
+// All currently rented copies
+private final TreeSet<Node> rentedSet = new TreeSet<>(CMP);
+```
+
+* `rentedSet`:
+
+  * Lưu toàn bộ những bản copy đã **được thuê**.
+  * Cũng dùng `TreeSet` với cùng comparator, nên luôn có thể lấy ra những bản thuê rẻ nhất theo thứ tự mong muốn.
+
+---
+
+```java
+// Quick lookup from (shop, movie) -> Node
+private final Map<Long, Node> byPair = new HashMap<>();
+```
+
+* `byPair`:
+
+  * Map từ một **cặp (shop, movie)** ➝ `Node`.
+  * Dùng để **truy xuất nhanh** đến đối tượng `Node` khi biết `shop` và `movie`.
+  * Tại sao không lưu `(shop, movie)` trực tiếp mà lại dùng `Long`?
+    → Bởi vì key trong `HashMap` nên là 1 object duy nhất, việc “nén” cặp `(shop, movie)` thành một `long` là cách tiết kiệm bộ nhớ và tối ưu lookup.
+
+---
+
+### 📌 Hàm tạo key
+
+```java
+private static long key(int shop, int movie) {
+    return (((long) shop) << 32) ^ (movie & 0xffffffffL);
+}
+```
+
+👉 Ý nghĩa:
+
+* Chuyển `(shop, movie)` thành một số `long` duy nhất.
+* Cách làm:
+
+  1. `((long) shop) << 32`: đẩy `shop` lên 32 bit cao của `long`.
+  2. `(movie & 0xffffffffL)`: lấy 32 bit thấp của `movie`.
+  3. Dùng phép XOR (`^`) để gộp chúng lại thành một số `long`.
+
+💡 Nhờ vậy, ta có một key duy nhất cho từng `(shop, movie)` và dùng được trong `HashMap<Long, Node> byPair`.
+
+---
+
+### 🚀 Tóm gọn:
+
+Hệ thống này quản lý:
+
+* `availableByMovie`: tra cứu các bản copy đang sẵn sàng cho thuê, theo từng phim.
+* `rentedSet`: tập hợp các bản copy đã được thuê.
+* `byPair`: lookup nhanh từ `(shop, movie)` ➝ `Node`.
+* `key(shop, movie)`: nén 2 số nguyên thành 1 số `long` duy nhất.
+
+---
+
+Bạn có muốn mình vẽ **sơ đồ minh họa luồng dữ liệu** (một phim ở nhiều shop → chọn shop rẻ nhất → chuyển sang `rentedSet`) để dễ hình dung hơn không?
+
+    public MovieRentingSystem(int n, int[][] entries) {
+        for (int[] e : entries) {
+            int shop = e[0], movie = e[1], price = e[2];
+            Node node = new Node(shop, movie, price);
+            byPair.put(key(shop, movie), node);
+            availableByMovie
+                .computeIfAbsent(movie, k -> new TreeSet<>(CMP))
+                .add(node);
+        }
+    }
+Hay đấy 👍 mình giải thích chi tiết đoạn constructor này:
+
+---
+
+### 📌 Code
+
+```java
+public MovieRentingSystem(int n, int[][] entries) {
+    for (int[] e : entries) {
+        int shop = e[0], movie = e[1], price = e[2];
+        Node node = new Node(shop, movie, price);
+        byPair.put(key(shop, movie), node);
+        availableByMovie
+            .computeIfAbsent(movie, k -> new TreeSet<>(CMP))
+            .add(node);
+    }
+}
+```
+
+---
+
+### 🚀 Giải thích thuật toán
+
+* `entries` là danh sách ban đầu của tất cả các bộ phim có sẵn ở các cửa hàng.
+  Mỗi phần tử của `entries` có dạng:
+
+  ```
+  [shop, movie, price]
+  ```
+
+  Nghĩa là **cửa hàng `shop` đang có bộ phim `movie` với giá `price`**.
+
+---
+
+#### 1. Lấy dữ liệu từ `entries`
+
+```java
+int shop = e[0], movie = e[1], price = e[2];
+```
+
+* `e[0]`: id của cửa hàng (shop)
+* `e[1]`: id của bộ phim (movie)
+* `e[2]`: giá thuê bộ phim tại cửa hàng đó (price)
+
+👉 Lý do là đề bài **quy định format** của `entries`: mỗi phần tử luôn chứa `[shop, movie, price]` theo đúng thứ tự này.
+
+---
+
+#### 2. Tạo một Node
+
+```java
+Node node = new Node(shop, movie, price);
+```
+
+* `Node` là class đại diện cho **một bản copy phim**.
+* Chứa đủ thông tin: shop nào, phim nào, giá bao nhiêu.
+
+---
+
+#### 3. Lưu để tra cứu nhanh
+
+```java
+byPair.put(key(shop, movie), node);
+```
+
+* Tạo key duy nhất từ `(shop, movie)` bằng hàm `key(shop, movie)`.
+* Lưu vào `byPair` để có thể **tra cứu nhanh Node khi biết shop + movie** (O(1) thời gian).
+
+---
+
+#### 4. Lưu vào danh sách phim đang có sẵn
+
+```java
+availableByMovie
+    .computeIfAbsent(movie, k -> new TreeSet<>(CMP))
+    .add(node);
+```
+
+* `computeIfAbsent(movie, ...)`: nếu chưa có entry cho `movie` này thì tạo mới một `TreeSet` rỗng (sắp xếp theo `CMP`).
+* Sau đó thêm `node` vào TreeSet của bộ phim đó.
+
+👉 Như vậy:
+
+* Với mỗi `movie`, ta có một `TreeSet` chứa tất cả cửa hàng cho thuê phim đó.
+* TreeSet tự động giữ **thứ tự sắp xếp**: rẻ nhất trước, rồi shop id nhỏ, rồi movie id nhỏ (dựa vào comparator `CMP`).
+
+---
+
+### ✅ Kết quả sau khi chạy constructor
+
+* Tất cả phim có sẵn sẽ được tổ chức thành:
+
+  * `byPair`: map từ `(shop,movie)` → `Node`.
+  * `availableByMovie`: map từ `movie` → TreeSet<Node> (sẵn sàng cho thuê).
+
+---
+
+👉 Tóm gọn: constructor này **khởi tạo dữ liệu ban đầu** cho hệ thống thuê phim.
+Format `[shop, movie, price]` đến từ đề bài nên bắt buộc phải lấy `shop = e[0], movie = e[1], price = e[2]`.
+
+---
+
+Bạn có muốn mình viết một **ví dụ cụ thể với entries nhỏ** (ví dụ 2 shop, 2 phim) để minh họa cách dữ liệu được đưa vào `byPair` và `availableByMovie` không?
+
+    // Return up to 5 shops with this movie, cheapest then shop asc.
+    public List<Integer> search(int movie) {
+        List<Integer> ans = new ArrayList<>(5);
+        TreeSet<Node> set = availableByMovie.get(movie);
+        if (set == null || set.isEmpty()) return ans;
+        Iterator<Node> it = set.iterator();
+        for (int i = 0; i < 5 && it.hasNext(); i++) {
+            ans.add(it.next().shop);
+        }
+        return ans;
+    }
+Ok 👌 mình giải thích chi tiết hàm **`search(int movie)`** này:
+
+---
+
+### 📌 Code
+
+```java
+public List<Integer> search(int movie) {
+    List<Integer> ans = new ArrayList<>(5);
+    TreeSet<Node> set = availableByMovie.get(movie);
+    if (set == null || set.isEmpty()) return ans;
+    Iterator<Node> it = set.iterator();
+    for (int i = 0; i < 5 && it.hasNext(); i++) {
+        ans.add(it.next().shop);
+    }
+    return ans;
+}
+```
+
+---
+
+### 🚀 Ý tưởng của hàm `search`
+
+* **Mục tiêu**: tìm **tối đa 5 cửa hàng** có bộ phim `movie` này, theo thứ tự ưu tiên:
+
+  1. Giá rẻ hơn trước.
+  2. Nếu giá bằng nhau → shop id nhỏ hơn trước.
+  3. (trường hợp hiếm) Nếu cả giá và shop bằng nhau → movie id nhỏ hơn.
+     (luật này đã được định nghĩa trong Comparator `CMP`).
+
+---
+
+### 📝 Giải thích từng bước
+
+#### 1. Tạo danh sách kết quả rỗng
+
+```java
+List<Integer> ans = new ArrayList<>(5);
+```
+
+* Chuẩn bị danh sách để trả về kết quả, tối đa 5 shop id.
+
+---
+
+#### 2. Lấy danh sách shop đang có bộ phim này
+
+```java
+TreeSet<Node> set = availableByMovie.get(movie);
+```
+
+* `availableByMovie` là map: `movie → TreeSet<Node>`.
+* TreeSet ở đây đã **được sắp xếp sẵn** theo comparator `CMP`.
+
+---
+
+#### 3. Kiểm tra có dữ liệu không
+
+```java
+if (set == null || set.isEmpty()) return ans;
+```
+
+* Nếu phim chưa có cửa hàng nào bán → trả về danh sách rỗng luôn.
+
+---
+
+#### 4. Duyệt qua tối đa 5 phần tử đầu tiên trong TreeSet
+
+```java
+Iterator<Node> it = set.iterator();
+for (int i = 0; i < 5 && it.hasNext(); i++) {
+    ans.add(it.next().shop);
+}
+```
+
+* TreeSet iterator sẽ duyệt theo **thứ tự đã sắp xếp** (rẻ → shop nhỏ → movie nhỏ).
+* Lấy ra tối đa 5 shop đầu tiên thỏa điều kiện.
+
+---
+
+#### 5. Trả về kết quả
+
+```java
+return ans;
+```
+
+* Danh sách các shop id (tối đa 5) được trả về.
+
+---
+
+### ✅ Tóm tắt
+
+Hàm `search(movie)` sẽ:
+
+1. Lấy TreeSet chứa các cửa hàng có phim này.
+2. Nếu rỗng → trả về danh sách rỗng.
+3. Nếu có → duyệt tối đa 5 shop đầu tiên theo thứ tự ưu tiên đã định nghĩa.
+4. Trả về danh sách shop id.
+
+---
+
+🔎 Ví dụ:
+Giả sử `movie = 10` có trong hệ thống:
+
+```
+(shop=2, price=4), (shop=5, price=3), (shop=1, price=3)
+```
+
+TreeSet sắp theo `price ↑, shop ↑`:
+
+```
+(shop=1, price=3), (shop=5, price=3), (shop=2, price=4)
+```
+
+Kết quả `search(10)` → `[1, 5, 2]`.
+
+---
+
+👉 Bạn có muốn mình so sánh hàm `search` trong Java này với phiên bản Python mà mình đã viết cho bạn trước đó để thấy sự giống nhau không?
+
+    // Move (shop,movie) from available -> rented
+    public void rent(int shop, int movie) {
+        long k = key(shop, movie);
+        Node node = byPair.get(k);
+        if (node == null) return; // defensive
+        TreeSet<Node> set = availableByMovie.get(movie);
+        if (set != null) set.remove(node);
+        rentedSet.add(node);
+    }
+Rồi 👍 mình sẽ giải thích chi tiết thuật toán của hàm **`rent(int shop, int movie)`** trong Java:
+
+---
+
+### 📌 Code
+
+```java
+public void rent(int shop, int movie) {
+    long k = key(shop, movie);
+    Node node = byPair.get(k);
+    if (node == null) return; // defensive
+    TreeSet<Node> set = availableByMovie.get(movie);
+    if (set != null) set.remove(node);
+    rentedSet.add(node);
+}
+```
+
+---
+
+### 🚀 Ý tưởng của hàm `rent`
+
+* Khi **một shop cho thuê một bộ phim**, ta cần:
+
+  1. Xóa bộ phim đó khỏi danh sách **còn sẵn để thuê** (`availableByMovie`).
+  2. Thêm bộ phim đó vào danh sách **đã được thuê** (`rentedSet`).
+
+---
+
+### 📝 Giải thích từng bước
+
+#### 1. Tạo "khóa" duy nhất từ `(shop, movie)`
+
+```java
+long k = key(shop, movie);
+```
+
+* Hàm `key(shop, movie)` tạo một số `long` duy nhất từ 2 số nguyên `shop` và `movie`.
+* Giúp tra cứu nhanh trong `HashMap byPair`.
+
+---
+
+#### 2. Lấy đối tượng `Node` ứng với `(shop, movie)`
+
+```java
+Node node = byPair.get(k);
+```
+
+* `byPair` là map: `(shop, movie) -> Node`.
+* `Node` chứa đủ thông tin: shop, movie, price.
+
+---
+
+#### 3. Kiểm tra phòng thủ
+
+```java
+if (node == null) return; // defensive
+```
+
+* Nếu không tìm thấy `Node` tương ứng thì dừng luôn (phòng lỗi).
+
+---
+
+#### 4. Xóa phim khỏi danh sách "có sẵn"
+
+```java
+TreeSet<Node> set = availableByMovie.get(movie);
+if (set != null) set.remove(node);
+```
+
+* Lấy ra `TreeSet` các shop đang có phim này.
+* Xóa `node` vì giờ nó đã bị thuê, không còn "available" nữa.
+
+---
+
+#### 5. Thêm phim vào danh sách "đã thuê"
+
+```java
+rentedSet.add(node);
+```
+
+* `rentedSet` là `TreeSet` chứa tất cả phim đang được thuê.
+* Được sắp xếp theo thứ tự (price ↑, shop ↑, movie ↑) nhờ comparator `CMP`.
+
+---
+
+### ✅ Tóm tắt
+
+Hàm `rent(shop, movie)` hoạt động như sau:
+
+1. Tìm bộ phim `(shop, movie)` thông qua map `byPair`.
+2. Nếu có → xóa khỏi danh sách available (`availableByMovie`).
+3. Thêm vào danh sách rented (`rentedSet`).
+
+---
+
+🔎 Ví dụ nhỏ:
+Giả sử ta có:
+
+```
+availableByMovie[1] = {(shop=0, movie=1, price=5), (shop=1, movie=1, price=4)}
+rentedSet = {}
+```
+
+Gọi `rent(1,1)`:
+
+* Xóa `(shop=1, movie=1, price=4)` khỏi `availableByMovie[1]`.
+* Thêm vào `rentedSet`.
+
+Kết quả:
+
+```
+availableByMovie[1] = {(shop=0, movie=1, price=5)}
+rentedSet = {(shop=1, movie=1, price=4)}
+```
+
+---
+
+👉 Bạn có muốn mình giải thích luôn **hàm `drop`** (ngược lại của `rent`) để bạn thấy rõ cặp "thuê" ↔ "trả" phim hoạt động thế nào không?
+
+
+    // Move (shop,movie) from rented -> available
+    public void drop(int shop, int movie) {
+        long k = key(shop, movie);
+        Node node = byPair.get(k);
+        if (node == null) return; // defensive
+        rentedSet.remove(node);
+        availableByMovie
+            .computeIfAbsent(movie, x -> new TreeSet<>(CMP))
+            .add(node);
+    }
+Rồi 👍 mình sẽ giải thích chi tiết thuật toán của hàm **`drop(int shop, int movie)`** trong Java:
+
+---
+
+### 📌 Code
+
+```java
+public void drop(int shop, int movie) {
+    long k = key(shop, movie);
+    Node node = byPair.get(k);
+    if (node == null) return; // defensive
+    rentedSet.remove(node);
+    availableByMovie
+        .computeIfAbsent(movie, x -> new TreeSet<>(CMP))
+        .add(node);
+}
+```
+
+---
+
+### 🚀 Ý tưởng
+
+* **`drop`** nghĩa là **khách trả lại phim**.
+* Khi một phim đã thuê được trả lại, ta cần:
+
+  1. Xóa phim đó khỏi danh sách **đang được thuê** (`rentedSet`).
+  2. Thêm phim đó trở lại danh sách **có sẵn để thuê** (`availableByMovie`).
+
+---
+
+### 📝 Giải thích từng bước
+
+#### 1. Sinh khóa duy nhất từ `(shop, movie)`
+
+```java
+long k = key(shop, movie);
+```
+
+* Dùng `key(shop, movie)` để tạo ra một số `long` duy nhất cho cặp `(shop, movie)`.
+* Giúp tra cứu nhanh trong `byPair`.
+
+---
+
+#### 2. Lấy `Node` của phim
+
+```java
+Node node = byPair.get(k);
+if (node == null) return; // defensive
+```
+
+* Lấy thông tin `Node` chứa `(shop, movie, price)`.
+* Nếu không tồn tại → thoát (phòng lỗi).
+
+---
+
+#### 3. Xóa khỏi danh sách đang thuê
+
+```java
+rentedSet.remove(node);
+```
+
+* Bỏ `node` khỏi tập `rentedSet`.
+* `rentedSet` là `TreeSet` lưu các phim đã thuê, có thứ tự theo (price ↑, shop ↑, movie ↑).
+
+---
+
+#### 4. Thêm lại vào danh sách có sẵn
+
+```java
+availableByMovie
+    .computeIfAbsent(movie, x -> new TreeSet<>(CMP))
+    .add(node);
+```
+
+* `availableByMovie` là `Map<Integer, TreeSet<Node>>`:
+
+  * Key: `movie`.
+  * Value: danh sách `TreeSet` chứa các shop đang có phim này.
+* `computeIfAbsent`: nếu `movie` chưa có entry → tạo `TreeSet` mới.
+* Thêm `node` trở lại → tức là shop này giờ lại có phim để cho thuê.
+
+---
+
+### ✅ Tóm tắt
+
+Hàm `drop(shop, movie)` làm ngược lại với `rent`:
+
+1. Lấy ra `Node` phim từ `(shop, movie)`.
+2. Xóa khỏi `rentedSet`.
+3. Thêm vào lại `availableByMovie[movie]`.
+
+---
+
+🔎 Ví dụ:
+
+Trước khi gọi `drop`:
+
+```
+availableByMovie[1] = {(shop=0, movie=1, price=5)}
+rentedSet = {(shop=1, movie=1, price=4)}
+```
+
+Gọi `drop(1,1)`:
+
+* Xóa `(shop=1, movie=1, price=4)` khỏi `rentedSet`.
+* Thêm nó vào lại `availableByMovie[1]`.
+
+Kết quả:
+
+```
+availableByMovie[1] = {(shop=0, movie=1, price=5), (shop=1, movie=1, price=4)}
+rentedSet = {}
+```
+
+---
+
+👉 Bạn có muốn mình so sánh trực tiếp **`rent` vs `drop`** bằng một bảng minh họa để dễ hình dung hơn không?
+
+    // Return up to 5 rented copies [shop, movie], cheapest then shop asc, then movie asc.
+    public List<List<Integer>> report() {
+        List<List<Integer>> ans = new ArrayList<>(5);
+        Iterator<Node> it = rentedSet.iterator();
+        for (int i = 0; i < 5 && it.hasNext(); i++) {
+            Node n = it.next();
+ans.add(Arrays.asList(n.shop, n.movie));
+        }
+        return ans;
+    }
+}
+Ok 👍 mình sẽ giải thích chi tiết thuật toán của hàm **`report()`** trong Java:
+
+---
+
+### 📌 Code
+
+```java
+public List<List<Integer>> report() {
+    List<List<Integer>> ans = new ArrayList<>(5);
+    Iterator<Node> it = rentedSet.iterator();
+    for (int i = 0; i < 5 && it.hasNext(); i++) {
+        Node n = it.next();
+        ans.add(Arrays.asList(n.shop, n.movie));
+    }
+    return ans;
+}
+```
+
+---
+
+### 🚀 Ý tưởng
+
+* **`report`** nghĩa là:
+  Xuất ra **tối đa 5 bộ phim đang được thuê**, theo thứ tự:
+
+  1. Giá **tăng dần** (`price ↑`)
+  2. Nếu giá bằng nhau → shop nhỏ hơn trước (`shop ↑`)
+  3. Nếu shop cũng bằng nhau → movie nhỏ hơn trước (`movie ↑`)
+
+* Danh sách này được lấy từ **`rentedSet`**, vốn là một `TreeSet` đã duy trì thứ tự sẵn nhờ **Comparator `CMP`**.
+
+---
+
+### 📝 Giải thích từng bước
+
+#### 1. Khởi tạo danh sách kết quả
+
+```java
+List<List<Integer>> ans = new ArrayList<>(5);
+```
+
+* Tạo `ArrayList` với capacity 5 để lưu kết quả.
+* Mỗi phần tử là `[shop, movie]`.
+
+---
+
+#### 2. Duyệt `rentedSet`
+
+```java
+Iterator<Node> it = rentedSet.iterator();
+```
+
+* Lấy **iterator** từ `rentedSet`.
+* Vì `rentedSet` đã được sắp xếp theo `CMP` (price ↑, shop ↑, movie ↑), khi duyệt sẽ có thứ tự mong muốn luôn.
+
+---
+
+#### 3. Lấy tối đa 5 phần tử
+
+```java
+for (int i = 0; i < 5 && it.hasNext(); i++) {
+    Node n = it.next();
+    ans.add(Arrays.asList(n.shop, n.movie));
+}
+```
+
+* Vòng lặp lấy ra **tối đa 5 phim đầu tiên** từ `rentedSet`.
+* Với mỗi `Node n`, chỉ lấy `[shop, movie]` (không cần `price`).
+* Thêm vào `ans`.
+
+---
+
+#### 4. Trả về kết quả
+
+```java
+return ans;
+```
+
+* Trả về danh sách tối đa 5 cặp `[shop, movie]`.
+
+---
+
+### ✅ Tóm tắt
+
+* Hàm `report()` trả về danh sách 5 phim đang thuê rẻ nhất (theo `CMP`).
+* Do `rentedSet` đã sắp xếp sẵn, ta chỉ cần duyệt lấy 5 phần tử đầu.
+
+---
+
+🔎 **Ví dụ minh họa**
+Giả sử `rentedSet` đang chứa:
+
+```
+(shop=1, movie=2, price=3)
+(shop=0, movie=1, price=5)
+(shop=2, movie=1, price=5)
+(shop=1, movie=3, price=6)
+(shop=0, movie=2, price=8)
+(shop=2, movie=3, price=9)
+```
+
+Sau khi gọi `report()`, kết quả:
+
+```
+[
+ [1,2],
+ [0,1],
+ [2,1],
+ [1,3],
+ [0,2]
+]
+```
+
+(Chỉ lấy **5 phim đầu tiên** theo đúng thứ tự đã sắp xếp).
+
+---
+
+👉 Bạn có muốn mình viết thêm phiên bản **Python tương đương** để so sánh dễ hiểu hơn không?
+
+
+/**
+ * Your MovieRentingSystem object will be instantiated and called as such:
+ * MovieRentingSystem obj = new MovieRentingSystem(n, entries);
+ * List<Integer> param_1 = obj.search(movie);
+ * obj.rent(shop,movie);
+ * obj.drop(shop,movie);
+ * List<List<Integer>> param_4 = obj.report();
+ */
+ Đoạn code này định nghĩa một **Comparator** trong Java để so sánh các đối tượng `Node`. Đây là cách để sắp xếp các `Node` theo nhiều tiêu chí (multi-level sorting).
+
+👉 Giải thích từng dòng:
+
+```java
+private static final Comparator<Node> CMP =
+        (a, b) -> {
+            // So sánh theo giá (price)
+            int c = Integer.compare(a.price, b.price);
+            if (c != 0) return c;  // Nếu giá khác nhau thì trả về kết quả so sánh
+
+            // Nếu giá bằng nhau thì so sánh theo shop
+            c = Integer.compare(a.shop, b.shop);
+            if (c != 0) return c;  // Nếu shop khác nhau thì trả về kết quả so sánh
+
+            // Nếu cả giá và shop đều bằng nhau thì so sánh theo movie
+            return Integer.compare(a.movie, b.movie);
+        };
+```
+
+---
+
+### 🚀 Thuật toán so sánh (Comparator logic)
+
+1. **So sánh theo `price` (giá)**:
+
+   * Nếu `a.price < b.price` → trả về số âm (nghĩa là `a` đứng trước `b`).
+   * Nếu `a.price > b.price` → trả về số dương (`a` đứng sau `b`).
+   * Nếu bằng nhau (`a.price == b.price`) → tiếp tục bước 2.
+
+2. **So sánh theo `shop`** (nếu giá bằng nhau):
+
+   * Giống logic ở trên, nhưng dựa vào `shop`.
+
+3. **So sánh theo `movie`** (nếu giá và shop đều bằng nhau):
+
+   * Đây là tiêu chí cuối cùng để phân biệt hai `Node`.
+
+---
+
+### 📝 Ý nghĩa:
+
+* Comparator này đảm bảo rằng danh sách `Node` luôn được **sắp xếp theo thứ tự**:
+
+  1. `price` tăng dần,
+  2. nếu trùng giá thì `shop` tăng dần,
+  3. nếu cả shop và giá trùng thì `movie` tăng dần.
+
+💡 Đây là dạng **lexicographic order** (giống như từ điển: so sánh chữ cái đầu, nếu bằng thì sang chữ tiếp theo).
+
+---
+
+👉 Bạn có muốn mình viết thêm ví dụ cụ thể minh họa so sánh 2–3 `Node` để thấy cách thứ tự thay đổi theo `Comparator` này không?

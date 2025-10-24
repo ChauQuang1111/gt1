@@ -1,0 +1,102 @@
+Water Bottles II
+class Solution:
+    def maxBottlesDrunk(self, numBottles: int, numExchange: int) -> int:
+        res = numBottles        # tổng số chai đã uống ban đầu
+        numEmpty = numBottles   # số vỏ chai ban đầu (vì uống hết rồi)
+
+        # tiếp tục đổi khi số vỏ đủ để đổi ra 1 chai mới
+        while numEmpty >= numExchange:
+            res += 1                    
+            numEmpty -= numExchange - 1                                       
+            numExchange += 1            
+
+        return res
+		
+		
+Ok mình sẽ giải thích thật kỹ đoạn này nhé 👇
+
+---
+
+### Đoạn code cần giải thích
+
+```python
+while numEmpty >= numExchange:
+    res += 1                    
+    numEmpty -= numExchange - 1                                       
+    numExchange += 1            
+
+return res
+```
+
+---
+
+### Ý nghĩa từng dòng
+
+1. **`while numEmpty >= numExchange:`**
+
+   * Khi số vỏ hiện tại (`numEmpty`) còn **đủ để đổi** lấy ít nhất 1 chai mới (theo mức `numExchange` hiện tại).
+   * Nếu không đủ vỏ thì vòng lặp kết thúc.
+
+---
+
+2. **`res += 1`**
+
+   * Đổi thành công → có thêm 1 chai mới để uống.
+   * Tổng số chai đã uống (`res`) tăng lên 1.
+
+---
+
+3. **`numEmpty -= numExchange - 1`**
+
+   * Khi đổi 1 chai: mất `numExchange` vỏ.
+   * Nhưng uống xong chai mới lại có **1 cái vỏ mới**.
+   * Vì vậy số vỏ thực sự giảm đi **`numExchange - 1`**.
+   * Đây là bước mấu chốt: thay vì trừ hẳn `numExchange`, ta trừ ít hơn 1 để bù lại cái vỏ từ chai mới.
+
+---
+
+4. **`numExchange += 1`**
+
+   * Đề bài "Water Bottles II" yêu cầu mỗi lần đổi thì điều kiện đổi trở nên khó hơn.
+   * Tức là sau mỗi lần đổi, bạn cần nhiều vỏ hơn (`numExchange`) để đổi tiếp.
+   * Vì thế phải tăng `numExchange` lên 1 sau mỗi lần.
+
+---
+
+5. **`return res`**
+
+   * Khi không còn đủ vỏ để đổi (tức là `numEmpty < numExchange`), thì dừng vòng lặp.
+   * Trả về tổng số chai đã uống.
+
+---
+
+### Ví dụ minh họa
+
+Giả sử: `numBottles = 5, numExchange = 2`.
+
+* Ban đầu:
+  `res = 5, numEmpty = 5`.
+
+* **Vòng 1**:
+
+  * Điều kiện: `numEmpty (5) >= numExchange (2)` ✅
+  * `res = 6` (uống thêm 1 chai mới).
+  * `numEmpty = 5 - (2 - 1) = 4`.
+  * `numExchange = 3`.
+
+* **Vòng 2**:
+
+  * `numEmpty (4) >= numExchange (3)` ✅
+  * `res = 7`.
+  * `numEmpty = 4 - (3 - 1) = 2`.
+  * `numExchange = 4`.
+
+* **Vòng 3**:
+
+  * `numEmpty (2) >= numExchange (4)` ❌ → Dừng.
+
+👉 Kết quả: **7 chai**.
+
+---
+
+Bạn có muốn mình viết ra **bảng trạng thái (res, numEmpty, numExchange)** theo từng vòng để nhìn rõ hơn không?

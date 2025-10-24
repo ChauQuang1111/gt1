@@ -1,0 +1,193 @@
+public static String timeConversion(String s) {
+    // Extract parts
+    String period = s.substring(8);  
+Ok, mình giải thích rõ:
+
+```java
+String period = s.substring(8);
+```
+
+---
+
+### 📌 Ý nghĩa
+
+* Hàm `substring(8)` sẽ **cắt chuỗi từ vị trí index = 8 trở đi**.
+* Trong định dạng giờ 12h, chuỗi luôn có dạng `"HH:mm:ssAM"` hoặc `"HH:mm:ssPM"`, độ dài **10 ký tự**.
+
+Ví dụ:
+
+```
+"07:05:45PM"
+ ↑0123456789   (chỉ số index)
+```
+
+* `s.substring(8)` → lấy từ index 8 đến hết.
+
+  * Index 8 = `'P'`
+  * Index 9 = `'M'`
+  * Kết quả: `"PM"`
+
+---
+
+### 📝 Các ví dụ cụ thể
+
+1. `"07:05:45PM"`
+
+   * `substring(8)` → `"PM"`
+
+2. `"12:00:00AM"`
+
+   * `substring(8)` → `"AM"`
+
+3. `"01:59:59AM"`
+
+   * `substring(8)` → `"AM"`
+
+---
+
+👉 Nói ngắn gọn:
+`String period = s.substring(8);`
+dùng để **lấy phần "AM" hoặc "PM"** ở cuối chuỗi thời gian.
+
+---
+
+Bạn có muốn mình vẽ hình minh họa cách `substring` cắt chuỗi theo index để dễ nhớ không?
+
+	// AM or PM
+    int hour = Integer.parseInt(s.substring(0, 2));
+    String minutesSeconds = s.substring(2, 8); // ":mm:ss"
+
+    if (period.equals("AM")) {
+        if (hour == 12) {
+            hour = 0;  // 12 AM -> 00
+        }
+    } else { // PM
+        if (hour != 12) {
+            hour += 12;  // e.g. 1PM -> 13
+        }
+    }
+
+    // Format back to HH:mm:ss
+    return String.format("%02d%s", hour, minutesSeconds);
+}  giai thich thuat toan 
+Ok 👍 mình giải thích chi tiết từng bước thuật toán trong hàm `timeConversion`:
+
+---
+
+### 🎯 Mục tiêu của hàm
+
+Chuyển đổi **thời gian 12h AM/PM** (ví dụ `"07:05:45PM"`) sang định dạng **24h** (ví dụ `"19:05:45"`).
+
+---
+
+### 📝 Giải thích code
+
+```java
+String period = s.substring(8);    // Lấy "AM" hoặc "PM"
+```
+
+* `substring(8)` → lấy từ vị trí thứ 8 trở đi (vì chuỗi `HH:mm:ssAM` có độ dài 10).
+* Ví dụ: `"07:05:45PM"` → `period = "PM"`.
+
+---
+
+```java
+int hour = Integer.parseInt(s.substring(0, 2));
+```
+
+* Lấy 2 ký tự đầu tiên (giờ).
+* `"07"` → `hour = 7`.
+
+---
+
+```java
+String minutesSeconds = s.substring(2, 8); // ":mm:ss"
+```
+
+* Lấy phần từ vị trí 2 đến 8 → `":05:45"`.
+* Giữ nguyên phút và giây, chỉ đổi giờ.
+
+---
+
+### 🚩 Xử lý AM/PM
+
+#### Trường hợp `"AM"`
+
+```java
+if (period.equals("AM")) {
+    if (hour == 12) {
+        hour = 0;  // 12 AM -> 00
+    }
+}
+```
+
+* Nếu là `"AM"`:
+
+  * `01 AM → 01`, `02 AM → 02` … giữ nguyên.
+  * Riêng `12 AM` là nửa đêm → đổi thành `00`.
+
+---
+
+#### Trường hợp `"PM"`
+
+```java
+else { // PM
+    if (hour != 12) {
+        hour += 12;  // e.g. 1PM -> 13
+    }
+}
+```
+
+* Nếu là `"PM"`:
+
+  * `01 PM → 13`, `02 PM → 14` … cộng thêm 12.
+  * Riêng `12 PM` (trưa) → giữ nguyên 12.
+
+---
+
+### 🖨️ Format lại chuỗi
+
+```java
+return String.format("%02d%s", hour, minutesSeconds);
+```
+
+* `%02d` → in số nguyên có 2 chữ số (thêm `0` nếu cần).
+* Ghép với `minutesSeconds`.
+
+---
+
+### 🔍 Ví dụ chạy thử
+
+1. **Input:** `"07:05:45PM"`
+
+   * period = "PM"
+   * hour = 7 → +12 = 19
+   * minutesSeconds = ":05:45"
+   * **Output:** `"19:05:45"` ✅
+
+2. **Input:** `"12:00:00AM"`
+
+   * period = "AM"
+   * hour = 12 → đổi thành 0
+   * minutesSeconds = ":00:00"
+   * **Output:** `"00:00:00"` ✅
+
+3. **Input:** `"12:45:54PM"`
+
+   * period = "PM"
+   * hour = 12 (giữ nguyên)
+   * minutesSeconds = ":45:54"
+   * **Output:** `"12:45:54"` ✅
+
+---
+
+👉 Tóm lại:
+
+* `12 AM → 00`
+* `01–11 AM → giữ nguyên`
+* `12 PM → giữ nguyên`
+* `01–11 PM → +12`
+
+---
+
+Bạn có muốn mình vẽ bảng chuyển đổi đầy đủ từ `01 AM` → `12 PM` sang 24h để dễ nhớ không?

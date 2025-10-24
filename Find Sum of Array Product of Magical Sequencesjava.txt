@@ -1,0 +1,1533 @@
+# 3539. Find Sum of Array Product of Magical Sequences(12/10/2025)
+class Solution {
+    private static final int MOD = 1_000_000_007;
+    private static final int MX = 31;
+
+    private static final long[] F = new long[MX]; // F[i] = i!
+    private static final long[] INV_F = new long[MX]; // INV_F[i] = i!^-1
+
+    static {
+        F[0] = 1;
+        for (int i = 1; i < MX; i++) {
+            F[i] = F[i - 1] * i % MOD;
+        }
+
+        INV_F[MX - 1] = pow(F[MX - 1], MOD - 2);
+        for (int i = MX - 1; i > 0; i--) {
+            INV_F[i - 1] = INV_F[i] * i % MOD;
+        }
+    }
+
+    private static long pow(long x, int n) {
+        long res = 1;
+        for (; n > 0; n /= 2) {
+            if (n % 2 > 0) {
+                res = res * x % MOD;
+            }
+            x = x * x % MOD;
+        }
+        return res;
+    }
+
+    public int magicalSum(int m, int k, int[] nums) {
+        int n = nums.length;
+        int[][] powV = new int[n][m + 1];
+        for (int i = 0; i < n; i++) {
+            powV[i][0] = 1;
+            for (int j = 1; j <= m; j++) {
+                powV[i][j] = (int) ((long) powV[i][j - 1] * nums[i] % MOD);
+            }
+        }
+
+        int[][][][] memo = new int[n][m + 1][m / 2 + 1][k + 1];
+        for (int[][][] a : memo) {
+            for (int[][] b : a) {
+                for (int[] c : b) {
+                    Arrays.fill(c, -1);
+                }
+            }
+        }
+        return (int) (dfs(0, m, 0, k, powV, memo) * F[m] % MOD);
+    }
+
+    private long dfs(int i, int leftM, int x, int leftK, int[][] powV, int[][][][] memo) {
+        int c1 = Integer.bitCount(x);
+        if (c1 + leftM < leftK) { // 可行性剪枝
+            return 0;
+        }
+        if (i == powV.length) {
+            return leftM == 0 && c1 == leftK ? 1 : 0;
+        }
+        if (memo[i][leftM][x][leftK] != -1) {
+            return memo[i][leftM][x][leftK];
+        }
+        long res = 0;
+        for (int j = 0; j <= leftM; j++) { // 枚举 I 中有 j 个下标 i
+            // 这 j 个下标 i 对 S 的贡献是 j * pow(2, i)
+            // 由于 x = S >> i，转化成对 x 的贡献是 j
+            int bit = (x + j) & 1; // 取最低位，提前从 leftK 中减去，其余进位到 x 中
+            if (bit <= leftK) {
+                long r = dfs(i + 1, leftM - j, (x + j) >> 1, leftK - bit, powV, memo);
+                res = (res + r * powV[i][j] % MOD * INV_F[j]) % MOD;
+            }
+        }
+        return memo[i][leftM][x][leftK] = (int) res;
+    }
+}
+
+
+
+Hai dòng này:
+
+```java
+private static final int MOD = 1_000_000_007;
+private static final int MX = 31;
+```
+
+đều là **hằng số toàn cục (constant)**, được khai báo `static final` vì chúng **không thay đổi trong toàn chương trình**.
+Cụ thể:
+
+---
+
+### 🔹 `MOD = 1_000_000_007`
+
+* Đây là một **số nguyên tố rất lớn**, thường được dùng trong các bài toán lập trình (đặc biệt là trong **thuật toán tổ hợp, đệ quy, dynamic programming**) để **tránh tràn số (overflow)**.
+* Vì khi ta nhân hoặc cộng các số lớn, kết quả có thể vượt quá giới hạn của kiểu `int` hoặc `long`.
+* Nên ta **lấy phần dư (modulo)** theo số này để giữ kết quả trong phạm vi an toàn.
+
+➡ Công thức thường gặp:
+
+```java
+(long)(a * b % MOD)
+(long)(a + b) % MOD
+```
+
+---
+
+### 🔹 `MX = 31`
+
+* Đây là **giới hạn trên (maximum)** cho các mảng tiền tính, cụ thể ở đây là mảng:
+
+  ```java
+  private static final long[] F = new long[MX];
+  private static final long[] INV_F = new long[MX];
+  ```
+
+  → nghĩa là ta chỉ cần tính **giai thừa và nghịch đảo giai thừa** cho các giá trị từ `0` đến `30`.
+
+* Vì trong bài toán này, `m` (số phần tử trong dãy ma thuật cần chọn) **không vượt quá 30**, nên `MX = 31` là đủ.
+  Nếu `m` lớn hơn, ta cần tăng `MX` tương ứng.
+
+---
+
+### 🧠 Tóm lại
+
+| Hằng số               | Ý nghĩa                         | Vai trò                                                   |
+| --------------------- | ------------------------------- | --------------------------------------------------------- |
+| `MOD = 1_000_000_007` | Số nguyên tố lớn (modular base) | Dùng để lấy phần dư, chống tràn số                        |
+| `MX = 31`             | Giới hạn tối đa cần tiền tính   | Dùng để tạo mảng factorial (giai thừa) cho giá trị đến 30 |
+
+---
+
+👉 Nếu ví dụ đề bài cho `m` có thể lên đến 1000, thì ta chỉ cần đổi:
+
+```java
+private static final int MX = 1001;
+```
+Ok 👍 để mình giải thích **cực dễ hiểu** nhé:
+
+---
+
+### 🧩 Hai dòng đó là:
+
+```java
+private static final long[] F = new long[MX];
+private static final long[] INV_F = new long[MX];
+```
+
+Nó tạo ra **2 mảng** (mỗi mảng có `MX` phần tử).
+Nhưng dùng để **lưu trữ trước kết quả tính toán** (tiền tính) để chương trình chạy nhanh hơn.
+
+---
+
+### 🧮 Mảng `F` – chứa **giai thừa (factorial)**
+
+> Giai thừa của một số n là tích của tất cả các số từ 1 đến n.
+
+Ví dụ:
+
+```
+F[0] = 1       // 0! = 1
+F[1] = 1       // 1! = 1
+F[2] = 2       // 2! = 1×2 = 2
+F[3] = 6       // 3! = 1×2×3 = 6
+F[4] = 24      // 4! = 1×2×3×4 = 24
+```
+
+Vì vậy mảng `F` lưu trữ **giai thừa của tất cả các số từ 0 → MX - 1**.
+
+---
+
+### 🔁 Mảng `INV_F` – chứa **nghịch đảo của giai thừa**
+
+Trong bài toán modulo (lấy phần dư theo `MOD = 1_000_000_007`), ta không thể chia bình thường,
+nên muốn chia thì ta phải **nhân với nghịch đảo modulo**.
+
+Ví dụ:
+
+* Muốn chia cho `a`, ta nhân với `a⁻¹ (mod MOD)`, tức là số sao cho:
+
+  ```
+  a × a⁻¹ ≡ 1 (mod MOD)
+  ```
+
+Nên mảng `INV_F` lưu:
+
+```
+INV_F[i] = (F[i])⁻¹ mod MOD
+```
+
+Tức là “nghịch đảo modulo” của `F[i]`.
+
+---
+
+### 💡 Tóm lại
+
+| Mảng    | Lưu cái gì                | Dùng để làm gì                       |
+| ------- | ------------------------- | ------------------------------------ |
+| `F`     | Giai thừa (0!, 1!, 2!, …) | Tính toán tổ hợp, công thức toán học |
+| `INV_F` | Nghịch đảo của giai thừa  | Giúp chia số khi làm việc với modulo |
+
+---
+
+### 🔢 Ví dụ minh họa nhỏ:
+
+Giả sử `MX = 6`, ta có:
+
+| i | F[i] (i!) | INV_F[i]  |
+| - | --------- | --------- |
+| 0 | 1         | 1         |
+| 1 | 1         | 1         |
+| 2 | 2         | 500000004 |
+| 3 | 6         | 166666668 |
+| 4 | 24        | 41666667  |
+| 5 | 120       | 808333339 |
+
+(Mấy số bên phải là giá trị nghịch đảo trong modulo 1e9+7)
+
+---
+
+👉 **Hiểu nôm na:**
+
+* `F` là “bảng cửu chương nhân” của giai thừa.
+* `INV_F` là “bảng chia ngược” để giúp chia trong phép mod.
+
+---
+
+Bạn muốn mình giải thích thêm **vì sao cần nghịch đảo (INV_F)** trong bài toán này không?
+Nó liên quan trực tiếp đến công thức tổ hợp (C(n, k)).
+Rất hay 👏 — đây là chỗ mà **nhiều người học lập trình gặp rối nhất**, nên mình sẽ giải cực dễ hiểu bằng **toán học cơ bản + ví dụ cụ thể** nhé.
+
+---
+
+## 🧩 1. Trước hết: giai thừa là gì?
+
+👉 Giai thừa của `n`, ký hiệu là `n!`, là tích của các số từ `1` đến `n`.
+
+Ví dụ:
+
+```
+5! = 1 × 2 × 3 × 4 × 5 = 120
+```
+
+---
+
+## ⚙️ 2. Trong lập trình, ta hay làm việc với **modulo (MOD)**
+
+Nhiều bài toán (như trong LeetCode hoặc Codeforces) yêu cầu kết quả **lấy phần dư theo MOD = 1,000,000,007**
+để tránh tràn số và giữ kết quả nhỏ.
+
+Ví dụ:
+
+```
+(3 + 5) mod 7 = 1
+(3 × 5) mod 7 = 1
+```
+
+---
+
+## ❌ 3. Vấn đề: không thể “chia” bình thường khi làm việc với modulo
+
+Ví dụ:
+
+```
+6 / 3 = 2
+```
+
+→ Nhưng trong modulo, **dấu chia không được phép** như vậy.
+
+Vì chia có thể tạo ra số thập phân, mà modulo chỉ làm việc với số nguyên.
+
+---
+
+## ✅ 4. Cách thay thế phép chia: **dùng nghịch đảo nhân modulo**
+
+Ta không làm:
+
+```
+a / b
+```
+
+mà làm:
+
+```
+a × (b⁻¹ mod MOD)
+```
+
+Trong đó `b⁻¹` gọi là **nghịch đảo modular của b**
+và thỏa mãn công thức:
+
+```
+b × b⁻¹ ≡ 1 (mod MOD)
+```
+
+---
+
+## 🔢 5. Ví dụ cụ thể
+
+MOD = 7
+Ta tìm nghịch đảo của 3.
+
+Ta cần tìm `x` sao cho:
+
+```
+3 × x ≡ 1 (mod 7)
+```
+
+Thử lần lượt:
+
+```
+3×1=3 mod7=3
+3×2=6 mod7=6
+3×3=9 mod7=2
+3×4=12 mod7=5
+3×5=15 mod7=1  ✅
+```
+
+Vậy **3⁻¹ mod 7 = 5**
+
+→ Nghĩa là:
+
+```
+(6 / 3) mod 7 = (6 × 5) mod 7 = 30 mod 7 = 2 ✅
+```
+
+---
+
+## 🧮 6. Nghịch đảo **giai thừa**
+
+Trong bài toán tổ hợp, ta hay gặp công thức:
+
+```
+C(n, k) = n! / (k! × (n−k)!)
+```
+
+Khi dùng modulo, không thể chia, nên ta dùng nghịch đảo:
+
+```
+C(n, k) mod MOD = n! × (k!)⁻¹ × ((n−k)!)⁻¹ mod MOD
+```
+
+=> Vì vậy ta cần tính **nghịch đảo của giai thừa**.
+
+---
+
+## ⚙️ 7. Cách tính nghịch đảo của giai thừa
+
+Trong code Java của bạn:
+
+```java
+INV_F[MX - 1] = pow(F[MX - 1], MOD - 2);
+```
+
+dòng này dùng **Định lý Fermat nhỏ**:
+
+```
+a⁻¹ ≡ a^(MOD-2) mod MOD   (khi MOD là số nguyên tố)
+```
+
+→ Dùng `pow()` để tính lũy thừa nhanh, ra nghịch đảo.
+
+Sau đó:
+
+```java
+for (int i = MX - 1; i > 0; i--) {
+    INV_F[i - 1] = INV_F[i] * i % MOD;
+}
+```
+
+→ Dùng nghịch đảo của `(n)!` để nhanh chóng tính `(n−1)!`, `(n−2)!`, …
+
+---
+
+## 🧠 8. Tóm lại
+
+| Tên        | Nghĩa          | Dùng để làm gì                             |
+| ---------- | -------------- | ------------------------------------------ |
+| `F[i]`     | i! mod MOD     | Giai thừa (đếm tổ hợp)                     |
+| `INV_F[i]` | (i!)⁻¹ mod MOD | Nghịch đảo giai thừa (để chia khi làm mod) |
+
+---
+
+Ví dụ:
+
+```
+F[5] = 120
+INV_F[5] = pow(120, 1_000_000_007 - 2) % 1_000_000_007
+```
+
+Khi cần chia cho 120 mod 1e9+7, ta chỉ cần **nhân với INV_F[5]**,
+chứ không cần phép chia thực sự.
+
+---
+
+Bạn muốn mình viết cho bạn **một ví dụ code nhỏ minh họa cách nghịch đảo hoạt động** (với số nhỏ thôi) để thấy rõ hơn không?
+Rất hay 👏 — mình sẽ cho bạn **một ví dụ cực rõ ràng, dễ hiểu**,
+để bạn **thấy tận mắt** nghịch đảo giai thừa hoạt động thế nào trong modulo.
+
+---
+
+## 🧩 Giả sử:
+
+Ta chọn **MOD = 7** (số nhỏ cho dễ tính).
+
+Ta muốn biết:
+
+```
+(5!)⁻¹ mod 7 là bao nhiêu?
+```
+
+---
+
+## 🧮 Bước 1: Tính giai thừa (factorial)
+
+```
+5! = 1 × 2 × 3 × 4 × 5 = 120
+```
+
+---
+
+## ⚙️ Bước 2: Lấy phần dư mod 7
+
+```
+120 mod 7 = 1   (vì 7 × 17 = 119, dư 1)
+```
+
+👉 Vậy:
+
+```
+5! mod 7 = 1
+```
+
+---
+
+## ❓ Bước 3: Tìm **nghịch đảo của 5! (mod 7)**
+
+Ta cần tìm một số `x` sao cho:
+
+```
+(5! × x) ≡ 1 (mod 7)
+```
+
+Mà `5! mod 7 = 1`, nên:
+
+```
+1 × x ≡ 1 (mod 7)
+```
+
+→ `x = 1`
+
+✅ Kết luận:
+
+```
+(5!)⁻¹ mod 7 = 1
+```
+
+---
+
+## 🔢 Một ví dụ khác rõ hơn:
+
+Tính nghịch đảo của `4! mod 7`
+
+### Bước 1:
+
+```
+4! = 1×2×3×4 = 24
+```
+
+### Bước 2:
+
+```
+24 mod 7 = 3
+```
+
+### Bước 3:
+
+Tìm `x` sao cho:
+
+```
+3 × x ≡ 1 (mod 7)
+```
+
+Thử:
+
+```
+3×1=3 mod7=3
+3×2=6 mod7=6
+3×3=9 mod7=2
+3×4=12 mod7=5
+3×5=15 mod7=1 ✅
+```
+
+→ `x = 5`
+
+✅ Vậy:
+
+```
+(4!)⁻¹ mod 7 = 5
+```
+
+---
+
+## ✅ Kiểm tra lại:
+
+```
+(4! × (4!)⁻¹) mod 7 = (3 × 5) mod 7 = 15 mod 7 = 1
+```
+
+→ Đúng, thoả điều kiện nghịch đảo.
+
+---
+
+## 🔥 Tổng quát:
+
+Nếu `MOD` là số nguyên tố (như `1_000_000_007` trong code bạn),
+thì nghịch đảo của `a` được tính bằng:
+
+```
+a⁻¹ ≡ a^(MOD-2) mod MOD
+```
+
+(Công thức này đến từ **Định lý Fermat nhỏ**)
+
+---
+
+## 🧠 Trong bài của bạn:
+
+Ta dùng:
+
+```java
+INV_F[MX - 1] = pow(F[MX - 1], MOD - 2);
+```
+
+→ Tính nghịch đảo của `(MX-1)!`
+Rồi suy ra nghịch đảo của các giai thừa nhỏ hơn để tiết kiệm thời gian.
+
+---
+
+Bạn có muốn mình viết **một đoạn code Java nhỏ** để bạn chạy thử thấy `(4!)⁻¹ mod 7 = 5` thực tế không?
+Rất tốt 👏 — đây là **một đoạn code cực quan trọng** trong lập trình số học (modular arithmetic).
+Mình sẽ giải thích **rõ ràng từng dòng, từng công thức, và vì sao làm vậy** nhé 💡
+
+---
+
+## 🔍 Toàn bộ đoạn code:
+
+```java
+static {
+    F[0] = 1;
+    for (int i = 1; i < MX; i++) {
+        F[i] = F[i - 1] * i % MOD;
+    }
+
+    INV_F[MX - 1] = pow(F[MX - 1], MOD - 2);
+    for (int i = MX - 1; i > 0; i--) {
+        INV_F[i - 1] = INV_F[i] * i % MOD;
+    }
+}
+```
+
+---
+
+## 🧩 Giải thích từng phần:
+
+### 🧮 1️⃣ `F[0] = 1;`
+
+👉 Khởi tạo giai thừa ban đầu:
+
+```
+0! = 1
+```
+
+---
+
+### 🧮 2️⃣ Vòng lặp đầu tiên:
+
+```java
+for (int i = 1; i < MX; i++) {
+    F[i] = F[i - 1] * i % MOD;
+}
+```
+
+👉 Dòng này dùng để **tính trước tất cả các giai thừa** (mod MOD).
+
+Ví dụ nếu `MX = 6`, thì:
+
+| i | F[i] (giai thừa mod MOD) |
+| - | ------------------------ |
+| 0 | 1                        |
+| 1 | 1 × 1 = 1                |
+| 2 | 1 × 2 = 2                |
+| 3 | 2 × 3 = 6                |
+| 4 | 6 × 4 = 24               |
+| 5 | 24 × 5 = 120             |
+
+✅ Bây giờ `F[i] = i! mod MOD`
+
+---
+
+### ⚙️ 3️⃣ Dòng này:
+
+```java
+INV_F[MX - 1] = pow(F[MX - 1], MOD - 2);
+```
+
+👉 Tính **nghịch đảo modular** của giai thừa lớn nhất `(MX-1)!`
+
+Công thức này dùng **Định lý Fermat nhỏ**:
+
+```
+a⁻¹ ≡ a^(MOD - 2) mod MOD
+```
+
+(khi MOD là số nguyên tố)
+
+Ví dụ:
+
+```
+INV_F[5] = (F[5])^(MOD - 2) mod MOD
+```
+
+---
+
+### 🔁 4️⃣ Vòng lặp thứ hai:
+
+```java
+for (int i = MX - 1; i > 0; i--) {
+    INV_F[i - 1] = INV_F[i] * i % MOD;
+}
+```
+
+👉 Dùng nghịch đảo của `(i)!` để tính nghịch đảo của `(i-1)!` nhanh hơn.
+Vì ta có công thức:
+
+```
+(i)! = (i-1)! × i
+⇒ (i-1)! = (i)! / i
+⇒ (i-1)!⁻¹ = (i)!⁻¹ × i
+```
+
+→ Nên:
+
+```
+INV_F[i - 1] = INV_F[i] × i mod MOD
+```
+
+✅ Điều này giúp tính nghịch đảo của tất cả giai thừa **mà không cần gọi pow() nhiều lần**
+(→ tiết kiệm thời gian đáng kể).
+
+---
+
+## 📊 Ví dụ nhỏ (giả sử MX = 5, MOD = 7):
+
+| i | F[i] (i! mod 7) | INV_F[i] ((i!)⁻¹ mod 7) |
+| - | --------------- | ----------------------- |
+| 0 | 1               | 1                       |
+| 1 | 1               | 1                       |
+| 2 | 2               | 4                       |
+| 3 | 6               | 6                       |
+| 4 | 3               | 5                       |
+
+(Ví dụ: 4! mod 7 = 3, nghịch đảo là 5 vì 3×5 = 15 ≡ 1 mod 7)
+
+---
+
+## 🧠 Tóm lại:
+
+| Mục đích                           | Mã                                   | Ý nghĩa                       |
+| ---------------------------------- | ------------------------------------ | ----------------------------- |
+| Tính giai thừa mod MOD             | `F[i] = F[i-1] * i % MOD;`           | Chuẩn bị bảng giai thừa       |
+| Tính nghịch đảo giai thừa lớn nhất | `INV_F[MX-1] = pow(F[MX-1], MOD-2);` | Dùng Fermat để lấy nghịch đảo |
+| Lan truyền ngược lại để tính nhanh | `INV_F[i-1] = INV_F[i] * i % MOD;`   | Tạo bảng nghịch đảo giai thừa |
+
+---
+
+👉 **Tóm gọn bằng lời:**
+
+> Đoạn code này tiền xử lý để có thể tính nhanh `n!` và `(n!)⁻¹` cho mọi n ≤ MX−1.
+> Khi cần chia trong phép toán mod, chỉ việc nhân với `INV_F[n]` là xong.
+
+---
+
+Bạn có muốn mình viết **một ví dụ Java nhỏ** chạy in ra bảng `F` và `INV_F` để thấy rõ các giá trị được tính ra sao không?
+Hàm này chính là **hàm lũy thừa nhị phân (fast exponentiation / binary exponentiation)** — một cách nhanh để tính
+👉 `x^n % MOD`.
+
+---
+
+### 🔍 Giải thích từng dòng:
+
+```java
+private static long pow(long x, int n) {
+    long res = 1;
+```
+
+* `res` lưu kết quả cuối cùng, ban đầu là 1 (vì `x^0 = 1`).
+
+---
+
+```java
+    for (; n > 0; n /= 2) {
+```
+
+* Vòng lặp chạy cho đến khi `n` (số mũ) = 0.
+* Mỗi vòng chia `n` cho 2 (đúng với ý tưởng **biểu diễn nhị phân của n**).
+
+---
+
+```java
+        if (n % 2 > 0) {
+            res = res * x % MOD;
+        }
+```
+
+* Nếu `n` là **số lẻ**, nghĩa là bit cuối của `n` là `1`.
+* Ta nhân `res` với `x` (vì `x^(bit=1)` phải được cộng vào kết quả).
+
+---
+
+```java
+        x = x * x % MOD;
+```
+
+* Sau mỗi bước, ta **bình phương `x`** vì khi chia `n` cho 2, ta đang “dịch sang bit tiếp theo”.
+
+---
+
+```java
+    }
+    return res;
+}
+```
+
+* Khi vòng lặp kết thúc (`n == 0`), trả về kết quả `res`.
+
+---
+
+### 💡 Ví dụ minh họa:
+
+Giả sử ta muốn tính:
+
+```text
+pow(3, 13) % 1_000_000_007
+```
+
+13 trong nhị phân là `1101`, tức:
+
+```
+3^13 = 3^(8+4+1) = 3^8 * 3^4 * 3^1
+```
+
+Vòng lặp hoạt động như sau:
+
+| n  | x    | n%2      | res      | x*x%MOD |
+| -- | ---- | -------- | -------- | ------- |
+| 13 | 3    | 1 → nhân | 3        | 9       |
+| 6  | 9    | 0        | 3        | 81      |
+| 3  | 81   | 1 → nhân | 3×81=243 | 6561    |
+| 1  | 6561 | 1 → nhân | 243×6561 | ...     |
+
+Kết quả cuối: `3^13 % MOD = 1594323`.
+
+---
+
+👉 **Tóm lại:**
+Hàm `pow(x, n)` giúp:
+
+* Tính nhanh `x^n % MOD` trong **O(log n)** thời gian.
+* Dùng để tính **nghịch đảo modulo** theo định lý Fermat nhỏ:
+  `a^(MOD-2) ≡ a^(-1) (mod MOD)` khi MOD là số nguyên tố.
+Rất hay — đây chính là **hàm đệ quy `dfs` (Depth-First Search)** cốt lõi trong lời giải bài **3539. Find Sum of Array Product of Magical Sequences**,
+một bài toán tổ hợp có tính chất “bit + phân tích đa thức”.
+Giờ ta sẽ **giải thích chi tiết từng dòng**, kèm logic tư duy đằng sau.
+
+---
+
+### 🧩 Mục tiêu của bài toán
+
+* Cho mảng `nums[]`, hai số `m` và `k`.
+* Ta cần chọn `m` phần tử từ `nums` (có thể lặp lại),
+* Tính tổng có trọng số đặc biệt — gọi là **magical sum**,
+  chỉ giữ lại những tổ hợp mà trong “biểu diễn nhị phân” của tổng có đúng `k` bit bằng `1`.
+
+---
+
+### 🧠 Giải thích hàm `dfs(...)`
+
+```java
+private long dfs(int i, int leftM, int x, int leftK, int[][] powV, int[][][][] memo)
+```
+
+**Tham số:**
+
+* `i` → đang xử lý phần tử thứ `i` trong `nums`
+* `leftM` → còn bao nhiêu phần tử cần chọn (chưa dùng hết m)
+* `x` → biểu diễn phần tổng đã chia bit (phục vụ tính bit_count)
+* `leftK` → còn cần bao nhiêu bit ‘1’ nữa để đạt k
+* `powV[i][j]` → giá trị `nums[i]^j % MOD`
+* `memo` → bảng ghi nhớ (memoization) để tránh tính lại
+
+---
+
+### 🧮 Dòng 1:
+
+```java
+int c1 = Integer.bitCount(x);
+```
+
+* Đếm số bit `1` trong `x` — tức là trong phần tổng nhị phân hiện tại, có bao nhiêu bit đang bật.
+
+---
+
+### ⚡ Dòng 2-4: Cắt nhánh (pruning)
+
+```java
+if (c1 + leftM < leftK) { 
+    return 0;
+}
+```
+
+* Nếu ngay cả khi **chọn tất cả phần tử còn lại**,
+  số bit `1` tối đa (`c1 + leftM`) vẫn nhỏ hơn `leftK` →
+  ❌ Không thể đạt mục tiêu ⇒ dừng sớm.
+
+---
+
+### 🧱 Dòng 5-7: Điều kiện dừng
+
+```java
+if (i == powV.length) {
+    return leftM == 0 && c1 == leftK ? 1 : 0;
+}
+```
+
+* Khi đã xét hết `nums[]` (i == n):
+
+  * Nếu chọn đủ `m` phần tử (`leftM == 0`)
+  * Và tổng nhị phân có đúng `k` bit `1` (`c1 == leftK`)
+    → ✅ hợp lệ, trả về 1.
+  * Ngược lại, ❌ không hợp lệ, trả về 0.
+
+---
+
+### 💾 Dòng 8-10: Tránh tính lại (memoization)
+
+```java
+if (memo[i][leftM][x][leftK] != -1) {
+    return memo[i][leftM][x][leftK];
+}
+```
+
+* Nếu đã tính giá trị này trước đó → trả về luôn, tiết kiệm thời gian.
+
+---
+
+### 🔁 Dòng 11:
+
+```java
+long res = 0;
+```
+
+* Biến kết quả cộng dồn.
+
+---
+
+### 🔂 Dòng 12-21: Duyệt số lượng phần tử chọn từ nums[i]
+
+```java
+for (int j = 0; j <= leftM; j++) {
+```
+
+* Giả sử tại vị trí `i`, ta chọn `j` phần tử `nums[i]`.
+
+---
+
+### 💡 Ghi chú logic trong vòng lặp:
+
+```java
+// j phần tử nums[i] đóng góp vào tổng S là j * 2^i
+// Vì x = S >> i, nên đóng góp tương ứng vào x là j
+```
+
+Ý là:
+
+* Trong phép cộng nhị phân, ta đang xử lý từng “bit tầng”.
+* `j` lần xuất hiện của phần tử thứ `i` tương ứng việc cộng `j` đơn vị vào bit `i`.
+
+---
+
+### ⚙️ Dòng 15:
+
+```java
+int bit = (x + j) & 1;
+```
+
+* Lấy **bit thấp nhất (LSB)** sau khi cộng `j` vào `x`.
+* Đây chính là **bit 0 hoặc 1** sẽ xuất hiện ở vị trí hiện tại của tổng nhị phân.
+
+---
+
+### ⚖️ Dòng 16:
+
+```java
+if (bit <= leftK) {
+```
+
+* Nếu vẫn còn đủ quota (`leftK`) để dùng bit `1`, mới tính tiếp.
+
+---
+
+### 🔁 Gọi đệ quy:
+
+```java
+long r = dfs(i + 1, leftM - j, (x + j) >> 1, leftK - bit, powV, memo);
+```
+
+* Di chuyển sang phần tử kế tiếp (`i+1`).
+* Giảm `leftM` vì đã chọn `j` phần tử.
+* Dịch phải `x + j` để “carry” bit sang tầng cao hơn.
+* Giảm `leftK` nếu đã dùng 1 bit `1`.
+
+---
+
+### ➕ Cộng kết quả:
+
+```java
+res = (res + r * powV[i][j] % MOD * INV_F[j]) % MOD;
+```
+
+* Mỗi tổ hợp góp thêm:
+
+  * `r`: số cách từ đệ quy con
+  * `powV[i][j]`: giá trị `nums[i]^j`
+  * `INV_F[j]`: chia cho `j!` vì các phần tử giống nhau (tổ hợp không phân biệt thứ tự)
+
+---
+
+### 📦 Lưu và trả về:
+
+```java
+return memo[i][leftM][x][leftK] = (int) res;
+```
+
+* Lưu lại kết quả vào `memo` để dùng lại lần sau.
+
+---
+
+### 🧠 Tóm tắt logic
+
+| Tham số      | Ý nghĩa                                   |
+| ------------ | ----------------------------------------- |
+| `i`          | đang xử lý phần tử thứ i                  |
+| `leftM`      | còn bao nhiêu phần tử cần chọn            |
+| `x`          | phần tổng hiện tại dưới dạng nhị phân     |
+| `leftK`      | còn cần bao nhiêu bit ‘1’ nữa             |
+| `powV[i][j]` | nums[i]^j (tính sẵn)                      |
+| `INV_F[j]`   | nghịch đảo của j! (tổ hợp chia trùng lặp) |
+
+---
+
+👉 **Hiểu đơn giản:**
+Hàm `dfs` đang tính **tổng tất cả các cách chọn m phần tử** sao cho tổng nhị phân của chúng có đúng `k` bit 1,
+và **dùng đệ quy + ghi nhớ trạng thái (memo)** để tính nhanh.
+
+---
+
+Nếu bạn muốn, mình có thể vẽ **sơ đồ đệ quy minh họa quá trình carry bit và giảm `leftK`** để bạn thấy trực quan hơn.
+Bạn có muốn mình vẽ không?
+Rất tốt 👍 — đây là **hàm chính `magicalSum()`**, là nơi chuẩn bị dữ liệu và gọi hàm đệ quy `dfs()` mà ta đã phân tích trước đó.
+Giờ mình sẽ **giải thích chi tiết từng dòng**, kèm ví dụ nhỏ để bạn hiểu rõ **mục đích từng bước** nhé 👇
+
+---
+
+### 🧩 Tổng quan:
+
+Hàm này thực hiện **3 bước lớn**:
+
+1. Tiền tính mũ của từng phần tử `nums[i]^j` (để dùng nhanh khi đệ quy).
+2. Khởi tạo mảng nhớ `memo` để lưu trạng thái đệ quy.
+3. Gọi `dfs()` để tính kết quả, sau đó nhân với `m!` để bù lại hệ số tổ hợp.
+
+---
+
+### 🔹 Dòng 1:
+
+```java
+int n = nums.length;
+```
+
+* Lưu độ dài của mảng `nums`.
+
+---
+
+### 🔹 Dòng 2:
+
+```java
+int[][] powV = new int[n][m + 1];
+```
+
+* Tạo mảng `powV` để lưu **tất cả các lũy thừa của mỗi phần tử trong `nums`**.
+* Kích thước `m+1` vì ta có thể chọn từ 0 đến m lần.
+
+📘 Ví dụ:
+Nếu `nums = [2, 3]` và `m = 3`
+thì `powV` sẽ là:
+
+```
+powV[0] = [1, 2, 4, 8]   // 2^0, 2^1, 2^2, 2^3
+powV[1] = [1, 3, 9, 27]  // 3^0, 3^1, 3^2, 3^3
+```
+
+---
+
+### 🔹 Dòng 3–8:
+
+```java
+for (int i = 0; i < n; i++) {
+    powV[i][0] = 1;
+    for (int j = 1; j <= m; j++) {
+        powV[i][j] = (int) ((long) powV[i][j - 1] * nums[i] % MOD);
+    }
+}
+```
+
+* Đây là **vòng lặp tiền tính mũ**:
+
+  * Bắt đầu từ `nums[i]^0 = 1`
+  * Sau đó nhân dần để ra `nums[i]^1`, `nums[i]^2`, ...
+* Dùng `% MOD` để tránh tràn số.
+
+💡 → Khi vào `dfs()`, ta chỉ cần truy cập `powV[i][j]` chứ không phải tính `Math.pow()` nữa (rất nhanh).
+
+---
+
+### 🔹 Dòng 9:
+
+```java
+int[][][][] memo = new int[n][m + 1][m / 2 + 1][k + 1];
+```
+
+* Tạo **bảng ghi nhớ 4 chiều**, ứng với các tham số của hàm `dfs`:
+
+  * `i` ∈ [0, n)
+  * `leftM` ∈ [0, m]
+  * `x` ∈ [0, m/2] → vì số bit 1 và carry không thể vượt quá nửa của m
+  * `leftK` ∈ [0, k]
+
+👉 `memo[i][leftM][x][leftK]` sẽ lưu giá trị đã tính trước của `dfs(i, leftM, x, leftK)`.
+
+---
+
+### 🔹 Dòng 10–14:
+
+```java
+for (int[][][] a : memo) {
+    for (int[][] b : a) {
+        for (int[] c : b) {
+            Arrays.fill(c, -1);
+        }
+    }
+}
+```
+
+* Gán giá trị mặc định `-1` cho toàn bộ `memo`
+  → nghĩa là trạng thái đó **chưa được tính**.
+* Giúp phân biệt khi kiểm tra `if (memo[i][leftM][x][leftK] != -1)` trong `dfs`.
+
+---
+
+### 🔹 Dòng 15:
+
+```java
+return (int) (dfs(0, m, 0, k, powV, memo) * F[m] % MOD);
+```
+
+* Gọi hàm đệ quy `dfs(...)` bắt đầu từ:
+
+  * `i = 0` → phần tử đầu tiên của nums
+  * `leftM = m` → cần chọn `m` phần tử
+  * `x = 0` → tổng ban đầu là 0
+  * `leftK = k` → cần đúng `k` bit 1
+* Sau khi `dfs()` trả về kết quả, ta **nhân với `F[m]`** (tức `m!`) vì:
+
+🧠 **Trong `dfs`**, ta chia cho `j!` để loại bỏ các tổ hợp trùng lặp khi hoán vị.
+→ Cuối cùng phải **nhân lại `m!`** để khôi phục tổng thể.
+
+---
+
+### ✅ Tóm tắt dễ hiểu
+
+| Bước | Ý nghĩa                    | Tác dụng                     |
+| ---- | -------------------------- | ---------------------------- |
+| 1️⃣  | Tiền tính `powV[i][j]`     | Tính nhanh `nums[i]^j`       |
+| 2️⃣  | Khởi tạo `memo` = -1       | Ghi nhớ trạng thái đệ quy    |
+| 3️⃣  | Gọi `dfs(0, m, 0, k, ...)` | Tính tổng đệ quy             |
+| 4️⃣  | Nhân với `m!` (`F[m]`)     | Phục hồi thứ tự chọn phần tử |
+
+---
+
+### 📘 Ví dụ minh họa nhỏ:
+
+Giả sử:
+
+```java
+m = 2, k = 1, nums = [1, 2]
+```
+
+* `powV`:
+
+  ```
+  [ [1, 1, 1], [1, 2, 4] ]
+  ```
+* Ta sẽ gọi `dfs(0, 2, 0, 1, powV, memo)`
+  để tìm số cách chọn 2 phần tử sao cho tổng nhị phân có đúng 1 bit 1.
+
+---
+
+Nếu bạn muốn, mình có thể viết lại đoạn này với **chú thích trực tiếp trong code**
+và có luôn `main` dùng `Scanner` (đọc input, gọi hàm, in output).
+Bạn có muốn mình viết bản đó luôn không?
+Rất hay — đây là hai dòng **rất quan trọng** trong toàn bộ thuật toán.
+Mình sẽ giải thích thật dễ hiểu từng dòng một nhé 👇
+
+---
+
+## 🔹 1️⃣ Dòng:
+
+```java
+powV[i][j] = (int) ((long) powV[i][j - 1] * nums[i] % MOD);
+```
+
+### 👉 Ý nghĩa:
+
+Dòng này dùng để **tiền tính lũy thừa** (power) của từng phần tử trong `nums`.
+
+Công thức:
+[
+\text{powV}[i][j] = \text{nums}[i]^j \mod MOD
+]
+
+---
+
+### 🔸 Giải thích chi tiết:
+
+* `powV[i][j - 1]` chính là `nums[i]^(j-1)`
+* Nhân thêm `nums[i]` nữa → `nums[i]^j`
+* Lấy `% MOD` để tránh tràn số (vì giá trị có thể rất lớn).
+
+Dùng `(long)` để **ép kiểu sang long trước khi nhân**, tránh bị tràn `int` (vì `nums[i]` có thể lớn).
+
+---
+
+### 📘 Ví dụ:
+
+Giả sử:
+
+```java
+nums = [2, 3];
+m = 3;
+```
+
+Thì ta có:
+
+| i | j | powV[i][j] | Giải thích |
+| - | - | ---------- | ---------- |
+| 0 | 0 | 1          | 2^0 = 1    |
+| 0 | 1 | 2          | 2^1 = 2    |
+| 0 | 2 | 4          | 2^2 = 4    |
+| 0 | 3 | 8          | 2^3 = 8    |
+| 1 | 0 | 1          | 3^0 = 1    |
+| 1 | 1 | 3          | 3^1 = 3    |
+| 1 | 2 | 9          | 3^2 = 9    |
+| 1 | 3 | 27         | 3^3 = 27   |
+
+➡️ Tức là `powV[i][j]` lưu sẵn **kết quả nhân dồn** để sau này trong `dfs()` chỉ cần lấy ra xài, không cần gọi `Math.pow()` (rất tốn thời gian).
+
+---
+
+## 🔹 2️⃣ Dòng:
+
+```java
+int[][][][] memo = new int[n][m + 1][m / 2 + 1][k + 1];
+```
+
+### 👉 Ý nghĩa:
+
+Đây là **mảng ghi nhớ (memoization)** dùng để **lưu lại kết quả các trạng thái đã tính trong đệ quy `dfs()`**
+→ giúp tránh tính lại các trạng thái trùng lặp.
+
+---
+
+### 🔸 4 chiều này có ý nghĩa:
+
+| Chiều       | Biến tương ứng | Ý nghĩa                                              |
+| ----------- | -------------- | ---------------------------------------------------- |
+| `n`         | `i`            | Đang xét đến phần tử thứ `i` trong `nums`            |
+| `m + 1`     | `leftM`        | Số phép nhân (hoặc số lượng phần tử còn lại để chọn) |
+| `m / 2 + 1` | `x`            | Trạng thái bit (carry trong cộng nhị phân)           |
+| `k + 1`     | `leftK`        | Số lượng bit 1 còn cần đạt được                      |
+
+---
+
+### 🔸 Ví dụ nhỏ:
+
+Giả sử:
+
+```
+n = 3
+m = 4
+k = 2
+```
+
+thì:
+
+```
+memo = new int[3][5][3][3];
+```
+
+→ nghĩa là ta lưu được kết quả cho **mọi tổ hợp trạng thái** `(i, leftM, x, leftK)`
+→ Khi `dfs()` gọi lại với cùng 4 giá trị đó, ta chỉ cần lấy ra từ `memo` thay vì tính lại.
+
+---
+
+### 💡 Vì sao `m / 2 + 1` cho chiều thứ 3?
+
+Vì trong phép cộng nhị phân, **carry (số nhớ)** tối đa bằng `m / 2`,
+bởi dù bạn cộng toàn bit 1 (`1 + 1` sinh ra carry 1), cũng không thể vượt quá `m/2` carry.
+
+---
+
+### ✅ Tóm tắt dễ hiểu:
+
+| Dòng code                                            | Vai trò                       | Mục đích                  |
+| ---------------------------------------------------- | ----------------------------- | ------------------------- |
+| `powV[i][j] = (int)((long)powV[i][j-1]*nums[i]%MOD)` | Tiền tính `nums[i]^j mod MOD` | Giúp `dfs()` nhanh hơn    |
+| `int[][][][] memo = ...`                             | Mảng lưu kết quả đệ quy       | Giúp tránh tính trùng lặp |
+
+---
+
+Bạn có muốn mình **vẽ sơ đồ minh họa** (kiểu cây đệ quy + memo cache) cho dễ hình dung cách `memo` hoạt động không?
+Nếu có, mình sẽ giải thích bằng hình và ví dụ cụ thể.
+Câu hỏi rất hay — bạn đang hỏi **“tại sao lại ra công thức `powV[i][j] = powV[i][j-1] * nums[i] % MOD`”**, tức là **nó được hình thành như thế nào** đúng không? 👇
+Mình sẽ giải thích từ gốc tư duy toán → lập trình để bạn hiểu **tại sao** dùng công thức này.
+
+---
+
+## 🌱 Bắt đầu từ định nghĩa toán học:
+
+Ta cần tính:
+[
+nums[i]^j \quad (mod ; MOD)
+]
+
+Ví dụ: nếu `nums[i] = 3`, ta cần:
+
+```
+3^0, 3^1, 3^2, 3^3, ...
+```
+
+---
+
+## 💡 Quan sát mối quan hệ giữa các lũy thừa:
+
+Nhìn 3^0, 3^1, 3^2, 3^3, ta thấy:
+
+```
+3^1 = 3^0 * 3
+3^2 = 3^1 * 3
+3^3 = 3^2 * 3
+```
+
+👉 Tức là:
+[
+a^j = a^{j-1} \times a
+]
+
+Đây là quy luật **đệ quy tự nhiên của lũy thừa** — mỗi lần nhân thêm `a` nữa.
+Không cần tính từ đầu, ta chỉ nhân tiếp từ kết quả trước.
+
+---
+
+## 🧠 Chuyển sang dạng lập trình:
+
+Nếu ta có `powV[i][j-1] = nums[i]^(j-1)`,
+thì ta chỉ cần nhân thêm `nums[i]` để được `nums[i]^j`:
+
+[
+powV[i][j] = powV[i][j-1] \times nums[i]
+]
+
+---
+
+## ⚙️ Thêm `% MOD` để tránh tràn số:
+
+Vì khi nhân nhiều lần, số có thể rất lớn,
+nên ta luôn lấy phần dư mod `MOD`:
+[
+powV[i][j] = (powV[i][j-1] \times nums[i]) \mod MOD
+]
+
+---
+
+## 💻 Kết quả là dòng code:
+
+```java
+powV[i][j] = (int) ((long) powV[i][j - 1] * nums[i] % MOD);
+```
+
+* Ép kiểu `(long)` để tránh tràn khi nhân (`int` chỉ chứa được đến ~2 tỷ).
+* `% MOD` để đảm bảo kết quả nằm trong khoảng `[0, MOD)`.
+
+---
+
+## 🔢 Ví dụ minh họa cụ thể:
+
+Giả sử:
+
+```java
+nums[i] = 2, m = 4
+```
+
+Ta có:
+
+| j | powV[i][j-1] | nums[i] | Công thức tính          | powV[i][j] |
+| - | ------------ | ------- | ----------------------- | ---------- |
+| 0 | –            | –       | Khởi tạo powV[i][0] = 1 | 1          |
+| 1 | 1            | 2       | 1 × 2                   | 2          |
+| 2 | 2            | 2       | 2 × 2                   | 4          |
+| 3 | 4            | 2       | 4 × 2                   | 8          |
+| 4 | 8            | 2       | 8 × 2                   | 16         |
+
+→ Kết quả: `powV[i] = [1, 2, 4, 8, 16]`, tức là `2^0, 2^1, 2^2, 2^3, 2^4`.
+
+---
+
+## ✅ Tóm lại:
+
+| Phần                    | Giải thích                                                     |
+| ----------------------- | -------------------------------------------------------------- |
+| **Nguồn gốc công thức** | Từ quy luật lũy thừa: `a^j = a^(j-1) * a`                      |
+| **Thêm `% MOD`**        | Để tránh tràn số và giữ kết quả trong phạm vi hợp lệ           |
+| **Mục tiêu**            | Tiền tính tất cả `nums[i]^j mod MOD` để truy cập nhanh sau này |
+
+---
+
+Nếu bạn muốn, mình có thể giải thích **tương tự cách hình thành công thức nghịch đảo giai thừa `INV_F[i-1] = INV_F[i] * i % MOD`** — vì nó cũng xuất phát từ quy luật toán học rất giống, chỉ là nghịch đảo thay vì nhân.
+Bạn có muốn mình giải thích tiếp phần đó không?
+Rất hay 👍 — câu hỏi này liên quan đến **tư duy thiết kế mảng `memo` nhiều chiều trong quy hoạch động (DP)**, cụ thể là:
+
+```java
+int[][][][] memo = new int[n][m + 1][m / 2 + 1][k + 1];
+```
+
+Giờ ta cùng **phân tích từng chiều và lý do hình thành công thức này** 👇
+
+---
+
+## 🧩 Tổng quan:
+
+`memo` là **bảng ghi nhớ (DP table)** dùng để lưu các trạng thái đã tính, tránh tính lại.
+Số chiều của nó tương ứng với **các biến trạng thái (state variables)** trong bài toán.
+
+Ta có **4 chiều** → tức là bài toán có 4 biến trạng thái độc lập.
+Giả sử bài toán là dạng:
+
+> “Từ mảng `nums` độ dài `n`, chọn tối đa `m` phần tử, trong đó chỉ được chọn `m/2` nhóm đặc biệt, và tổng giá trị không vượt quá `k`.”
+
+Thì `memo[i][j][x][y]` có thể được hiểu như sau:
+
+| Ký hiệu | Ý nghĩa                                          | Phạm vi   |
+| ------- | ------------------------------------------------ | --------- |
+| `i`     | đang xét đến **phần tử thứ i** trong `nums`      | `0 … n-1` |
+| `j`     | đã **chọn j phần tử**                            | `0 … m`   |
+| `x`     | đã **chọn x nhóm (hoặc cặp, hoặc subset)**       | `0 … m/2` |
+| `y`     | **tổng giá trị hiện tại / chi phí / năng lượng** | `0 … k`   |
+
+---
+
+## 🔹 Giải thích từng chiều trong `memo[n][m + 1][m / 2 + 1][k + 1]`
+
+### 1️⃣ `n` — số phần tử trong mảng
+
+* Dùng để xét lần lượt từng phần tử `nums[i]`.
+* `n` chiều đầu tiên: trạng thái tại **phần tử thứ i**.
+  → Có `n` giá trị (từ `0` đến `n-1`).
+
+---
+
+### 2️⃣ `m + 1` — số lượng phần tử đã chọn
+
+* Có thể chọn từ `0` đến `m` phần tử.
+* Vì vậy cần `m + 1` trạng thái (bao gồm cả khi chưa chọn gì).
+
+→ Nếu bạn đang chọn dần phần tử, đây là **biến đếm số phần tử đã chọn**.
+
+---
+
+### 3️⃣ `m / 2 + 1` — số nhóm hoặc cặp đã chọn
+
+* Nếu bài toán có ràng buộc như “chỉ được tạo tối đa `m/2` nhóm/cặp”,
+  thì ta cần đếm thêm số nhóm hiện tại.
+* Vì chỉ có thể tạo tối đa `m/2` nhóm → cần `m/2 + 1` trạng thái.
+
+→ Ví dụ: trong bài “chọn cặp” (pairing problem), `x = m / 2` là số cặp tối đa.
+
+---
+
+### 4️⃣ `k + 1` — tổng giá trị hoặc chi phí hiện tại
+
+* Nếu bài toán có ràng buộc như tổng ≤ `k` (ví dụ: tổng skill, tổng mana,...)
+  thì ta cần mảng để lưu cho từng tổng từ `0` đến `k`.
+* Có `k + 1` giá trị (bao gồm cả 0).
+
+---
+
+## 🧠 Vì sao phải cộng +1 ở ba chiều sau?
+
+| Chiều     | Lý do cộng +1                        |
+| --------- | ------------------------------------ |
+| `m + 1`   | Đếm cả trường hợp chọn 0 phần tử     |
+| `m/2 + 1` | Đếm cả trường hợp chưa chọn nhóm nào |
+| `k + 1`   | Đếm cả tổng = 0                      |
+
+Nếu không cộng +1, khi index = 0 sẽ bị lỗi hoặc không biểu diễn được trạng thái khởi đầu.
+
+---
+
+## 🧮 Tổng kết công thức:
+
+| Thành phần  | Ý nghĩa                     | Phạm vi chỉ số | Ghi nhớ                         |
+| ----------- | --------------------------- | -------------- | ------------------------------- |
+| `n`         | phần tử đang xét            | `0 … n-1`      | mỗi `i` là một bước duyệt       |
+| `m + 1`     | số phần tử đã chọn          | `0 … m`        | cộng +1 để chứa cả trường hợp 0 |
+| `m / 2 + 1` | số nhóm/cặp                 | `0 … m/2`      | giới hạn số nhóm tối đa         |
+| `k + 1`     | tổng chi phí / tổng giá trị | `0 … k`        | cộng +1 để chứa tổng = 0        |
+
+---
+
+## 🔧 Ví dụ minh họa:
+
+Giả sử `n=3, m=4, k=5`.
+Khi đó `memo` có kích thước:
+
+```
+memo[3][5][3][6]
+```
+
+→ 3 phần tử, chọn tối đa 4 phần tử, tạo tối đa 2 nhóm (m/2),
+và tổng ≤ 5.
+
+Trạng thái `memo[2][3][1][4]` có thể hiểu là:
+
+> Khi xét đến phần tử thứ 2, đã chọn 3 phần tử, tạo 1 nhóm, và tổng hiện tại là 4.
+
+---
+
+Nếu bạn gửi thêm **đề bài hoặc đoạn code đầy đủ chứa `memo` này**, mình có thể giúp bạn **giải thích chính xác từng chiều theo đúng ngữ cảnh** (hiện giờ mình đang giải thích theo mô hình DP tổng quát 4 biến).
+Bạn có muốn mình làm vậy không?
+Rất hay 👏 — câu hỏi “**tại sao lại có +1 trong `m / 2 + 1`**” là điều rất nhiều người thắc mắc khi học quy hoạch động (DP).
+Giờ ta giải thích thật đơn giản nhé 👇
+
+---
+
+## 🎯 Mục đích của `+1`
+
+Trong lập trình, **mảng có chỉ số bắt đầu từ 0**.
+👉 Nếu bạn muốn biểu diễn **tất cả các giá trị từ 0 đến m/2**,
+thì **số lượng phần tử trong mảng phải là `(m/2) + 1`**.
+
+---
+
+## 🔹 Ví dụ trực quan
+
+Giả sử `m = 4`, thì `m / 2 = 2`.
+
+Nếu bạn chỉ tạo mảng:
+
+```java
+int[] a = new int[m / 2];
+```
+
+→ tức là `a = new int[2]`
+→ chỉ có **chỉ số 0 và 1**.
+
+👉 Bạn **không thể truy cập `a[2]`**,
+nhưng bạn cần lưu giá trị tại `x = 2` (tức là đã chọn 2 nhóm).
+
+---
+
+Vì thế, bạn phải tạo:
+
+```java
+int[] a = new int[m / 2 + 1];
+```
+
+→ `a = new int[3]`
+→ có thể dùng `a[0], a[1], a[2]`
+→ biểu diễn đầy đủ các giá trị `0, 1, 2`.
+
+---
+
+## 🔹 Tổng quát hơn
+
+Trong quy hoạch động (DP), khi một biến trạng thái `v` có thể nhận giá trị:
+
+```
+0, 1, 2, …, max
+```
+
+thì bạn **luôn cần tạo mảng có kích thước `max + 1`** để lưu được mọi trạng thái.
+
+---
+
+## 🔸 Áp dụng vào công thức của bạn:
+
+```java
+int[][][][] memo = new int[n][m + 1][m / 2 + 1][k + 1];
+```
+
+| Chiều       | Lý do cộng +1                          |
+| ----------- | -------------------------------------- |
+| `m + 1`     | cần chứa số phần tử đã chọn từ `0 … m` |
+| `m / 2 + 1` | cần chứa số nhóm từ `0 … m/2`          |
+| `k + 1`     | cần chứa tổng từ `0 … k`               |
+
+---
+
+✅ **Tóm lại:**
+`+1` là để **bao gồm cả trường hợp 0** (vì chỉ số bắt đầu từ 0),
+nếu không cộng thì bạn sẽ bị **mất trạng thái lớn nhất hoặc lỗi out of bounds**.
+
+---
+
+Bạn có muốn mình minh họa bằng **một đoạn code nhỏ chạy lỗi khi bỏ +1** để thấy rõ sự khác biệt không?

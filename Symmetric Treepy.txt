@@ -1,0 +1,109 @@
+101.Symmetric Tree
+def isSymmetric(self, root: Optional[TreeNode]) -> bool:
+    if not root:
+        return True
+    return self.isMirror(root.left, root.right)
+
+def isMirror(self, t1: Optional[TreeNode], t2: Optional[TreeNode]) -> bool:
+    if not t1 and not t2:
+        return True
+    if not t1 or not t2:
+        return False
+    return (t1.val == t2.val and
+            self.isMirror(t1.left, t2.right) and
+            self.isMirror(t1.right, t2.left))
+			
+			
+Rất hay 👏 — đoạn code này là **trái tim của thuật toán kiểm tra cây đối xứng**.
+Mình sẽ giải thích từng dòng thật rõ nhé 👇
+
+---
+
+### 🔍 Đoạn code:
+
+```python
+if not t1 and not t2:
+    return True
+if not t1 or not t2:
+    return False
+return (t1.val == t2.val and
+        self.isMirror(t1.left, t2.right) and
+        self.isMirror(t1.right, t2.left))
+```
+
+---
+
+### 🧩 Giải thích từng bước:
+
+#### ✅ `if not t1 and not t2: return True`
+
+* Nếu **cả hai cây con đều rỗng (None)** → chúng **đối xứng**.
+* Ví dụ:
+
+  ```
+  None  ↔  None
+  ```
+
+  Hai nhánh cùng trống thì hiển nhiên là “ảnh gương” của nhau.
+
+---
+
+#### ❌ `if not t1 or not t2: return False`
+
+* Nếu **một nhánh rỗng** mà **nhánh kia có giá trị**, thì **không thể đối xứng**.
+* Ví dụ:
+
+  ```
+  None  ↔  3
+  ```
+
+  → không đối xứng.
+
+---
+
+#### 🔁 `return (t1.val == t2.val and ...)`
+
+* Bây giờ cả hai nút **đều tồn tại**, ta kiểm tra 3 điều kiện:
+
+  1. `t1.val == t2.val`
+     → Giá trị của hai nút phải giống nhau.
+  2. `self.isMirror(t1.left, t2.right)`
+     → Nhánh **trái của t1** đối xứng với nhánh **phải của t2**.
+  3. `self.isMirror(t1.right, t2.left)`
+     → Nhánh **phải của t1** đối xứng với nhánh **trái của t2**.
+
+Nếu cả ba điều kiện đều đúng → hai cây con là **ảnh gương của nhau** ✅
+
+---
+
+### 📘 Ví dụ minh họa:
+
+```
+       1
+     /   \
+    2     2
+   / \   / \
+  3  4  4  3
+```
+
+Lúc gọi `isMirror(2(left), 2(right))`:
+
+1. `2 == 2` ✅
+2. Gọi đệ quy `isMirror(3, 3)` → ✅
+3. Gọi đệ quy `isMirror(4, 4)` → ✅
+   Tất cả đều đúng → `True`.
+
+---
+
+### 🧠 Tóm lại:
+
+| Trường hợp                                 | Kết quả |
+| ------------------------------------------ | ------- |
+| Cả hai `None`                              | ✅ True  |
+| Một `None`, một không                      | ❌ False |
+| Hai giá trị khác nhau                      | ❌ False |
+| Hai giá trị bằng nhau & nhánh con đối xứng | ✅ True  |
+
+---
+
+Bạn có muốn mình vẽ **sơ đồ minh họa luồng đệ quy** cho ví dụ trên (kiểu cây gọi hàm `isMirror`) để dễ hình dung hơn không?

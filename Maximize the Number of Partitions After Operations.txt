@@ -1,0 +1,711 @@
+Maximize the Number of Partitions After Operations
+class Solution {
+    public int maxPartitionsAfterOperations(String S, int k) {
+        if(k == 26) return 1;
+        char[] s = S.toCharArray();
+        int n = s.length;
+        int[] left1 = new int[n], left2 = new int[n];
+        int[] partitions = new int[n];
+        int mask1 = 0, mask2 = 0, count = 1;
+        for(int i = 0; i < n; i++) {
+            int filter = 1 << (s[i] - 'a');
+            mask2 |= mask1 & filter;
+            mask1 |= filter;
+            if(Integer.bitCount(mask1) > k) {
+                mask1 = filter;
+                mask2 = 0;
+                count++;
+            }
+            left1[i] = mask1;
+            left2[i] = mask2;
+            partitions[i] = count;
+        }
+        int ans = count;
+        mask1 = mask2 = count = 0;
+        for(int i = n - 1; i >= 0; i--) {
+            int filter = 1 << (s[i] - 'a');
+            mask2 |= mask1 & filter;
+            mask1 |= filter;
+            if(Integer.bitCount(mask1) > k) {
+                mask1 = filter;
+                mask2 = 0;
+                count++;
+            }
+            if(Integer.bitCount(mask1) == k) {
+                if((filter & mask2) != 0 && (filter & left2[i]) != 0 && Integer.bitCount(left1[i]) == k && (left1[i] | mask1) != (1 << 26) - 1) ans = Math.max(ans, count + partitions[i] + 2);
+                else if(mask2 != 0) ans = Math.max(ans, count + partitions[i] + 1);
+            }
+        }
+        return ans;
+    }
+}
+
+Rất hay 👏 — đoạn code bạn hỏi là **phần khởi tạo logic chính** trong hàm `maxPartitionsAfterOperations`, mình sẽ giải thích chi tiết từng dòng để bạn nắm rõ **ý nghĩa và mục đích** nhé 👇
+
+---
+
+### 🧩 **Đoạn code cần giải thích**
+
+```java
+if (k == 26) return 1;
+char[] s = S.toCharArray();
+int n = s.length;
+int[] left1 = new int[n], left2 = new int[n];
+int[] partitions = new int[n];
+int mask1 = 0, mask2 = 0, count = 1;
+```
+
+---
+
+### 🔍 **Giải thích từng dòng**
+
+#### 🟦 `if (k == 26) return 1;`
+
+* Nếu `k = 26` → tức là cho phép tối đa **26 ký tự khác nhau** trong một nhóm.
+* Mà bảng chữ cái chỉ có 26 ký tự (a → z), nên:
+  → **toàn bộ chuỗi chỉ cần 1 nhóm duy nhất**, không thể chia nhỏ hơn.
+* Do đó, hàm trả về `1` ngay, không cần xử lý thêm.
+
+---
+
+#### 🟦 `char[] s = S.toCharArray();`
+
+* Chuyển chuỗi `S` thành mảng ký tự `s` để tiện thao tác từng ký tự.
+
+  * Ví dụ: `S = "abac"`
+    👉 `s = ['a', 'b', 'a', 'c']`
+
+---
+
+#### 🟦 `int n = s.length;`
+
+* Lấy **độ dài chuỗi** → `n` dùng làm giới hạn trong các vòng lặp.
+
+  * Ví dụ: `"abac"` → `n = 4`
+
+---
+
+#### 🟦 `int[] left1 = new int[n], left2 = new int[n];`
+
+* Hai mảng này dùng để **ghi lại trạng thái bitmask** khi duyệt từ trái sang phải.
+
+| Mảng       | Vai trò                                                                            | Ý nghĩa |
+| ---------- | ---------------------------------------------------------------------------------- | ------- |
+| `left1[i]` | lưu bitmask của **các ký tự khác nhau** trong nhóm tính đến vị trí `i`             |         |
+| `left2[i]` | lưu bitmask của **các ký tự bị trùng (xuất hiện ≥ 2 lần)** trong nhóm tính đến `i` |         |
+
+Ví dụ:
+
+* Duyệt đến `'a'` → `left1[i]` chứa bit của `'a'`
+* Duyệt đến `'b'` → `left1[i]` chứa `'a'` và `'b'`
+* Nếu gặp lại `'a'` → `left2[i]` đánh dấu `'a'` là ký tự trùng.
+
+---
+
+#### 🟦 `int[] partitions = new int[n];`
+
+* Lưu số lượng **nhóm (phân đoạn)** đến vị trí `i` khi duyệt từ trái sang phải.
+
+Ví dụ:
+
+| i | s[i] | partitions[i] | Giải thích                            |
+| - | ---- | ------------- | ------------------------------------- |
+| 0 | a    | 1             | bắt đầu nhóm đầu tiên                 |
+| 1 | b    | 1             | nhóm hiện tại vẫn hợp lệ              |
+| 2 | a    | 1             | vẫn nhóm cũ                           |
+| 3 | c    | 2             | vượt quá k ký tự khác nhau → nhóm mới |
+
+---
+
+#### 🟦 `int mask1 = 0, mask2 = 0, count = 1;`
+
+| Biến    | Vai trò                                                 | Giải thích                                     |
+| ------- | ------------------------------------------------------- | ---------------------------------------------- |
+| `mask1` | bitmask lưu các ký tự **khác nhau trong nhóm hiện tại** | mỗi ký tự tương ứng 1 bit trong 26 bit         |
+| `mask2` | bitmask lưu các ký tự **bị trùng** trong nhóm hiện tại  | khi 1 ký tự xuất hiện lần 2 → thêm vào `mask2` |
+| `count` | đếm số **nhóm đã chia được**                            | bắt đầu từ 1 (vì luôn có ít nhất 1 nhóm)       |
+
+Ví dụ:
+
+* `'a'` → `mask1 = 000...001`
+* `'b'` → `mask1 = 000...011`
+* gặp lại `'a'` → `mask2 = 000...001` (đánh dấu ‘a’ trùng)
+
+---
+
+### 🧠 **Tóm tắt**
+
+| Mục tiêu                        | Cách làm                            |
+| ------------------------------- | ----------------------------------- |
+| Xử lý nhanh các ký tự khác nhau | Dùng bitmask (`mask1`)              |
+| Ghi nhận ký tự trùng            | Dùng bitmask (`mask2`)              |
+| Ghi nhớ kết quả từng bước       | Dùng `left1`, `left2`, `partitions` |
+| Bắt đầu đếm nhóm                | `count = 1`                         |
+
+---
+
+👉 Nói ngắn gọn:
+
+> Đoạn này **chuẩn bị các biến và cấu trúc dữ liệu** để duyệt chuỗi từ trái sang phải,
+> theo dõi **các ký tự xuất hiện** và **tự động chia nhóm** sao cho mỗi nhóm có ≤ `k` ký tự khác nhau.
+
+---
+
+Bạn có muốn mình minh họa cụ thể **cách bitmask (mask1, mask2)** thay đổi từng bước khi duyệt chuỗi `"abac"` với `k = 2` không? (rất dễ hiểu khi thấy trực quan 👀)
+Rất tuyệt 👏 — đây là **vòng lặp chính duyệt từ trái sang phải**, giúp chia chuỗi thành từng **phân đoạn hợp lệ** sao cho mỗi đoạn có **không quá `k` ký tự khác nhau**.
+Mình sẽ giải thích **từng dòng, từng bước** cực dễ hiểu nhé 👇
+
+---
+
+### 🧩 **Đoạn code cần giải thích**
+
+```java
+for (int i = 0; i < n; i++) {
+    int filter = 1 << (s[i] - 'a');
+    mask2 |= mask1 & filter;
+    mask1 |= filter;
+    if (Integer.bitCount(mask1) > k) {
+        mask1 = filter;
+        mask2 = 0;
+        count++;
+    }
+    left1[i] = mask1;
+    left2[i] = mask2;
+    partitions[i] = count;
+}
+```
+
+---
+
+### 🔍 **Giải thích từng dòng**
+
+#### 🟦 `for (int i = 0; i < n; i++) {`
+
+* Duyệt **toàn bộ chuỗi `s`** ký tự theo chỉ số `i = 0 → n-1`.
+* Mục tiêu: xem ký tự hiện tại ảnh hưởng thế nào đến nhóm đang xét.
+
+---
+
+#### 🟦 `int filter = 1 << (s[i] - 'a');`
+
+* Mỗi ký tự được ánh xạ vào **một bit trong số 26 bit (a–z)**.
+  Ví dụ:
+
+  * `'a' → 1 << 0 → 000...001`
+  * `'b' → 1 << 1 → 000...010`
+  * `'c' → 1 << 2 → 000...100`
+
+👉 `filter` đại diện cho **bitmask của ký tự hiện tại**.
+
+---
+
+#### 🟦 `mask2 |= mask1 & filter;`
+
+* `mask1 & filter` → kiểm tra xem ký tự hiện tại đã **từng xuất hiện** trong nhóm chưa.
+
+  * Nếu **đã xuất hiện**, biểu thức ≠ 0
+  * Nếu **chưa**, biểu thức = 0
+
+* Sau đó, `mask2 |= ...` nghĩa là:
+
+  > Nếu ký tự xuất hiện lần 2 trở lên → thêm nó vào `mask2`.
+
+✅ **Mục đích:**
+`mask2` lưu tất cả các ký tự **bị trùng** trong nhóm hiện tại.
+
+---
+
+#### 🟦 `mask1 |= filter;`
+
+* Thêm ký tự hiện tại vào tập ký tự đang có (`mask1`).
+
+Ví dụ:
+
+| i | s[i] | mask1 (bit) | Giải thích    |
+| - | ---- | ----------- | ------------- |
+| 0 | a    | 000...001   | thêm 'a'      |
+| 1 | b    | 000...011   | thêm 'b'      |
+| 2 | a    | 000...011   | 'a' đã có sẵn |
+
+---
+
+#### 🟦 `if (Integer.bitCount(mask1) > k) { ... }`
+
+* `Integer.bitCount(mask1)` đếm số ký tự **khác nhau** trong nhóm hiện tại.
+* Nếu vượt quá `k` → nhóm không hợp lệ nữa → cần **bắt đầu nhóm mới**.
+
+---
+
+#### 🟦 `mask1 = filter; mask2 = 0; count++;`
+
+Khi nhóm bị quá tải (`> k` ký tự khác nhau):
+
+1. **Bắt đầu nhóm mới**
+
+   * `mask1 = filter` → nhóm mới chỉ chứa ký tự hiện tại.
+2. **Xóa danh sách trùng**
+
+   * `mask2 = 0` → nhóm mới chưa có ký tự trùng.
+3. **Tăng số nhóm**
+
+   * `count++` → thêm một nhóm mới được tạo.
+
+---
+
+#### 🟦 `left1[i] = mask1;`
+
+* Ghi lại **bitmask của nhóm hiện tại** đến vị trí `i`.
+* Dùng để tính toán sau này (ở bước duyệt ngược phải → trái).
+
+---
+
+#### 🟦 `left2[i] = mask2;`
+
+* Ghi lại **bitmask của các ký tự bị trùng** trong nhóm hiện tại.
+
+---
+
+#### 🟦 `partitions[i] = count;`
+
+* Lưu **số lượng nhóm (phân đoạn)** đã chia được tính đến vị trí `i`.
+
+---
+
+### 🧠 **Ví dụ minh họa**
+
+Giả sử:
+`s = "abac"`, `k = 2`
+
+| i | s[i] | mask1 (ký tự khác nhau) | mask2 (ký tự trùng) | bitCount(mask1) | count | partitions[i] |
+| - | ---- | ----------------------- | ------------------- | --------------- | ----- | ------------- |
+| 0 | a    | {a}                     | {}                  | 1               | 1     | 1             |
+| 1 | b    | {a,b}                   | {}                  | 2               | 1     | 1             |
+| 2 | a    | {a,b}                   | {a}                 | 2               | 1     | 1             |
+| 3 | c    | {c}                     | {}                  | 1               | 2     | 2             |
+
+➡️ Kết quả: chia được 2 nhóm
+
+* Nhóm 1: `"aba"`
+* Nhóm 2: `"c"`
+
+---
+
+### ✅ **Tóm lại**
+
+Vòng `for` này:
+
+> 📌 Duyệt chuỗi từ trái sang phải,
+> 📌 Dùng bitmask để đếm số ký tự khác nhau và trùng lặp,
+> 📌 Khi vượt quá `k`, tự động tách thành nhóm mới,
+> 📌 Lưu lại trạng thái mỗi bước để dùng cho phần sau (khi xét thao tác đổi 1 ký tự).
+
+---
+
+Bạn có muốn mình tiếp tục giải thích **vòng for thứ 2 (duyệt từ phải sang trái)** — nơi thuật toán xét từng vị trí nếu đổi ký tự thì số nhóm tăng bao nhiêu — không?
+Đó là phần quyết định **đáp án cuối cùng (`ans`)**.
+Tốt lắm 👍 — đoạn này chính là **vòng lặp thứ 2 (duyệt từ phải sang trái)** trong thuật toán, đóng vai trò cực kỳ quan trọng.
+Mình sẽ giải thích **từng dòng rõ ràng** nhé 👇
+
+---
+
+### 🧩 **Đoạn code cần giải thích**
+
+```java
+int ans = count;
+mask1 = mask2 = count = 0;
+for (int i = n - 1; i >= 0; i--) {
+    int filter = 1 << (s[i] - 'a');
+    mask2 |= mask1 & filter;
+    mask1 |= filter;
+    if (Integer.bitCount(mask1) > k) {
+        mask1 = filter;
+        mask2 = 0;
+        count++;
+    }
+```
+
+---
+
+### 🔍 **Giải thích từng dòng**
+
+#### 🟦 `int ans = count;`
+
+* `count` từ vòng lặp đầu tiên (bên trái → phải) là **số phân đoạn ban đầu** khi **chưa thay đổi ký tự nào**.
+* `ans` được khởi tạo bằng giá trị này, vì đây là **số phân đoạn hiện tại** — và ta sẽ cố gắng **tăng tối đa nó** sau khi đổi 1 ký tự.
+
+👉 Mục tiêu: tìm giá trị lớn nhất của `ans` sau khi thực hiện phép thay đổi.
+
+---
+
+#### 🟦 `mask1 = mask2 = count = 0;`
+
+* Reset toàn bộ biến trạng thái để **chuẩn bị duyệt ngược (phải → trái)**:
+
+  * `mask1`: lưu các ký tự khác nhau trong nhóm đang duyệt từ phải.
+  * `mask2`: lưu các ký tự bị trùng trong nhóm từ phải.
+  * `count`: đếm số nhóm khi duyệt ngược lại.
+
+---
+
+#### 🟦 `for (int i = n - 1; i >= 0; i--) {`
+
+* Duyệt chuỗi **từ phải sang trái**.
+* Mục đích: xem khi đổi ký tự ở vị trí `i`, số nhóm hợp lệ tối đa sẽ là bao nhiêu.
+
+---
+
+#### 🟦 `int filter = 1 << (s[i] - 'a');`
+
+* Giống vòng lặp đầu: tạo **bitmask** cho ký tự hiện tại.
+
+Ví dụ:
+
+| Ký tự | filter (nhị phân) |
+| ----- | ----------------- |
+| a     | 000...001         |
+| b     | 000...010         |
+| c     | 000...100         |
+
+---
+
+#### 🟦 `mask2 |= mask1 & filter;`
+
+* Giống như trước: nếu ký tự `s[i]` **đã xuất hiện trong nhóm từ phải sang trái**,
+  → thêm ký tự đó vào `mask2` (tập ký tự trùng).
+
+---
+
+#### 🟦 `mask1 |= filter;`
+
+* Thêm ký tự `s[i]` vào tập `mask1` — tập các ký tự khác nhau trong nhóm đang duyệt từ phải.
+
+---
+
+#### 🟦 `if (Integer.bitCount(mask1) > k) {`
+
+* Đếm số ký tự khác nhau trong nhóm hiện tại.
+* Nếu **quá `k` ký tự khác nhau**, nhóm không hợp lệ nữa ⇒ cần chia nhóm mới.
+
+---
+
+#### 🟦 `mask1 = filter; mask2 = 0; count++;`
+
+* Tạo **nhóm mới** (bắt đầu lại từ ký tự hiện tại `s[i]`):
+
+  * `mask1 = filter`: nhóm mới chỉ chứa ký tự này.
+  * `mask2 = 0`: chưa có ký tự trùng.
+  * `count++`: tăng số lượng nhóm.
+
+---
+
+### 🧠 **Tóm tắt ý tưởng**
+
+✅ Vòng lặp đầu: duyệt **trái → phải** để tính số nhóm ban đầu và trạng thái từng vị trí (`left1`, `left2`, `partitions`).
+✅ Vòng lặp này: duyệt **phải → trái** để tính trạng thái các nhóm bên phải,
+rồi sau đó (ở đoạn tiếp theo của code) sẽ **kết hợp bên trái và bên phải tại vị trí i**
+→ kiểm tra xem nếu đổi ký tự tại `s[i]`, ta có thể **tăng thêm bao nhiêu nhóm hợp lệ**.
+
+---
+
+Bạn muốn mình giải thích **phần còn lại của vòng for** — tức là đoạn `if (Integer.bitCount(mask1) == k)` và phần tính `ans = Math.max(...)` — không?
+Đó là phần cốt lõi quyết định **cách tối ưu số nhóm sau khi đổi ký tự**.
+Rất hay 👏 — bạn đang đi đến phần **cốt lõi nhất của thuật toán**, nơi quyết định kết quả cuối cùng (`ans`).
+Mình sẽ giải thích thật chi tiết **mỗi điều kiện** trong đoạn này nhé 👇
+
+---
+
+### 🧩 **Đoạn code cần giải thích**
+
+```java
+if (Integer.bitCount(mask1) == k) {
+    if ((filter & mask2) != 0 && (filter & left2[i]) != 0 &&
+        Integer.bitCount(left1[i]) == k &&
+        (left1[i] | mask1) != (1 << 26) - 1)
+        ans = Math.max(ans, count + partitions[i] + 2);
+    else if (mask2 != 0)
+        ans = Math.max(ans, count + partitions[i] + 1);
+}
+return ans;
+```
+
+---
+
+## 🧠 Ý tưởng tổng quát
+
+* Đoạn này chạy **sau khi đã duyệt từ phải sang trái**.
+* Ở mỗi vị trí `i`, ta giả sử **thực hiện thay đổi ký tự tại s[i]** để cố gắng tạo **nhiều nhóm hợp lệ nhất**.
+
+Ta sẽ **kết hợp hai phía**:
+
+* `partitions[i]`: số nhóm khi duyệt **từ trái đến i**.
+* `count`: số nhóm khi duyệt **từ phải đến i**.
+  → Nếu đổi ký tự tại `i`, có thể **tăng thêm 1 hoặc 2 nhóm hợp lệ**, tùy trường hợp.
+
+---
+
+## 🔍 Giải thích từng phần
+
+---
+
+### 🟦 `if (Integer.bitCount(mask1) == k) {`
+
+* Nghĩa là **nhóm bên phải hiện tại** (bắt đầu từ vị trí `i`)
+  đang chứa **chính xác k ký tự khác nhau** — nhóm này **đã đầy**.
+* Bây giờ, nếu ta **đổi ký tự s[i]**, ta có thể chia nhóm này ra để tăng tổng số nhóm.
+
+---
+
+### 🟩 Điều kiện 1 (phức tạp nhất):
+
+```java
+if ((filter & mask2) != 0 && (filter & left2[i]) != 0 &&
+    Integer.bitCount(left1[i]) == k &&
+    (left1[i] | mask1) != (1 << 26) - 1)
+    ans = Math.max(ans, count + partitions[i] + 2);
+```
+
+#### 💬 Giải thích ý nghĩa:
+
+* `(filter & mask2) != 0`:
+  → ký tự hiện tại **xuất hiện trùng** trong nhóm bên phải.
+
+* `(filter & left2[i]) != 0`:
+  → ký tự hiện tại **cũng trùng** trong nhóm bên trái.
+
+* `Integer.bitCount(left1[i]) == k`:
+  → nhóm bên trái tại vị trí `i` **cũng đã đầy k ký tự khác nhau**.
+
+* `(left1[i] | mask1) != (1 << 26) - 1`:
+  → hợp của 2 nhóm **không chứa đủ 26 ký tự** (vẫn còn chỗ để đổi thêm ký tự).
+
+✅ Khi **tất cả các điều kiện này đúng** → việc đổi ký tự tại `s[i]` cho phép:
+
+* nhóm trái và nhóm phải **đều thêm được 1 nhóm hợp lệ**
+  → tổng số nhóm tăng thêm **2**.
+
+👉 `ans = Math.max(ans, count + partitions[i] + 2);`
+
+---
+
+### 🟨 Điều kiện 2 (nhẹ hơn):
+
+```java
+else if (mask2 != 0)
+    ans = Math.max(ans, count + partitions[i] + 1);
+```
+
+* Nếu không thỏa điều kiện phức tạp ở trên,
+  nhưng nhóm bên phải **vẫn có ký tự trùng (`mask2 != 0`)**,
+  thì việc đổi 1 ký tự **vẫn có thể tách thêm 1 nhóm hợp lệ**.
+
+→ Tăng thêm **1 nhóm** thay vì 2.
+
+---
+
+### 🟧 `return ans;`
+
+* Sau khi duyệt hết chuỗi (từ phải sang trái),
+  `ans` sẽ chứa **số nhóm lớn nhất có thể đạt được**
+  sau khi đổi đúng **1 ký tự** trong chuỗi.
+
+---
+
+## 🧩 Tổng kết thuật toán
+
+| Giai đoạn          | Hướng duyệt                                                                         | Mục đích |
+| ------------------ | ----------------------------------------------------------------------------------- | -------- |
+| **1. Trái → phải** | Ghi nhận số nhóm ban đầu và bitmask tại mỗi vị trí (`left1`, `left2`, `partitions`) |          |
+| **2. Phải → trái** | Tính số nhóm bên phải và thử đổi 1 ký tự tại từng vị trí `i`                        |          |
+| **3. Kết hợp**     | Kiểm tra điều kiện để xem đổi `s[i]` giúp tăng được 1 hoặc 2 nhóm                   |          |
+| **4. Kết quả**     | Lấy giá trị `ans` lớn nhất                                                          |          |
+
+---
+
+## 📘 Ví dụ minh họa nhỏ
+
+Giả sử:
+
+```
+S = "abca", k = 2
+```
+
+* Gốc: nhóm = ["ab", "ca"] → 2 nhóm
+* Nếu đổi `c → b`: nhóm = ["abb", "a"] → 3 nhóm
+  → `ans = 3`
+
+---
+
+Bạn có muốn mình **vẽ sơ đồ minh họa trực quan** từng bước khi `k=2`, để thấy **khi nào +1, khi nào +2 nhóm** không?
+Cái này nhìn bằng hình rất dễ hiểu, đặc biệt phần `(filter & mask2)` hơi trừu tượng.
+Rất hay 👍 — câu hỏi “**tại sao dùng `Math.max()`**” chính là trọng tâm của đoạn cuối này.
+Giải thích chi tiết nhé 👇
+
+---
+
+### ⚙️ 1. Mục tiêu của bài toán
+
+Thuật toán đang tìm **giá trị lớn nhất có thể đạt được** — ở đây là:
+
+> ✅ **số đoạn con hợp lệ nhiều nhất** mà ta có thể chia chuỗi ra theo quy tắc `k`.
+
+Vì ta duyệt qua **từng vị trí `i`** trong chuỗi và tính số phần tách được nếu cắt tại đó,
+→ mỗi lần tính ra một **giá trị mới**, ta phải so sánh xem:
+
+* giá trị mới này có **lớn hơn kết quả cũ (`ans`)** không?
+
+---
+
+### ⚖️ 2. Vì sao dùng `Math.max(ans, …)`
+
+Câu lệnh:
+
+```java
+ans = Math.max(ans, count + partitions[i] + 1);
+```
+
+nghĩa là:
+
+> Giữ lại giá trị lớn hơn giữa **kết quả hiện tại (`ans`)** và **giá trị mới tính được (`count + partitions[i] + 1`)**.
+
+🧠 Vì trong quá trình duyệt:
+
+* Có thể có nhiều cách chia chuỗi khác nhau,
+* Ta chỉ cần **giữ lại cách tốt nhất (lớn nhất)**.
+
+Nếu không dùng `Math.max`, mà gán thẳng `ans = count + partitions[i] + 1`,
+→ kết quả cuối cùng có thể bị **ghi đè bởi giá trị nhỏ hơn** (sai).
+
+---
+
+### 📊 Ví dụ nhỏ
+
+Giả sử có ba cách chia chuỗi:
+
+| i | partitions[i] | count | Tổng |   |
+| - | ------------- | ----- | ---- | - |
+| 2 | 1             | 1     | 2    | ✅ |
+| 3 | 2             | 1     | 3    | ✅ |
+| 4 | 1             | 0     | 1    | ❌ |
+
+Mỗi lần duyệt:
+
+```java
+ans = Math.max(ans, tổng);
+```
+
+* i=2 → ans = max(0,2) = 2
+* i=3 → ans = max(2,3) = 3
+* i=4 → ans = max(3,1) = 3
+
+→ Kết quả cuối cùng đúng là **3**, tức là chia được tối đa 3 phần hợp lệ.
+
+---
+
+### 🧩 Kết luận
+
+> ✅ Dùng `Math.max()` để **giữ lại giá trị lớn nhất** (tối ưu) khi có nhiều lựa chọn.
+> Không dùng nó thì kết quả có thể bị ghi đè bởi giá trị nhỏ hơn và sai logic.
+
+---
+
+Bạn có muốn mình giải thích thêm **`count + partitions[i] + 1`** cụ thể từng phần đại diện cho cái gì trong công thức không (để thấy vì sao cộng lại ra tổng số đoạn)?
+
+Rất hay 👏 — mình giải thích thật kỹ **công thức `count + partitions[i] + 1`** nhé.
+
+---
+
+## 🎯 Mục tiêu của bài
+
+Ta cần chia chuỗi `s` thành **nhiều nhất số đoạn có thể**,
+mỗi đoạn phải chứa **không quá `k` ký tự khác nhau**,
+và ta **được phép đổi 1 ký tự bất kỳ** trong chuỗi để đạt tối đa số đoạn.
+
+---
+
+## 🧩 Công thức xuất hiện ở đoạn sau:
+
+```java
+else if (mask2 != 0)
+    ans = Math.max(ans, count + partitions[i] + 1);
+```
+
+Ta đang xét **vị trí i** là “điểm chia” giữa phần trái và phải của chuỗi.
+
+---
+
+## 🧠 Giải thích từng phần
+
+| Thành phần      | Ý nghĩa                                                  |
+| --------------- | -------------------------------------------------------- |
+| `partitions[i]` | Số đoạn hợp lệ ở **phía trái** (từ `s[0]` đến `s[i]`)    |
+| `count`         | Số đoạn hợp lệ ở **phía phải** (từ `s[i]` đến hết chuỗi) |
+| `+1`            | Do **đổi 1 ký tự**, ta có thể **tạo thêm 1 đoạn mới**    |
+
+---
+
+## 🔍 Tại sao chỉ cộng **+1** (mà không phải +2)?
+
+Ta xét **tình huống chỉ một bên được lợi** khi đổi ký tự.
+Cụ thể:
+
+* `mask2 != 0` nghĩa là bên phải **có ít nhất một ký tự bị trùng**
+  (tức là có thể “chia tách” một đoạn mới khi đổi ký tự).
+* Nhưng **bên trái không đủ điều kiện** để chia thêm đoạn.
+  → Nên chỉ bên phải được cộng thêm **1 đoạn**.
+
+---
+
+## 📖 Ví dụ minh họa
+
+Giả sử:
+
+```
+s = "abcda"
+k = 3
+```
+
+### 🔹 Bước 1:
+
+Không đổi gì → chia được:
+
+```
+abc | da
+```
+
+→ 2 đoạn (partitions[i] + count = 2)
+
+### 🔹 Bước 2:
+
+Nếu **đổi ký tự thứ 3 `'c'` thành `'x'`**,
+chuỗi trở thành `"abxda"`, chia được:
+
+```
+abx | da
+```
+
+Hoặc `"abc"` → `"abx"` giúp tách riêng thêm một đoạn mới.
+
+→ Tổng cộng: **số đoạn tăng thêm 1**, nên ta có
+`partitions[i] + count + 1`
+
+---
+
+## ✅ Tóm lại
+
+Công thức:
+
+```java
+count + partitions[i] + 1
+```
+
+có nghĩa là:
+
+> “Tổng số đoạn bên trái + bên phải, cộng thêm 1 đoạn mới được tạo ra nhờ phép đổi 1 ký tự.”
+
+Điều kiện `mask2 != 0` đảm bảo rằng việc đổi ký tự **thực sự giúp tách thêm đoạn**,
+chứ không vô ích.
+
+---
+
+Bạn có muốn mình giải thích tiếp **trường hợp `+2`** (khi đổi ký tự giúp tách cả 2 bên) để thấy sự khác biệt rõ hơn không?
+

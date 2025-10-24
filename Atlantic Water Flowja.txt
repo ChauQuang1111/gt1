@@ -1,0 +1,538 @@
+Atlantic Water Flow
+class Solution {
+
+    List<List<Integer>> pacificAtlantic(int[][] matrix) {
+        return new java.util.AbstractList<List<Integer>>() {
+            private List<List<Integer>> res;
+
+            public List<Integer> get(int i) {
+                init();
+                return res.get(i);
+            }
+
+            public int size() {
+                init();
+                return res.size();
+            }
+
+            private void init() {
+                if (res==null) {
+                    res=solve(matrix);
+                }
+            }
+        };
+    }
+    private static final int[][] directions = new int[][]{{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+    
+    public List<List<Integer>> solve(int[][] matrix) {
+        
+        List<List<Integer>> res=new ArrayList<>();
+        if (matrix==null || matrix.length==0) {
+            return res;
+        }
+        int m=matrix.length;
+        int n=matrix[0].length;
+        char[][] visited=new char[m][n];
+        for (int col=0; col<n; col++) {
+            dfs(matrix, 0, col, visited, 'P', res);
+        }
+        for (int row=0; row<m; row++) {
+            dfs(matrix, row, 0, visited, 'P', res);
+        }      
+        for (int col=0; col<n; col++) {
+            dfs(matrix, m-1, col, visited, 'A', res);
+        }
+        for (int row=0; row<m; row++) {
+            dfs(matrix, row, n-1, visited, 'A', res);
+        }
+        return res;
+    }
+    
+    private void dfs(int[][] matrix, int row, int col, char[][] visited, char ch, List<List<Integer>> res) {
+        if (visited[row][col]=='P' && ch=='A') {
+            res.add(new ArrayList<Integer>() {{
+                add(row);
+                add(col);
+            }});
+        }
+        visited[row][col]=ch;
+        for (int[] dir : directions) {
+            int x=row+dir[0];
+            int y=col+dir[1];
+            if (x>=0 && x<matrix.length && y>=0 && y<matrix[0].length && matrix[row][col]<=matrix[x][y] && visited[x][y]!=ch) {
+                dfs(matrix, x, y, visited, ch, res);
+            }
+        }        
+    }
+}
+Rồi 👍 phần này nhìn có vẻ “phức tạp” vì nó dùng `java.util.AbstractList`,
+nhưng thật ra chỉ là **một cách viết “lười khởi tạo” (lazy initialization)** — không liên quan trực tiếp đến logic bài toán "Pacific Atlantic Water Flow".
+Để hiểu rõ, mình sẽ giải thích từng phần nhé 👇
+
+---
+
+## 🧩 Mục tiêu của đoạn code này
+
+Hàm:
+
+```java
+List<List<Integer>> pacificAtlantic(int[][] matrix)
+```
+
+trả về **một danh sách các tọa độ (hàng, cột)** mà nước có thể chảy đến **cả hai đại dương**.
+
+Nhưng thay vì **tạo kết quả ngay lập tức**, tác giả **trì hoãn việc tính toán** (lazy evaluation):
+
+* Chỉ **khi nào thật sự cần dùng dữ liệu** (ví dụ: `get()` hoặc `size()` được gọi)
+  thì nó mới gọi hàm `solve(matrix)` để thực hiện tính toán thực sự.
+
+---
+
+## 🧠 Giải thích từng dòng
+
+```java
+return new java.util.AbstractList<List<Integer>>() {
+```
+
+* Tạo **một lớp ẩn danh (anonymous inner class)** kế thừa từ `AbstractList`.
+* `AbstractList` là một lớp trừu tượng trong Java giúp bạn **tạo list tùy chỉnh** mà không cần viết lại toàn bộ.
+
+---
+
+```java
+private List<List<Integer>> res;
+```
+
+* Đây là biến lưu **kết quả thật sự** (`res`) – danh sách các ô nước có thể chảy đến cả hai đại dương.
+* Ban đầu `res = null`, vì **chưa khởi tạo ngay** (lazy init).
+
+---
+
+### 🧩 Hàm `get(int i)`
+
+```java
+public List<Integer> get(int i) {
+    init();
+    return res.get(i);
+}
+```
+
+* Khi gọi `get(i)` để lấy phần tử thứ `i` của danh sách:
+
+  * Gọi `init()` để đảm bảo `res` đã được khởi tạo.
+  * Sau đó trả về `res.get(i)` – tức là danh sách tọa độ `[row, col]` thứ `i`.
+
+---
+
+### 🧩 Hàm `size()`
+
+```java
+public int size() {
+    init();
+    return res.size();
+}
+```
+
+* Khi gọi `size()` để biết danh sách có bao nhiêu phần tử:
+
+  * Cũng gọi `init()` trước để chắc chắn `res` đã có dữ liệu.
+  * Rồi trả về số lượng phần tử.
+
+---
+
+### 🧩 Hàm `init()`
+
+```java
+private void init() {
+    if (res == null) {
+        res = solve(matrix);
+    }
+}
+```
+
+* Kiểm tra nếu `res` chưa được tính (`null`), thì:
+
+  * Gọi `solve(matrix)` để **thực hiện tính toán thật sự** (đây là phần chính của thuật toán DFS/BFS tìm nước chảy đến hai biển).
+* Nếu `res` đã tồn tại rồi thì không cần gọi lại.
+
+---
+
+## 💡 Tóm lại
+
+| Thành phần         | Vai trò                                                        |
+| ------------------ | -------------------------------------------------------------- |
+| `AbstractList`     | Tạo một danh sách “ảo” chỉ tính khi cần                        |
+| `res`              | Biến lưu kết quả thật (sau khi chạy thuật toán)                |
+| `init()`           | Hàm kiểm tra và tính toán `res` nếu chưa có                    |
+| `get()` & `size()` | Hai hàm kích hoạt tính toán khi người dùng thật sự cần dữ liệu |
+
+---
+
+## ✅ Lợi ích
+
+* **Tiết kiệm tài nguyên**: không tính kết quả trừ khi thật sự cần.
+* **Đẹp, gọn code**: người gọi chỉ cần dùng `pacificAtlantic(matrix)` như 1 list bình thường.
+* **Không ảnh hưởng logic chính**: thuật toán thực sự vẫn nằm trong `solve(matrix)`.
+
+---
+
+👉 Nếu bạn chỉ muốn hiểu **thuật toán Pacific Atlantic**,
+thì phần này chỉ là **một lớp bọc (wrapper)** giúp trì hoãn gọi `solve(matrix)` thôi,
+phần chính vẫn nằm trong **`solve()` và `dfs()`** — nơi thực hiện việc tìm các ô có thể chảy tới hai đại dương.
+Câu hỏi rất hay 👍
+Đoạn code này hơi “dị” — nó **tạo ra một lớp ẩn danh** (anonymous class) kế thừa từ `AbstractList<List<Integer>>` để **trì hoãn việc tính toán (lazy initialization)** của hàm `pacificAtlantic`.
+👉 Nói dễ hiểu: thay vì tính kết quả ngay khi gọi hàm, nó **chỉ tính khi cần dùng** (`get()` hoặc `size()` được gọi).
+
+---
+
+### 🔍 Giải thích chi tiết
+
+Hàm:
+
+```java
+List<List<Integer>> pacificAtlantic(int[][] matrix) {
+    return new java.util.AbstractList<List<Integer>>() {
+        private List<List<Integer>> res;
+
+        public List<Integer> get(int i) {
+            init();
+            return res.get(i);
+        }
+
+        public int size() {
+            init();
+            return res.size();
+        }
+
+        private void init() {
+            if (res == null) {
+                res = solve(matrix);
+            }
+        }
+    };
+}
+```
+
+---
+
+### 🧠 Ý tưởng
+
+* `pacificAtlantic()` **không trực tiếp trả về kết quả ngay**.
+* Thay vào đó, nó **trả về một “danh sách ảo” (virtual list)** — chỉ thật sự được tính toán khi ta truy cập dữ liệu.
+
+  * Khi gọi `get(i)` hoặc `size()`, hàm `init()` được chạy.
+  * `init()` kiểm tra nếu `res == null`, thì chạy `solve(matrix)` → thực thi thuật toán thật sự.
+* Lần đầu tiên truy cập, dữ liệu sẽ được tính. Các lần sau, chỉ dùng lại `res` (đã có sẵn).
+
+---
+
+### ⚙️ Mục đích của cách làm này
+
+| Mục đích                         | Giải thích                                                                               |
+| -------------------------------- | ---------------------------------------------------------------------------------------- |
+| ⏱ **Trì hoãn tính toán**         | Không tốn tài nguyên cho đến khi thực sự cần kết quả.                                    |
+| 🧩 **Tạo API “giống danh sách”** | Hàm trả về một đối tượng có thể dùng như `List<List<Integer>>`, nhưng được sinh ra động. |
+| 🧠 **Giảm bộ nhớ tạm thời**      | Nếu người gọi không bao giờ dùng kết quả, thì `solve()` sẽ không bao giờ chạy.           |
+| 🔐 **Đóng gói logic**            | Người dùng không cần biết bên trong có `solve()`, chỉ cần dùng `List` bình thường.       |
+
+---
+
+### 🧩 Ví dụ minh họa
+
+```java
+Solution s = new Solution();
+List<List<Integer>> result = s.pacificAtlantic(matrix);
+
+// Tới đây chưa tính toán gì hết
+System.out.println("Chưa truy cập dữ liệu!");
+
+// Lúc này mới thật sự chạy solve()
+System.out.println(result.size());
+```
+
+Khi gọi `result.size()` → `init()` chạy → `solve(matrix)` mới được thực thi.
+
+---
+
+👉 **Tóm lại:**
+Hàm viết kiểu này là để **lazy compute (tính toán trì hoãn)**, chỉ chạy thuật toán thật sự khi có ai “đụng” vào dữ liệu.
+Đây là kỹ thuật khá advanced trong Java, thường dùng trong các thư viện lớn (ví dụ `Collections`, `Streams`, hoặc frameworks như Spring).
+
+---
+
+Nếu bạn muốn, mình có thể **viết lại phiên bản rút gọn không dùng `AbstractList`** cho dễ hiểu hơn — bạn có muốn mình làm không?
+
+
+Rất hay 👏 — đoạn code này chính là **phần cốt lõi của thuật toán Pacific Atlantic Water Flow**, và mình sẽ giải thích chi tiết từng bước cho bạn hiểu **rõ toàn bộ logic DFS “ngược dòng”** nhé.
+
+---
+
+## 🧠 Ý tưởng bài toán
+
+* Ta có một **bản đồ độ cao** (`matrix[i][j]`).
+* Nước **chảy từ ô có độ cao cao hơn sang ô có độ cao thấp hơn hoặc bằng**.
+* **Thái Bình Dương (Pacific)** nằm ở **biên trên và biên trái**.
+* **Đại Tây Dương (Atlantic)** nằm ở **biên dưới và biên phải**.
+* Yêu cầu: tìm **tất cả ô** mà **nước từ ô đó có thể chảy đến cả 2 đại dương**.
+
+---
+
+## 🚀 Ý tưởng thuật toán
+
+Thay vì **duyệt từ mỗi ô để xem có chảy được ra biển không** (rất tốn thời gian, O(m×n×m×n)),
+ta làm **ngược lại**:
+
+👉 Ta **duyệt từ hai đại dương vào trong**, mô phỏng **nước “chảy ngược dòng”**, nghĩa là từ biển đi ngược lên các ô cao hơn hoặc bằng.
+
+Như vậy:
+
+* Nếu từ biển Thái Bình Dương ta có thể đi đến ô `(i,j)` → nước từ `(i,j)` có thể chảy ra Thái Bình Dương.
+* Nếu từ biển Đại Tây Dương ta cũng có thể đi đến `(i,j)` → nước từ `(i,j)` có thể chảy đến Đại Tây Dương.
+
+=> Giao của 2 tập hợp đó là kết quả cuối cùng ✅
+
+---
+
+## 🔍 Giải thích từng dòng code
+
+```java
+public List<List<Integer>> solve(int[][] matrix) {
+    List<List<Integer>> res = new ArrayList<>();
+    if (matrix == null || matrix.length == 0) {
+        return res;
+    }
+```
+
+* `res` là danh sách kết quả.
+* Nếu ma trận rỗng thì trả về luôn.
+
+---
+
+```java
+int m = matrix.length;
+int n = matrix[0].length;
+char[][] visited = new char[m][n];
+```
+
+* `m`, `n`: số hàng, cột.
+* `visited`: mảng đánh dấu mỗi ô:
+
+  * `'P'` = ô này có thể chảy ra Thái Bình Dương
+  * `'A'` = ô này có thể chảy ra Đại Tây Dương
+  * `'\0'` = chưa thăm
+
+---
+
+### 🌊 Bắt đầu DFS từ Thái Bình Dương
+
+```java
+for (int col = 0; col < n; col++) {
+    dfs(matrix, 0, col, visited, 'P', res); // hàng đầu (biển Thái Bình Dương)
+}
+for (int row = 0; row < m; row++) {
+    dfs(matrix, row, 0, visited, 'P', res); // cột đầu (biển Thái Bình Dương)
+}
+```
+
+👉 Tất cả các ô ở **hàng trên cùng và cột trái** đều giáp **Thái Bình Dương**,
+nên từ đó, ta DFS “ngược dòng” để đánh dấu tất cả ô có thể chảy tới biển này.
+
+---
+
+### 🌊 Tiếp theo: DFS từ Đại Tây Dương
+
+```java
+for (int col = 0; col < n; col++) {
+    dfs(matrix, m-1, col, visited, 'A', res); // hàng cuối (biển Đại Tây Dương)
+}
+for (int row = 0; row < m; row++) {
+    dfs(matrix, row, n-1, visited, 'A', res); // cột cuối (biển Đại Tây Dương)
+}
+```
+
+👉 Tất cả các ô ở **hàng dưới cùng và cột phải** đều giáp **Đại Tây Dương**,
+nên cũng DFS từ đó để đánh dấu.
+
+---
+
+### 🧩 Cách tìm kết quả
+
+Trong hàm `dfs`, nếu phát hiện:
+
+```java
+if (visited[row][col] == 'P' && ch == 'A')
+```
+
+nghĩa là:
+
+* Ô này **đã được DFS của Thái Bình Dương ('P') thăm qua**,
+* Và hiện tại đang được DFS của Đại Tây Dương ('A') thăm tới.
+
+=> Ô đó có thể chảy đến **cả 2 đại dương** → thêm vào `res`.
+
+---
+
+## ⚙️ Tóm tắt quy trình:
+
+1. DFS từ các biên thuộc Thái Bình Dương để đánh dấu ô có thể chảy ra Pacific.
+2. DFS từ các biên thuộc Đại Tây Dương để đánh dấu ô có thể chảy ra Atlantic.
+3. Trong lúc DFS Atlantic, nếu gặp ô đã được Pacific thăm rồi → thêm vào kết quả.
+
+---
+
+## ⏱️ Độ phức tạp:
+
+* **Thời gian**: O(m×n) — mỗi ô được thăm tối đa 2 lần (một cho Pacific, một cho Atlantic).
+* **Không gian**: O(m×n) — dùng mảng `visited`.
+
+---
+
+Bạn có muốn mình vẽ **sơ đồ dòng chảy minh họa bằng ASCII hoặc hình ảnh** cho dễ hình dung thuật toán không?
+Rất hay 👍 — đây là phần **cốt lõi nhất của thuật toán** trong bài “**Pacific Atlantic Water Flow**”, chính là hàm `dfs()` (Depth-First Search – duyệt sâu).
+Giờ mình sẽ giải thích **từng dòng chi tiết** để bạn hiểu rõ **tư duy “nước chảy ngược dòng”** nhé 💧
+
+---
+
+## 🧩 Mục đích hàm `dfs`
+
+Hàm `dfs()` được dùng để **lan từ biên đại dương (Pacific hoặc Atlantic) vào trong đất liền**,
+theo quy tắc:
+
+> Chỉ di chuyển từ ô có độ cao thấp **đến ô có độ cao cao hơn hoặc bằng**
+> (vì đây là “chảy ngược dòng”, nước thật ra chảy từ cao xuống thấp).
+
+---
+
+## 🧱 Giải thích từng dòng code:
+
+```java
+private void dfs(int[][] matrix, int row, int col, char[][] visited, char ch, List<List<Integer>> res) {
+```
+
+* `matrix`: bản đồ độ cao.
+* `row`, `col`: vị trí hiện tại.
+* `visited`: mảng đánh dấu trạng thái mỗi ô:
+
+  * `'P'` → có thể chảy đến Pacific
+  * `'A'` → có thể chảy đến Atlantic
+  * `'\0'` → chưa thăm
+* `ch`: ký hiệu đại dương hiện đang duyệt (`'P'` hoặc `'A'`).
+* `res`: danh sách kết quả chứa các ô chảy được đến **cả hai đại dương**.
+
+---
+
+### 🔹 1️⃣ Kiểm tra nếu ô này đã được đại dương kia thăm
+
+```java
+if (visited[row][col] == 'P' && ch == 'A') {
+    res.add(new ArrayList<Integer>() {{
+        add(row);
+        add(col);
+    }});
+}
+```
+
+👉 Ý nghĩa:
+
+* Nếu ô này **đã được DFS của Pacific (‘P’) thăm qua**
+  và **hiện tại đang được DFS của Atlantic (‘A’) thăm đến**
+  → nghĩa là **nước từ ô này có thể chảy đến cả hai đại dương**.
+
+Khi đó ta thêm `(row, col)` vào `res`.
+
+---
+
+### 🔹 2️⃣ Đánh dấu ô này là đã thăm bởi đại dương hiện tại
+
+```java
+visited[row][col] = ch;
+```
+
+→ Tránh thăm lại ô này khi DFS cùng một đại dương (giảm vòng lặp vô hạn).
+
+---
+
+### 🔹 3️⃣ Duyệt 4 hướng xung quanh (trên, dưới, trái, phải)
+
+```java
+for (int[] dir : directions) {
+    int x = row + dir[0];
+    int y = col + dir[1];
+```
+
+`directions` = `{ {0,1}, {0,-1}, {1,0}, {-1,0} }`
+→ tương ứng 4 hướng: phải, trái, xuống, lên.
+
+---
+
+### 🔹 4️⃣ Kiểm tra điều kiện hợp lệ để tiếp tục DFS
+
+```java
+if (x >= 0 && x < matrix.length &&
+    y >= 0 && y < matrix[0].length &&
+    matrix[row][col] <= matrix[x][y] &&
+    visited[x][y] != ch) {
+    dfs(matrix, x, y, visited, ch, res);
+}
+```
+
+Giải thích từng phần:
+
+* `x >= 0 && x < matrix.length && y >= 0 && y < matrix[0].length`:
+  → đảm bảo ô (x, y) **nằm trong phạm vi ma trận**.
+
+* `matrix[row][col] <= matrix[x][y]`:
+  → đảm bảo ta **chỉ đi từ ô thấp hơn sang ô cao hơn hoặc bằng**
+  (điều kiện “chảy ngược dòng” – nước có thể chảy từ ô cao này về ô thấp ban đầu).
+
+* `visited[x][y] != ch`:
+  → tránh lặp lại những ô đã thăm cùng đại dương.
+
+---
+
+### 🔹 5️⃣ Gọi đệ quy DFS cho ô kế tiếp
+
+```java
+dfs(matrix, x, y, visited, ch, res);
+```
+
+→ Tiếp tục lan rộng để tìm các ô khác có thể chảy tới đại dương này.
+
+---
+
+## 🧠 Tóm tắt logic tổng thể
+
+1. Khi gọi `dfs()` từ **biên của Thái Bình Dương**:
+
+   * Nó đánh dấu tất cả ô **nước có thể chảy ra Thái Bình Dương**.
+
+2. Khi gọi `dfs()` từ **biên của Đại Tây Dương**:
+
+   * Nó đánh dấu tất cả ô **nước có thể chảy ra Đại Tây Dương**.
+
+3. Nếu một ô được đánh dấu bởi **cả hai DFS**,
+   → nước từ ô đó có thể chảy đến **cả hai đại dương** 🌊🌊.
+
+---
+
+## 🔁 Ví dụ nhỏ minh họa
+
+```
+Độ cao:
+[
+ [1, 2, 2],
+ [3, 2, 3],
+ [2, 4, 5]
+]
+```
+
+* Pacific = cạnh **trên + trái**
+* Atlantic = cạnh **dưới + phải**
+
+👉 DFS Pacific lan vào trong → đánh dấu được những ô cao hơn 1, 2.
+👉 DFS Atlantic lan từ phải/bottom → đánh dấu được những ô cao ≥ cạnh phải.
+👉 Ô nào được cả hai đánh dấu → nước chảy được đến cả hai.
+
+---
+
+Bạn có muốn mình thêm **bản Java hoàn chỉnh có `main` + chú thích chi tiết từng dòng** để bạn chạy thử không?

@@ -1,0 +1,865 @@
+966. Vowel Spellchecker(14/09/2025)
+class Solution {
+    public String[] spellchecker(String[] wordlist, String[] queries) {
+        int m = wordlist.length, n = queries.length;
+        String[] res = new String[n];
+        Map<String, Integer> caseSense = new HashMap<>();
+        Map<String, Integer> caseInsense = new HashMap<>();
+        Map<String, Integer> vowelErrors = new HashMap<>();
+        for (int i = m - 1; i >= 0; i--) {
+            String word = wordlist[i];
+            caseSense.put(word, i);
+            String lowerCase = word.toLowerCase();
+            char[] vowelRepArr = lowerCase.toCharArray();
+            for (int j = 0; j < vowelRepArr.length; j++) {
+                if (vowelRepArr[j] == 'e' || vowelRepArr[j] == 'i' || vowelRepArr[j] == 'o' || vowelRepArr[j] == 'u') {
+                    vowelRepArr[j] = 'a';
+                }
+            }
+            caseInsense.put(lowerCase, i);
+            vowelErrors.put(new String(vowelRepArr), i);
+        }
+        for (int i = 0; i < n; i++) {
+            String word = queries[i];
+            if (caseSense.containsKey(word)) {
+                res[i] = word;
+                continue;
+            }
+
+            String lowerCase = word.toLowerCase();
+            if (caseInsense.containsKey(lowerCase)) {
+                res[i] = wordlist[caseInsense.get(lowerCase)];
+                continue;
+            }
+
+            char[] vowelRepArr = lowerCase.toCharArray();
+            for (int j = 0; j < vowelRepArr.length; j++) {
+                if (vowelRepArr[j] == 'e' || vowelRepArr[j] == 'i' || vowelRepArr[j] == 'o' || vowelRepArr[j] == 'u') {
+                    vowelRepArr[j] = 'a';
+                }
+            }
+            String vowelRepStr = new String(vowelRepArr);
+            if (vowelErrors.containsKey(vowelRepStr)) {
+                res[i] = wordlist[vowelErrors.get(vowelRepStr)];
+                continue;
+            }
+            res[i] = "";
+        }
+
+        return res;
+
+    }
+}
+
+Ok, mình giải thích chi tiết đoạn code Java này nhé. Đây là phần **xây dựng các bảng tra cứu (maps) cho thuật toán Vowel Spellchecker** trong Java.
+
+---
+
+### 🔹 Code
+
+```java
+for (int i = m - 1; i >= 0; i--) {
+    String word = wordlist[i];
+    
+    caseSense.put(word, i);                 // 1
+    String lowerCase = word.toLowerCase();  // 2
+    
+    char[] vowelRepArr = lowerCase.toCharArray();
+    for (int j = 0; j < vowelRepArr.length; j++) {
+        if (vowelRepArr[j] == 'e' || vowelRepArr[j] == 'i' || vowelRepArr[j] == 'o' || vowelRepArr[j] == 'u') {
+            vowelRepArr[j] = 'a';           // 3
+        }
+    }
+    
+    caseInsense.put(lowerCase, i);          // 4
+    vowelErrors.put(new String(vowelRepArr), i); // 5
+}
+```
+
+---
+
+### 🔎 Giải thích từng bước
+
+**1. `caseSense.put(word, i)`**
+
+* Lưu từ gốc kèm index trong `wordlist` → để **check exact match**.
+* Key = từ gốc, Value = index (giúp lấy từ xuất hiện đầu tiên nếu có nhiều từ trùng).
+
+---
+
+**2. `String lowerCase = word.toLowerCase();`**
+
+* Chuyển từ gốc sang chữ thường → để **check case-insensitive**.
+
+---
+
+**3. Thay nguyên âm thành `'a'`**
+
+```java
+char[] vowelRepArr = lowerCase.toCharArray();
+for (int j = 0; j < vowelRepArr.length; j++) {
+    if (vowelRepArr[j] == 'e' || vowelRepArr[j] == 'i' || vowelRepArr[j] == 'o' || vowelRepArr[j] == 'u') {
+        vowelRepArr[j] = 'a';
+    }
+}
+```
+
+* Chuyển chuỗi `lowerCase` thành mảng ký tự.
+* Duyệt từng ký tự, nếu là `e,i,o,u` → đổi thành `a`.
+* Mục đích: **bỏ qua khác biệt nguyên âm (vowel error)**.
+* `'a'` giữ nguyên → tất cả nguyên âm coi như `'a'`.
+
+---
+
+**4. `caseInsense.put(lowerCase, i)`**
+
+* Lưu từ viết thường kèm index → check **case-insensitive match**.
+
+---
+
+**5. `vowelErrors.put(new String(vowelRepArr), i)`**
+
+* Chuyển mảng ký tự đã thay nguyên âm thành chuỗi → lưu vào map kèm index → check **vowel-error match**.
+
+---
+
+### 🔹 Thuật toán tổng thể
+
+1. Duyệt từ cuối đến đầu `wordlist` → đảm bảo **lấy từ xuất hiện đầu tiên** khi map.
+2. Xây 3 map:
+
+   * `caseSense` → exact match.
+   * `caseInsense` → case-insensitive.
+   * `vowelErrors` → bỏ qua nguyên âm.
+
+---
+
+### 📌 Ví dụ
+
+```java
+wordlist = ["KiTe", "kite", "Hare"];
+```
+
+| word | caseSense | lowerCase | vowelRep | caseInsense | vowelErrors |
+| ---- | --------- | --------- | -------- | ----------- | ----------- |
+| KiTe | "KiTe"→0  | "kite"    | "kata"   | "kite"→0    | "kata"→0    |
+| kite | "kite"→1  | "kite"    | "kata"   | "kite"→1    | "kata"→1    |
+| Hare | "Hare"→2  | "hare"    | "hara"   | "hare"→2    | "hara"→2    |
+
+* Map cuối cùng sẽ ưu tiên **index nhỏ nhất (từ xuất hiện đầu tiên)** khi lookup.
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ 3 map + cách lookup query** để trực quan dễ nhớ hơn.
+
+Bạn có muốn mình làm không?
+Ok, mình giải thích dòng này với **ví dụ cụ thể** nhé:
+
+---
+
+### 🔹 Dòng code:
+
+```java
+vowelErrors.put(new String(vowelRepArr), i);
+```
+
+* `vowelRepArr` là **mảng ký tự** của từ đã được chuẩn hóa nguyên âm (`e,i,o,u → a`).
+* `new String(vowelRepArr)` → chuyển mảng ký tự trở thành **chuỗi mới**.
+* `put(key, value)` → thêm vào map `vowelErrors`:
+
+  * **Key** = từ đã chuẩn hóa nguyên âm
+  * **Value** = index trong `wordlist` (giúp lấy từ xuất hiện đầu tiên)
+
+---
+
+### 🔹 Ví dụ cụ thể
+
+Giả sử:
+
+```java
+wordlist = ["KiTe", "Hare"];
+```
+
+1. **Từ "KiTe"**
+
+```java
+lowerCase = "kite"
+vowelRepArr = ['k','i','t','e']  // ban đầu
+```
+
+* Thay nguyên âm:
+
+  * 'i' → 'a', 'e' → 'a'
+
+```java
+vowelRepArr = ['k','a','t','a']
+```
+
+* Chuyển thành String:
+
+```java
+new String(vowelRepArr) = "kata"
+```
+
+* Map lưu:
+
+```java
+vowelErrors.put("kata", 0)  // 0 = index của "KiTe" trong wordlist
+```
+
+2. **Từ "Hare"**
+
+```java
+lowerCase = "hare"
+vowelRepArr = ['h','a','r','e']
+```
+
+* Thay nguyên âm:
+
+```java
+vowelRepArr = ['h','a','r','a']
+```
+
+* Chuyển thành String:
+
+```java
+new String(vowelRepArr) = "hara"
+```
+
+* Map lưu:
+
+```java
+vowelErrors.put("hara", 1)  // 1 = index của "Hare"
+```
+
+---
+
+### 🔹 Lookup với query
+
+* Query `"kite"` → chuyển vowel → `"kata"`
+
+* `vowelErrors.get("kata")` → trả về **index 0** → từ gốc `"KiTe"`.
+
+* Query `"hare"` → `"hara"` → index 1 → từ gốc `"Hare"`.
+
+---
+
+✅ Tóm gọn:
+`vowelErrors.put(new String(vowelRepArr), i)` = **lưu từ đã chuẩn hóa nguyên âm kèm index gốc**, giúp khi query sai nguyên âm vẫn tìm được từ đúng đầu tiên.
+
+---
+
+Nếu bạn muốn, mình có thể vẽ **sơ đồ map `vowelErrors` + lookup query** để trực quan dễ nhớ. Bạn có muốn không?
+Ok, mình giải thích đoạn code Java này. Đây là phần **xử lý từng query và kiểm tra exact match** trong thuật toán Vowel Spellchecker.
+
+---
+
+### 🔹 Code
+
+```java
+for (int i = 0; i < n; i++) {
+    String word = queries[i];
+
+    if (caseSense.containsKey(word)) {
+        res[i] = word;
+        continue;
+    }
+```
+
+---
+
+### 🔎 Giải thích
+
+**1. `for (int i = 0; i < n; i++)`**
+
+* Duyệt từng query `word` trong mảng `queries` có `n` phần tử.
+
+---
+
+**2. `String word = queries[i];`**
+
+* Lấy query thứ `i` ra để xử lý.
+
+---
+
+**3. `if (caseSense.containsKey(word))`**
+
+* Kiểm tra xem từ này có **exact match** trong `caseSense` không.
+* `caseSense` là **map từ gốc → index**, được xây dựng trước từ `wordlist`.
+* Nếu tồn tại → query **khớp chính xác với từ trong wordlist**.
+
+---
+
+**4. `res[i] = word;`**
+
+* Nếu exact match, lưu chính query vào kết quả `res[i]`.
+* Không cần tra `caseInsense` hay `vowelErrors` nữa vì **exact match có độ ưu tiên cao nhất**.
+
+---
+
+**5. `continue;`**
+
+* Bỏ qua các bước kiểm tra tiếp theo (case-insensitive, vowel-error) vì query đã khớp exact.
+
+---
+
+### 🔹 Ví dụ minh họa
+
+```java
+wordlist = ["KiTe", "Hare"];
+queries  = ["KiTe", "kite", "Hare", "HARE", "kito"];
+```
+
+* i = 0 → word = `"KiTe"`
+
+  * `"KiTe"` có trong `caseSense` → res\[0] = `"KiTe"` → tiếp tục vòng lặp
+
+* i = 1 → word = `"kite"`
+
+  * `"kite"` không có exact match → chuyển sang check case-insensitive → `"KiTe"`
+
+---
+
+### ✅ Tóm tắt thuật toán
+
+1. Duyệt từng query.
+2. Nếu **exact match** → lưu kết quả, bỏ qua các bước khác.
+3. Nếu không → tiếp tục check **case-insensitive** và **vowel-error**.
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ flowchart xử lý query** từ exact → case → vowel → "" để trực quan dễ nhớ hơn.
+
+Bạn có muốn mình làm không?
+Ok, mình giải thích đoạn code Java này. Đây là phần **xử lý case-insensitive match** trong thuật toán Vowel Spellchecker.
+
+---
+
+### 🔹 Code
+
+```java
+String lowerCase = word.toLowerCase();
+
+if (caseInsense.containsKey(lowerCase)) {
+    res[i] = wordlist[caseInsense.get(lowerCase)];
+    continue;
+}
+```
+
+---
+
+### 🔎 Giải thích
+
+**1. `String lowerCase = word.toLowerCase();`**
+
+* Chuyển query `word` sang chữ thường.
+* Mục đích: **không phân biệt hoa/thường** khi so với từ trong `wordlist`.
+
+---
+
+**2. `if (caseInsense.containsKey(lowerCase))`**
+
+* `caseInsense` là **map từ lowercase → index của từ gốc đầu tiên trong wordlist**.
+* Kiểm tra xem phiên bản lowercase của query có khớp với từ trong map không.
+
+---
+
+**3. `res[i] = wordlist[caseInsense.get(lowerCase)];`**
+
+* Nếu khớp → lấy **từ gốc từ wordlist** bằng index lưu trong map.
+* Lưu vào kết quả `res[i]`.
+* Bảo đảm: **luôn trả về từ xuất hiện đầu tiên trong wordlist**.
+
+---
+
+**4. `continue;`**
+
+* Bỏ qua các bước còn lại (vowel-error, return "") vì query đã khớp case-insensitive.
+
+---
+
+### 🔹 Ví dụ minh họa
+
+```java
+wordlist = ["KiTe", "Hare"];
+queries  = ["kite", "HARE"];
+```
+
+1. i = 0 → word = `"kite"`
+
+   * `"kite".toLowerCase()` = `"kite"`
+   * `"kite"` có trong `caseInsense` → index = 0
+   * res\[0] = wordlist\[0] = `"KiTe"`
+
+2. i = 1 → word = `"HARE"`
+
+   * `"HARE".toLowerCase()` = `"hare"`
+   * `"hare"` có trong `caseInsense` → index = 1
+   * res\[1] = wordlist\[1] = `"Hare"`
+
+---
+
+### ✅ Tóm tắt
+
+* **Case-insensitive match** = kiểm tra query sau khi chuyển về lowercase → trả về từ gốc đầu tiên.
+* **Ưu tiên thứ 2** (sau exact match).
+* Nếu khớp → bỏ qua các bước vowel-error.
+
+---
+
+Bạn có muốn mình tiếp tục giải thích phần **vowel-error match** trong Java luôn không?
+Ok, mình giải thích chi tiết đoạn code Java này. Đây là phần **chuẩn hóa nguyên âm (vowel-error)** trong thuật toán Vowel Spellchecker.
+
+---
+
+### 🔹 Code
+
+```java
+char[] vowelRepArr = lowerCase.toCharArray();
+for (int j = 0; j < vowelRepArr.length; j++) {
+    if (vowelRepArr[j] == 'e' || vowelRepArr[j] == 'i' || vowelRepArr[j] == 'o' || vowelRepArr[j] == 'u') {
+        vowelRepArr[j] = 'a';
+    }
+}
+```
+
+---
+
+### 🔎 Giải thích từng bước
+
+**1. `char[] vowelRepArr = lowerCase.toCharArray();`**
+
+* Chuyển chuỗi `lowerCase` của query sang **mảng ký tự**.
+* Mục đích: dễ dàng duyệt từng ký tự và thay đổi nguyên âm.
+
+---
+
+**2. `for (int j = 0; j < vowelRepArr.length; j++)`**
+
+* Duyệt từng ký tự trong mảng.
+
+---
+
+**3. `if (vowelRepArr[j] == 'e' || vowelRepArr[j] == 'i' || vowelRepArr[j] == 'o' || vowelRepArr[j] == 'u')`**
+
+* Kiểm tra xem ký tự có phải là nguyên âm **khác 'a'** không.
+
+---
+
+**4. `vowelRepArr[j] = 'a';`**
+
+* Nếu đúng → thay ký tự đó bằng `'a'`.
+* Mục đích: **bỏ qua khác biệt nguyên âm** khi so với từ trong `wordlist`.
+
+---
+
+### 🔹 Ví dụ minh họa
+
+```java
+query = "Kite";
+lowerCase = "kite";
+vowelRepArr = ['k','i','t','e'];
+```
+
+* j = 1: 'i' → 'a'
+* j = 3: 'e' → 'a'
+
+Kết quả cuối:
+
+```java
+vowelRepArr = ['k','a','t','a']
+```
+
+* Khi lookup map `vowelErrors`, `"kata"` sẽ trỏ về từ gốc `"KiTe"` trong wordlist.
+
+---
+
+### ✅ Tóm tắt
+
+* **Mục đích:** Chuẩn hóa query để bỏ qua khác biệt nguyên âm.
+* **Nguyên tắc:** `'e','i','o','u'` → `'a'`
+* Dùng **mảng ký tự** để dễ thay đổi từng ký tự.
+* Sau khi xử lý → dùng `new String(vowelRepArr)` để lookup trong map `vowelErrors`.
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ trực quan flow lookup query: exact → case → vowel → ""** để dễ nhớ cả thuật toán luôn.
+
+Bạn có muốn mình làm không?
+Mình giải thích rõ nhé:
+
+---
+
+### 🔹 `.toCharArray()` trong Java
+
+* Đây là **một phương thức của lớp `String`**.
+* Nó **chuyển một chuỗi (`String`) thành mảng ký tự (`char[]`)**.
+* Mỗi phần tử của mảng là **một ký tự trong chuỗi**.
+
+---
+
+### 🔹 Cú pháp
+
+```java
+String s = "Hello";
+char[] arr = s.toCharArray();
+```
+
+* Kết quả:
+
+```java
+arr[0] = 'H'
+arr[1] = 'e'
+arr[2] = 'l'
+arr[3] = 'l'
+arr[4] = 'o'
+```
+
+---
+
+### 🔹 Tại sao dùng trong Vowel Spellchecker
+
+* Khi muốn **duyệt từng ký tự** và **thay đổi nguyên âm** (`e,i,o,u → a`) thì phải dùng mảng ký tự.
+* Chuỗi (`String`) trong Java là **immutable** → không thể thay đổi trực tiếp ký tự trong chuỗi.
+* `.toCharArray()` giúp biến chuỗi thành mảng có thể **thay đổi được**.
+
+---
+
+### 🔹 Ví dụ minh họa
+
+```java
+String word = "kite";
+char[] chars = word.toCharArray();
+
+for (int i = 0; i < chars.length; i++) {
+    if (chars[i] == 'i' || chars[i] == 'e') {
+        chars[i] = 'a';
+    }
+}
+
+// chars = ['k','a','t','a']
+String newWord = new String(chars); // "kata"
+```
+
+---
+
+✅ Tóm tắt dễ nhớ:
+
+* `.toCharArray()` = “**biến chuỗi thành mảng ký tự để có thể sửa từng ký tự**”.
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ ngắn từ String → toCharArray → thay đổi → new String** để trực quan dễ nhớ.
+Bạn có muốn không?
+Ok, mình giải thích đoạn code Java này. Đây là **bước cuối cùng xử lý query với vowel-error match và trả kết quả** trong thuật toán Vowel Spellchecker.
+
+---
+
+### 🔹 Code
+
+```java
+String vowelRepStr = new String(vowelRepArr);
+
+if (vowelErrors.containsKey(vowelRepStr)) {
+    res[i] = wordlist[vowelErrors.get(vowelRepStr)];
+    continue;
+}
+
+res[i] = "";
+```
+
+---
+
+### 🔎 Giải thích từng bước
+
+**1. `String vowelRepStr = new String(vowelRepArr);`**
+
+* Chuyển mảng ký tự `vowelRepArr` (đã chuẩn hóa nguyên âm: `'e','i','o','u' → 'a'`) thành chuỗi mới.
+* Chuỗi này dùng làm **key lookup** trong map `vowelErrors`.
+
+---
+
+**2. `if (vowelErrors.containsKey(vowelRepStr))`**
+
+* Kiểm tra xem chuỗi đã chuẩn hóa nguyên âm có **tồn tại trong map** `vowelErrors` không.
+* `vowelErrors` là map: `"chuỗi bỏ nguyên âm" → index từ wordlist`.
+
+---
+
+**3. `res[i] = wordlist[vowelErrors.get(vowelRepStr)];`**
+
+* Nếu có → lấy **từ gốc từ wordlist** theo index lưu trong map.
+* Gán vào kết quả `res[i]`.
+* Đây là **vowel-error match**, thứ ưu tiên cuối cùng sau exact và case-insensitive.
+
+---
+
+**4. `continue;`**
+
+* Bỏ qua các bước còn lại, tiếp tục vòng lặp cho query tiếp theo.
+
+---
+
+**5. `res[i] = "";`**
+
+* Nếu không khớp exact, case-insensitive, và vowel-error → query không có từ tương ứng → gán chuỗi rỗng `" "`.
+
+---
+
+### 🔹 Ví dụ minh họa
+
+```java
+wordlist = ["KiTe", "Hare"];
+queries  = ["kite", "HARE", "kito", "xyz"];
+```
+
+| Query | Exact | Case | Vowel | Output |
+| ----- | ----- | ---- | ----- | ------ |
+| kite  | ❌     | ✅    | -     | "KiTe" |
+| HARE  | ❌     | ✅    | -     | "Hare" |
+| kito  | ❌     | ❌    | ✅     | "KiTe" |
+| xyz   | ❌     | ❌    | ❌     | ""     |
+
+* `"kito"` → chuyển nguyên âm: `"kata"` → lookup `vowelErrors` → index = 0 → từ gốc `"KiTe"`.
+
+---
+
+### ✅ Tóm tắt
+
+1. Chuyển query đã chuẩn hóa nguyên âm thành chuỗi.
+2. Lookup trong map `vowelErrors` → nếu có → lấy từ gốc.
+3. Nếu không → trả về `""`.
+4. Đây là **bước cuối cùng** để hoàn tất thuật toán.
+
+---
+
+Nếu bạn muốn, mình có thể vẽ **flowchart toàn bộ thuật toán Vowel Spellchecker từ Exact → Case → Vowel → ""** để dễ nhớ hơn.
+Bạn có muốn mình làm không?
+Ok, mình làm **bảng tóm tắt toàn bộ thuật toán Vowel Spellchecker** dựa trên đoạn code bạn vừa gửi, cực gọn để dễ học, dễ nhớ và review nhanh:
+
+---
+
+# 📝 Vowel Spellchecker – Bảng tóm tắt thuật toán
+
+| Bước | Mục đích                   | Cách làm / Code                                                                                                                                                                                                            | Kết quả                                                        |
+| ---- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| 1    | **Exact match**            | `if (caseSense.containsKey(word)) res[i] = word;`                                                                                                                                                                          | Nếu query trùng từ gốc → trả luôn query                        |
+| 2    | **Case-insensitive match** | `lowerCase = word.toLowerCase(); if (caseInsense.containsKey(lowerCase)) res[i] = wordlist[caseInsense.get(lowerCase)];`                                                                                                   | Nếu query khác hoa thường → trả từ gốc đầu tiên trong wordlist |
+| 3    | **Vowel-error match**      | `vowelRepArr = lowerCase.toCharArray();` <br> `for each char: e,i,o,u → a` <br> `vowelRepStr = new String(vowelRepArr);` <br> `if (vowelErrors.containsKey(vowelRepStr)) res[i] = wordlist[vowelErrors.get(vowelRepStr)];` | Nếu query sai nguyên âm → trả từ gốc đầu tiên trong wordlist   |
+| 4    | **Không khớp**             | `res[i] = "";`                                                                                                                                                                                                             | Nếu query không khớp ở cả 3 bước → trả chuỗi rỗng              |
+
+---
+
+### 🔹 Flow logic ngắn gọn
+
+```
+Exact match → Case-insensitive → Vowel-error → ""
+```
+
+---
+
+### 🔹 Ví dụ minh họa
+
+| Wordlist         | Queries | Output | Giải thích        |
+| ---------------- | ------- | ------ | ----------------- |
+| \["KiTe","Hare"] | "KiTe"  | "KiTe" | Exact match       |
+|                  | "kite"  | "KiTe" | Case-insensitive  |
+|                  | "kito"  | "KiTe" | Vowel-error match |
+|                  | "xyz"   | ""     | Không khớp        |
+
+---
+
+### 🔹 Tips dễ nhớ
+
+* Map 3 loại:
+
+  1. `caseSense` → exact match
+  2. `caseInsense` → lowercase → index
+  3. `vowelErrors` → đổi nguyên âm → index
+* Lookup query theo thứ tự ưu tiên trên.
+* Khi lookup vowel-error, chuyển query → lowercase → đổi e,i,o,u → a → check map.
+
+---
+
+Nếu bạn muốn, mình có thể vẽ **sơ đồ trực quan flow Exact → Case → Vowel → ""** dạng hình minh họa dễ nhớ để review nhanh trong 30 giây.
+Bạn có muốn mình làm không?
+Tuyệt! Mình làm sơ đồ trực quan **flow thuật toán Vowel Spellchecker** để bạn dễ nhớ và review nhanh:
+
+---
+
+# 🖼️ Flowchart – Vowel Spellchecker
+
+```
+             +------------------+
+             |   Query word q   |
+             +------------------+
+                       |
+                       v
+             +------------------+
+             | Exact match?     |
+             | caseSense.containsKey(q) |
+             +------------------+
+               |         |
+              Yes       No
+               |         v
+           +-------+   +----------------------+
+           | res[i] = q | Case-insensitive? |
+           +-------+   | caseInsense.containsKey(q.toLowerCase()) |
+                       +----------------------+
+                         |         |
+                        Yes       No
+                         |         v
+                    +---------------+   
+                    | res[i] = wordlist[caseInsense.get(q.toLowerCase())] |
+                    +---------------+
+                                 |
+                                 v
+                     +--------------------------+
+                     | Vowel-error match?       |
+                     | Convert q -> lowerCase   |
+                     | Replace e,i,o,u -> a    |
+                     | Check vowelErrors map    |
+                     +--------------------------+
+                         |         |
+                        Yes       No
+                         |         |
+         +-------------------------------------+
+         | res[i] = wordlist[vowelErrors.get(vowelRepStr)] |
+         +-------------------------------------+
+                         |
+                         v
+                     No match? 
+                         |
+                     +--------+
+                     | res[i] = "" |
+                     +--------+
+```
+
+---
+
+### 🔹 Nhớ nhanh
+
+* **Thứ tự ưu tiên lookup:**
+  `Exact → Case-insensitive → Vowel-error → ""`
+* **Map lưu:**
+
+  1. `caseSense` → exact
+  2. `caseInsense` → lowercase → index
+  3. `vowelErrors` → lowercase với e,i,o,u → a → index
+* **Lookup query:** đi theo flowchart trên.
+
+---
+
+Nếu muốn, mình có thể làm thêm **bảng ôn tập mini + sơ đồ + ví dụ** trong **1 trang** để bạn review 30 giây là nhớ toàn bộ thuật toán.
+Bạn có muốn mình làm luôn không?
+Tuyệt! Mình sẽ làm **mini cheat sheet** cho thuật toán **Vowel Spellchecker** kết hợp **pseudo code + flowchart + ví dụ minh họa** để bạn review nhanh trong 30 giây:
+
+---
+
+# 📝 Vowel Spellchecker – Mini Cheat Sheet
+
+---
+
+## 1️⃣ Flowchart logic
+
+```
+Query q
+   │
+   ▼
+Exact match? (caseSense.containsKey(q))
+   │Yes → res[i] = q
+   │No
+   ▼
+Case-insensitive? (caseInsense.containsKey(q.toLowerCase()))
+   │Yes → res[i] = wordlist[caseInsense.get(q.toLowerCase())]
+   │No
+   ▼
+Vowel-error? (devowel(q.toLowerCase()) in vowelErrors)
+   │Yes → res[i] = wordlist[vowelErrors.get(devowel(q.toLowerCase()))]
+   │No → res[i] = ""
+```
+
+---
+
+## 2️⃣ Pseudo code Java
+
+```java
+// 1. Build maps
+Set<String> exact = new HashSet<>();
+Map<String, Integer> caseMap = new HashMap<>();
+Map<String, Integer> vowelMap = new HashMap<>();
+
+for (int i = wordlist.length-1; i >= 0; i--) {
+    String word = wordlist[i];
+    exact.add(word);
+    caseMap.put(word.toLowerCase(), i);
+    vowelMap.put(devowel(word.toLowerCase()), i);
+}
+
+// 2. Process queries
+for (int i = 0; i < queries.length; i++) {
+    String q = queries[i];
+
+    if (exact.contains(q)) { res[i] = q; continue; }
+    if (caseMap.containsKey(q.toLowerCase())) { res[i] = wordlist[caseMap.get(q.toLowerCase())]; continue; }
+    if (vowelMap.containsKey(devowel(q.toLowerCase()))) { res[i] = wordlist[vowelMap.get(devowel(q.toLowerCase()))]; continue; }
+
+    res[i] = "";
+}
+
+// helper
+String devowel(String s) {
+    return s.replace('e','a').replace('i','a').replace('o','a').replace('u','a');
+}
+```
+
+---
+
+## 3️⃣ Key concepts
+
+| Concept                    | Description                                                   |
+| -------------------------- | ------------------------------------------------------------- |
+| **Exact match**            | Query matches wordlist exactly (case + letters).              |
+| **Case-insensitive match** | Ignore letter case, return **first occurrence** in wordlist.  |
+| **Vowel-error match**      | Replace e,i,o,u → a, return **first occurrence** in wordlist. |
+| **No match**               | Return `""`.                                                  |
+
+---
+
+## 4️⃣ Mini example
+
+```java
+wordlist = ["KiTe","Hare"];
+queries  = ["kite","HARE","kito","xyz"];
+```
+
+| Query  | Match Type       | Output |
+| ------ | ---------------- | ------ |
+| "kite" | Case-insensitive | "KiTe" |
+| "HARE" | Case-insensitive | "Hare" |
+| "kito" | Vowel-error      | "KiTe" |
+| "xyz"  | No match         | ""     |
+
+* `devowel("kito")` → `"kata"` → lookup `vowelMap` → index 0 → "KiTe"
+
+---
+
+## 5️⃣ Quick memory tip
+
+**Lookup order:**
+
+```
+Exact → Case-insensitive → Vowel-error → ""
+```
+
+**Maps:**
+
+1. `exact` → exact match
+2. `caseMap` → lowercase → index
+3. `vowelMap` → devowel(lowercase) → index
+
+---
+
+Nếu muốn, mình có thể **vẽ sơ đồ flowchart trực quan dạng hình minh họa đẹp** để in ra hoặc dán làm flashcard học nhanh.
+
+Bạn có muốn mình làm không?

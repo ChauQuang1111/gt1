@@ -1,0 +1,679 @@
+Container With Most Water
+class Solution:
+    def maxArea(self, height: List[int]) -> int:
+        ans = i = 0
+        j = len(height) - 1
+        while j > i:
+            temp = (j - i) * min(height[i], height[j])
+            if temp > ans:
+                ans = temp
+            else:
+                if height[i] > height[j]:
+                    temp = j
+                    while j != i:
+                        j -= 1
+                        if height[j] > height[temp]:
+                            break
+                else:
+                    temp = i
+                    while j != i:
+                        i += 1
+                        if height[i] > height[temp]:
+                            break
+        return ans
+Rồi 👇 mình cùng phân tích chi tiết **thuật toán Python này** trong bài **Container With Most Water** nhé:
+
+---
+
+### 🌊 Bài toán gốc:
+
+Cho mảng `height[]`, trong đó mỗi phần tử là **chiều cao của vách tường** tại vị trí tương ứng.
+Ta cần chọn **hai vách tường** sao cho **lượng nước chứa được giữa chúng là lớn nhất**.
+
+Công thức tính diện tích nước giữa 2 vách:
+[
+\text{diện tích} = (j - i) \times \min(height[i], height[j])
+]
+
+---
+
+### 📘 Code và giải thích từng dòng:
+
+```python
+class Solution:
+    def maxArea(self, height: List[int]) -> int:
+        ans = i = 0
+        j = len(height) - 1
+```
+
+* `i` là con trỏ bên trái (bắt đầu từ đầu mảng)
+* `j` là con trỏ bên phải (bắt đầu từ cuối mảng)
+* `ans` lưu diện tích lớn nhất tìm được cho đến hiện tại
+
+---
+
+```python
+        while j > i:
+            temp = (j - i) * min(height[i], height[j])
+```
+
+👉 **(j - i)**: khoảng cách giữa 2 vách tường → là **chiều rộng** của vùng nước.
+👉 **min(height[i], height[j])**: chiều cao của nước **chỉ có thể bằng vách thấp hơn**, vì nước sẽ tràn qua bên đó.
+
+==> `temp` = diện tích hiện tại.
+
+---
+
+```python
+            if temp > ans:
+                ans = temp
+```
+
+Nếu diện tích hiện tại lớn hơn diện tích lớn nhất trước đó → cập nhật `ans`.
+
+---
+
+```python
+            else:
+                if height[i] > height[j]:
+                    temp = j
+                    while j != i:
+                        j -= 1
+                        if height[j] > height[temp]:
+                            break
+```
+
+💡 **Giải thích phần này:**
+
+* Nếu vách bên phải (`height[j]`) **thấp hơn** → dịch con trỏ `j` sang trái.
+* Vì nếu ta giữ vách thấp hơn, việc thu hẹp khoảng cách `(j - i)` chỉ làm diện tích **nhỏ hơn hoặc bằng**, trừ khi tìm được vách cao hơn ở bên trong.
+* Vòng `while` này sẽ **tìm vách cao hơn** so với vách vừa bỏ (`height[temp]`).
+
+---
+
+```python
+                else:
+                    temp = i
+                    while j != i:
+                        i += 1
+                        if height[i] > height[temp]:
+                            break
+```
+
+Ngược lại, nếu **vách trái thấp hơn hoặc bằng**, ta tăng `i` để **tìm vách cao hơn ở bên phải**.
+
+---
+
+```python
+        return ans
+```
+
+Khi 2 con trỏ gặp nhau, ta đã duyệt hết các khả năng → trả về diện tích lớn nhất `ans`.
+
+---
+
+### 🧠 Tóm tắt tư duy:
+
+1. Duyệt hai đầu mảng (`i`, `j`).
+2. Tính diện tích giữa hai vách.
+3. Cập nhật diện tích lớn nhất.
+4. Dịch con trỏ **vách thấp hơn** vì chỉ khi tìm được vách cao hơn thì diện tích mới có thể tăng.
+5. Lặp lại cho đến khi hai con trỏ gặp nhau.
+
+---
+
+### ⚡ So sánh:
+
+Thuật toán này là **tối ưu O(n)** so với brute-force O(n²).
+Tuy nhiên, phiên bản Python trên **phức tạp hơn cần thiết**, vì dùng thêm vòng `while` lồng.
+Cách viết ngắn gọn hơn (chuẩn LeetCode) là:
+
+```python
+while i < j:
+    ans = max(ans, (j - i) * min(height[i], height[j]))
+    if height[i] < height[j]:
+        i += 1
+    else:
+        j -= 1
+return ans
+```
+
+---
+
+👉 **Tóm lại:**
+
+* `(j - i)` = chiều rộng
+* `min(height[i], height[j])` = chiều cao nước
+* Dịch con trỏ bên thấp hơn để hy vọng tìm vách cao hơn → tăng diện tích
+* `max()` để lưu diện tích lớn nhất tìm được.
+Rất hay 👍 — hai dòng này là **cốt lõi** của thuật toán “Container With Most Water”.
+Giờ mình sẽ giải thích thật dễ hiểu từng phần nhé 👇
+
+---
+
+### 🔹 1. `j = len(height) - 1`
+
+* `height` là danh sách chứa **chiều cao của các cột**.
+* `len(height)` trả về **số lượng cột**.
+* Vì **chỉ số mảng bắt đầu từ 0**, nên:
+
+  ```
+  cột đầu tiên: index 0
+  cột cuối cùng: index len(height) - 1
+  ```
+
+→ `j = len(height) - 1` nghĩa là **con trỏ phải** bắt đầu từ **cột cuối cùng**.
+
+✅ Mục đích: ta sẽ **duyệt từ hai đầu vào giữa**, để tìm cặp cột chứa nhiều nước nhất.
+
+---
+
+### 🔹 2. `temp = (j - i) * min(height[i], height[j])`
+
+Công thức này tính **lượng nước** có thể chứa giữa hai cột ở vị trí `i` và `j`.
+
+Cụ thể:
+
+| Thành phần                  | Ý nghĩa                     | Giải thích                                                                                   |
+| --------------------------- | --------------------------- | -------------------------------------------------------------------------------------------- |
+| `(j - i)`                   | **Chiều rộng** giữa hai cột | Là khoảng cách theo trục ngang                                                               |
+| `min(height[i], height[j])` | **Chiều cao hữu dụng**      | Vì nước chỉ có thể cao bằng **cột thấp hơn** — nếu đổ nước cao hơn thì sẽ bị tràn qua cột đó |
+| `*`                         | **Nhân hai yếu tố lại**     | Diện tích hình chữ nhật = chiều rộng × chiều cao                                             |
+
+→ **Tổng thể**:
+[
+\text{temp} = (j - i) \times \min(height[i], height[j])
+]
+
+là **lượng nước tối đa** có thể chứa giữa hai cột `i` và `j`.
+
+---
+
+### 🧠 Ví dụ:
+
+Giả sử:
+
+```python
+height = [1, 8, 6, 2, 5, 4, 8, 3, 7]
+```
+
+Bắt đầu:
+
+```
+i = 0  (height[0] = 1)
+j = 8  (height[8] = 7)
+```
+
+=> `(j - i) = 8 - 0 = 8`
+=> `min(height[i], height[j]) = min(1, 7) = 1`
+=> `temp = 8 * 1 = 8`
+
+Nghĩa là hai cột đầu và cuối có thể chứa được **8 đơn vị nước**.
+
+---
+
+### 💡 Tóm lại:
+
+* `j = len(height) - 1`: bắt đầu từ cột cuối → để xét khoảng cách lớn nhất.
+* `(j - i)`: độ rộng vùng chứa nước.
+* `min(height[i], height[j])`: chiều cao vùng nước bị giới hạn bởi cột thấp hơn.
+* `temp`: diện tích vùng nước giữa 2 cột đó.
+
+---
+
+Nếu bạn muốn, mình có thể minh họa bằng **hình ASCII** để bạn nhìn thấy rõ cách tính `(j - i)` và `min(height[i], height[j])`. Bạn có muốn không?
+Rất tốt 👏 — hai dòng này là phần **so sánh và cập nhật kết quả lớn nhất** trong quá trình duyệt.
+Giờ mình giải thích chi tiết nhé 👇
+
+---
+
+### 🔹 Mã gốc:
+
+```python
+if temp > ans:
+    ans = temp
+```
+
+---
+
+### 🔹 Ý nghĩa biến:
+
+| Biến   | Vai trò                                                                            |
+| ------ | ---------------------------------------------------------------------------------- |
+| `temp` | Diện tích (lượng nước) vừa tính được giữa hai cột hiện tại `i` và `j`              |
+| `ans`  | Diện tích lớn nhất (nước chứa được nhiều nhất) tìm thấy cho đến thời điểm hiện tại |
+
+---
+
+### 🔹 Giải thích logic:
+
+* Mỗi lần bạn chọn **một cặp cột** `(i, j)`, bạn tính lượng nước chứa được là `temp`.
+* Sau đó, ta **so sánh** xem lượng nước này có **lớn hơn kết quả tốt nhất trước đó (`ans`)** không.
+
+➡️ Nếu **lớn hơn**, nghĩa là ta vừa tìm được **một cặp cột tốt hơn** → ta **cập nhật kết quả mới**:
+
+```python
+ans = temp
+```
+
+➡️ Nếu **không lớn hơn**, nghĩa là cặp này chứa ít nước hơn → ta **bỏ qua**, không cần cập nhật.
+
+---
+
+### 🔹 Ví dụ minh họa:
+
+Giả sử:
+
+| Lần xét | i | j | temp | ans trước đó | ans sau khi so sánh |
+| ------- | - | - | ---- | ------------ | ------------------- |
+| 1       | 0 | 8 | 8    | 0            | 8                   |
+| 2       | 1 | 8 | 49   | 8            | 49                  |
+| 3       | 1 | 7 | 18   | 49           | 49                  |
+
+→ Khi `temp > ans`, ta cập nhật.
+→ Khi `temp ≤ ans`, ta giữ nguyên.
+
+---
+
+### 💡 Tóm lại:
+
+```python
+if temp > ans:
+    ans = temp
+```
+
+nghĩa là:
+
+> “Nếu lượng nước vừa tính được **lớn hơn kết quả lớn nhất hiện tại**, thì **cập nhật** kết quả lớn nhất.”
+
+Hay nói cách khác:
+
+> luôn lưu giữ giá trị **diện tích lớn nhất tìm được cho đến thời điểm hiện tại**.
+
+---
+
+Bạn có muốn mình giải thích luôn phần `else` sau đó — tức là tại sao lại di chuyển `i` hoặc `j` tùy theo cột nào thấp hơn — không?
+Đó là phần mấu chốt giúp thuật toán chạy nhanh hơn (O(n) thay vì O(n²)).
+Ok 👍 mình giải thích chậm và dễ hiểu hơn nha, từng dòng một theo bảng đó.
+
+Giả sử bạn có mảng:
+`height = [1,8,6,2,5,4,8,3,7]`
+
+---
+
+### 🧩 Mục tiêu:
+
+Tìm **hai cột** sao cho khi đổ nước vào giữa chúng, lượng nước (diện tích hình chữ nhật) là **lớn nhất**.
+
+Công thức diện tích:
+
+```
+diện tích = (khoảng cách giữa 2 cột) × (chiều cao thấp hơn)
+```
+
+---
+
+### 💡 Biến trong chương trình:
+
+* `i`: con trỏ bên trái
+* `j`: con trỏ bên phải
+* `temp`: diện tích giữa hai cột `i` và `j`
+* `ans`: diện tích lớn nhất đã tìm được đến thời điểm hiện tại
+
+Ban đầu:
+
+```
+i = 0
+j = 8   # cột cuối cùng
+ans = 0
+```
+
+---
+
+### 🔹 **Lần xét 1:**
+
+Cột trái cao 1, cột phải cao 7
+
+```
+temp = (j - i) * min(height[i], height[j])
+     = (8 - 0) * min(1, 7)
+     = 8 * 1 = 8
+```
+
+So sánh:
+
+```
+ans = max(ans, temp) = max(0, 8) = 8
+```
+
+👉 Diện tích lớn nhất hiện tại là **8**.
+
+---
+
+### 🔹 **Lần xét 2:**
+
+Thuật toán thấy cột trái thấp hơn (`height[i] = 1 < 7`),
+nên **dịch con trỏ trái `i` sang phải** (vì chỉ cột thấp hơn mới có thể tăng diện tích nếu tìm được cột cao hơn).
+Giờ `i = 1`, `j = 8`.
+
+Tính tiếp:
+
+```
+temp = (8 - 1) * min(8, 7)
+     = 7 * 7 = 49
+```
+
+So sánh:
+
+```
+ans = max(8, 49) = 49
+```
+
+👉 Diện tích lớn nhất tăng lên **49**.
+
+---
+
+### 🔹 **Lần xét 3:**
+
+Giờ `i = 1`, `j = 7`
+(cột phải thấp hơn, nên ta dịch `j` sang trái)
+
+```
+temp = (7 - 1) * min(8, 3)
+     = 6 * 3 = 18
+```
+
+So sánh:
+
+```
+ans = max(49, 18) = 49
+```
+
+👉 Không lớn hơn nên giữ nguyên `ans = 49`.
+
+---
+
+### ✅ Tóm lại bảng:
+
+| Lần xét | i | j | Chiều cao (height[i], height[j]) | temp | ans trước đó | ans sau khi so sánh | Ghi chú                    |
+| ------- | - | - | -------------------------------- | ---- | ------------ | ------------------- | -------------------------- |
+| 1       | 0 | 8 | (1,7)                            | 8    | 0            | 8                   | chọn cột 0 và 8            |
+| 2       | 1 | 8 | (8,7)                            | 49   | 8            | 49                  | tìm được diện tích lớn hơn |
+| 3       | 1 | 7 | (8,3)                            | 18   | 49           | 49                  | nhỏ hơn, giữ nguyên        |
+
+---
+
+👉 Vậy giá trị cuối cùng `ans = 49` là diện tích lớn nhất (tức là lượng nước chứa được nhiều nhất).
+
+Bạn muốn mình vẽ minh họa bằng hình ASCII hoặc sơ đồ để dễ nhìn hơn không?
+| Dòng code                            | Ý nghĩa                                                    |
+| ------------------------------------ | ---------------------------------------------------------- |
+| `if height[i] > height[j]:`          | Chọn di chuyển bên **phải**, vì nó thấp hơn                |
+| `temp = j`                           | Ghi nhớ cột thấp ban đầu                                   |
+| `while j != i:`                      | Lặp tìm cột cao hơn bên trong                              |
+| `j -= 1`                             | Di chuyển sang trái                                        |
+| `if height[j] > height[temp]: break` | Khi gặp cột cao hơn thì dừng lại để thử tính diện tích mới |
+| Thành phần                           | Ý nghĩa                                                                |
+| ------------------------------------ | ---------------------------------------------------------------------- |
+| `while j != i:`                      | Di chuyển con trỏ `j` dần sang trái, dừng nếu gặp `i` hoặc cột cao hơn |
+| `j -= 1`                             | Giảm dần chỉ số `j`                                                    |
+| `if height[j] > height[temp]: break` | Khi gặp cột cao hơn thì dừng lại (vì có thể tạo diện tích lớn hơn)     |
+
+Câu hỏi này rất hay 👍 — vì dòng `temp = i` nhìn thì nhỏ,
+nhưng lại **rất quan trọng** để thuật toán hoạt động đúng.
+Giờ mình sẽ giải thích thật dễ hiểu nhé 👇
+
+---
+
+## 🧩 Bối cảnh đoạn code:
+
+Đoạn bạn hỏi nằm trong phần **else** — nghĩa là:
+
+```python
+else:
+    temp = i
+    while j != i:
+        i += 1
+        if height[i] > height[temp]:
+            break
+```
+
+Phần này **chạy khi `height[i] <= height[j]`**,
+tức là **cột bên trái thấp hơn hoặc bằng cột bên phải**.
+
+---
+
+## 🧠 Mục tiêu:
+
+Ta **muốn di chuyển con trỏ `i` sang phải** để **tìm một cột cao hơn**
+(vì cột thấp hơn thì không thể tạo ra diện tích lớn hơn được).
+
+---
+
+## 💡 Tại sao lại `temp = i`?
+
+* Biến `temp` **ghi nhớ lại vị trí hiện tại của `i`** trước khi ta bắt đầu di chuyển nó.
+* Ta cần giá trị chiều cao của cột này (`height[temp]`) để so sánh với các cột tiếp theo khi di chuyển.
+
+---
+
+### 🔍 Nếu viết chi tiết hơn:
+
+1. Gán `temp = i`
+   → Lưu lại vị trí cũ để biết **cột ban đầu có chiều cao bao nhiêu**.
+
+2. Trong vòng `while`:
+
+   ```python
+   while j != i:
+       i += 1
+       if height[i] > height[temp]:
+           break
+   ```
+
+   → Tăng `i` dần sang phải
+   → Nếu thấy **một cột cao hơn cột cũ** (`height[i] > height[temp]`)
+   → thì **dừng lại**, vì ta đã tìm được một ranh giới mới có tiềm năng chứa nhiều nước hơn.
+
+---
+
+## 🧩 Ví dụ minh họa:
+
+Giả sử:
+
+```
+height = [1, 8, 6, 2, 5, 4, 8, 3, 7]
+i = 0 (cao 1)
+j = 8 (cao 7)
+```
+
+Ta có `height[i] < height[j]`
+→ di chuyển `i` (vì bên trái thấp hơn).
+
+Bước vào:
+
+```
+temp = i  # temp = 0, height[temp] = 1
+```
+
+Vòng `while`:
+
+| Lần | i mới | height[i] | height[temp]=1 | Kết quả         |
+| --- | ----- | --------- | -------------- | --------------- |
+| 1   | 1     | 8         | 1              | 8 > 1 ✅ → break |
+
+👉 Dừng vì đã tìm được cột cao hơn (8 > 1).
+Giờ `i` = 1 → ta có khả năng tạo vùng chứa lớn hơn.
+
+---
+
+## 🚫 Nếu KHÔNG có `temp = i` thì sao?
+
+Khi `i` di chuyển, ta **mất giá trị gốc** để so sánh,
+→ không biết **so sánh với cột nào** nữa.
+
+Ví dụ:
+
+```python
+if height[i] > height[i]:  # luôn False 😅
+```
+
+Nên ta **phải lưu lại** `temp = i` để **so sánh với chiều cao ban đầu**.
+
+---
+
+## ✅ Tóm gọn:
+
+| Lệnh                                 | Ý nghĩa                                                      |
+| ------------------------------------ | ------------------------------------------------------------ |
+| `temp = i`                           | Ghi nhớ vị trí ban đầu của `i` để so sánh sau này            |
+| `i += 1`                             | Di chuyển sang phải tìm cột cao hơn                          |
+| `if height[i] > height[temp]: break` | Khi gặp cột cao hơn, dừng lại — có thể tạo vùng nước lớn hơn |
+
+---
+
+Bạn có muốn mình minh họa bằng **sơ đồ cột nước (vẽ các cột, chỉ mũi tên di chuyển `i` và `j`)** cho dễ hình dung không?
+
+Ok 👍 mình sẽ giải thích **rõ ràng và chậm rãi hơn** để bạn hiểu tận gốc `temp = i` là gì và **tại sao phải có nó**.
+
+---
+
+### 🧩 Trước tiên, bạn cần hiểu bối cảnh:
+
+Đây là đoạn code nằm trong **thuật toán "Container With Most Water"**,
+với 2 con trỏ `i` và `j` đang chạy từ hai đầu mảng `height`.
+
+```python
+if height[i] > height[j]:
+    temp = j
+    while j != i:
+        j -= 1
+        if height[j] > height[temp]:
+            break
+else:
+    temp = i
+    while j != i:
+        i += 1
+        if height[i] > height[temp]:
+            break
+```
+
+Hai trường hợp:
+
+* Nếu **bên phải thấp hơn** → ta **di chuyển con trỏ phải** (`j`)
+* Nếu **bên trái thấp hơn hoặc bằng** → ta **di chuyển con trỏ trái** (`i`)
+
+---
+
+## 💡 Bây giờ ta xem kỹ phần `temp = i`
+
+Giả sử đang ở **else**, nghĩa là:
+
+```python
+height[i] <= height[j]
+```
+
+→ bên trái thấp hơn → ta cần **tăng i** để tìm cột bên trái nào đó **cao hơn** cột hiện tại.
+
+---
+
+## 🔍 Giải thích cụ thể từng dòng:
+
+```python
+temp = i
+```
+
+➡️ Lưu lại vị trí hiện tại của `i`, để nhớ **chiều cao cột cũ**.
+Nói cách khác:
+
+> “Trước khi ta di chuyển sang phải, hãy ghi nhớ chiều cao cột này để biết khi nào ta tìm thấy cột cao hơn nó.”
+
+---
+
+```python
+while j != i:
+    i += 1
+    if height[i] > height[temp]:
+        break
+```
+
+➡️ Dịch sang tiếng Việt:
+
+* Khi `i` vẫn chưa chạm `j`, ta **tiếp tục di chuyển sang phải** (`i += 1`)
+* Mỗi lần tăng, ta kiểm tra:
+  “Cột mới có **cao hơn cột cũ** (vị trí `temp`) không?”
+
+  → Nếu có (`height[i] > height[temp]`), **dừng lại** —
+  vì ta đã tìm được **cột cao hơn bên trái**, có khả năng tạo vùng nước lớn hơn.
+
+---
+
+## 📊 Ví dụ trực quan:
+
+Giả sử:
+
+```python
+height = [1, 8, 6, 2, 5, 4, 8, 3, 7]
+i = 0
+j = 8
+```
+
+### Lúc đầu:
+
+* height[i] = 1
+* height[j] = 7
+  → vì **1 < 7**, nên ta **di chuyển i**.
+
+### Khi chạy:
+
+```python
+temp = i   # temp = 0, tức cột có chiều cao 1
+```
+
+→ ta ghi nhớ rằng:
+“Cột gốc (bên trái) có chiều cao là 1.”
+
+Rồi ta chạy vòng lặp:
+
+| Lần | i | height[i] | height[temp] | So sánh | Kết quả |
+| --- | - | --------- | ------------ | ------- | ------- |
+| 1   | 1 | 8         | 1            | 8 > 1   | ✅ break |
+
+→ Khi gặp cột 8, cao hơn 1 → dừng.
+
+---
+
+## 🧠 Nếu không có `temp = i` thì chuyện gì xảy ra?
+
+Nếu bỏ dòng đó, ta không còn biết **chiều cao cột ban đầu** là bao nhiêu.
+Lúc này, khi `i` tăng lên, ta sẽ **so sánh sai** vì `i` đã thay đổi.
+
+Ví dụ:
+
+```python
+if height[i] > height[i]:  # luôn sai, vì so sánh chính nó
+```
+
+=> Không thể biết khi nào tìm được cột cao hơn,
+vòng `while` có thể **chạy vô hạn hoặc sai logic**.
+
+---
+
+## ✅ Tóm lại:
+
+| Câu lệnh                             | Ý nghĩa                                                                         |
+| ------------------------------------ | ------------------------------------------------------------------------------- |
+| `temp = i`                           | Ghi nhớ vị trí ban đầu của con trỏ trái để biết chiều cao ban đầu là bao nhiêu. |
+| `i += 1`                             | Di chuyển con trỏ trái sang phải.                                               |
+| `if height[i] > height[temp]: break` | Khi gặp cột cao hơn cột ban đầu → dừng lại.                                     |
+
+---
+
+👉 Cách hiểu đơn giản nhất:
+
+> `temp = i` giống như **đặt mốc** để ghi nhớ chiều cao của cột cũ,
+> rồi **so sánh các cột sau xem có cột nào cao hơn không**.
+
+---
+
+Bạn có muốn mình **vẽ minh họa trực quan bằng cột nước và mũi tên di chuyển `i`, `j`** để thấy rõ `temp` giúp gì không?

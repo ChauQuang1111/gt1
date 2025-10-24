@@ -1,0 +1,509 @@
+Check If Digits Are Equal in String After Operations I
+class Solution:
+    def hasSameDigits(self, s: str) -> bool:
+        n = len(s)
+        if n <= 3:
+            return s[0] == s[-1]
+
+        v1 = v2 = 0
+        c = 1
+        s_int = [ord(ch) - 48 for ch in s] 
+        n1 = n - 1
+        for i in range(n):
+            v1 += s_int[i] * c
+            v2 += s_int[n1 - i] * c
+            c = c * (n1 - 2 - i) // (i + 1)
+
+        return (v1 - v2) % 10 == 0
+Rất tốt 👍 — mình sẽ giải thích **từng dòng** đoạn code này cho bạn nhé:
+
+---
+
+### 🧩 Đoạn code:
+
+```python
+if n <= 3:
+    return s[0] == s[-1]
+
+v1 = v2 = 0
+c = 1
+```
+
+---
+
+### 🧠 Giải thích từng phần:
+
+#### ✅ `if n <= 3:`
+
+* Đây là **điều kiện cơ sở (base case)** trong thuật toán — thường dùng trong bài toán chuỗi hoặc đệ quy.
+* Nghĩa là: nếu độ dài của chuỗi `s` nhỏ hơn hoặc bằng 3 ký tự thì ta **xử lý riêng**, không cần làm phức tạp.
+
+---
+
+#### 🪞 `return s[0] == s[-1]`
+
+* Khi chuỗi có 3 ký tự trở xuống, ta chỉ cần kiểm tra **ký tự đầu tiên và ký tự cuối cùng** có giống nhau không.
+* `s[0]` là ký tự đầu tiên
+  `s[-1]` là ký tự cuối cùng
+  → Nếu giống nhau → trả về `True`, ngược lại `False`.
+
+Ví dụ:
+
+| Chuỗi   | Kết quả   |
+| ------- | --------- |
+| `"aba"` | ✅ `True`  |
+| `"abc"` | ❌ `False` |
+| `"aa"`  | ✅ `True`  |
+
+---
+
+#### ⚙️ `v1 = v2 = 0`
+
+* Đây là cách Python **gán cùng một giá trị (0)** cho **hai biến cùng lúc**.
+* Sau dòng này:
+
+  ```python
+  v1 == 0
+  v2 == 0
+  ```
+* Hai biến này thường dùng để:
+
+  * Lưu **trạng thái tạm** (ví dụ: số lượng ký tự khớp),
+  * Hoặc **chỉ số (index)** khi duyệt chuỗi.
+
+---
+
+#### 🔢 `c = 1`
+
+* Biến `c` thường là **counter (bộ đếm)**.
+* Gán `c = 1` để **bắt đầu đếm từ 1**, có thể đại diện cho:
+
+  * Số lượng ký tự đã kiểm tra,
+  * Số lần lặp,
+  * Hoặc mức độ (depth) trong đệ quy.
+
+---
+
+### 🧩 Tóm lại:
+
+| Dòng lệnh              | Ý nghĩa                                                  |
+| ---------------------- | -------------------------------------------------------- |
+| `if n <= 3:`           | Kiểm tra chuỗi ngắn (≤ 3 ký tự)                          |
+| `return s[0] == s[-1]` | Nếu chuỗi ngắn, chỉ so sánh đầu–cuối                     |
+| `v1 = v2 = 0`          | Khởi tạo hai biến đếm/trạng thái                         |
+| `c = 1`                | Bắt đầu đếm từ 1 (chuẩn bị cho vòng lặp hoặc đệ quy sau) |
+
+---
+
+👉 Nếu bạn gửi **phần code phía sau** (nơi `v1, v2, c` được dùng), mình có thể giải thích chi tiết **chức năng thực tế của chúng** trong ngữ cảnh đó nhé. Bạn muốn mình làm vậy không?
+Rất hay 👏 — đoạn code bạn gửi là phần chính của một thuật toán kiểm tra xem **các chữ số trong chuỗi có "đối xứng theo một quy luật toán học" hay không** (kiểu như kiểm tra xem hai phía có cùng giá trị modulo 10).
+Giờ mình sẽ **giải thích từng dòng** một cách dễ hiểu nhất nhé 👇
+
+---
+
+### 🧩 Toàn bộ đoạn code:
+
+```python
+s_int = [ord(ch) - 48 for ch in s]
+n1 = n - 1
+for i in range(n):
+    v1 += s_int[i] * c
+    v2 += s_int[n1 - i] * c
+    c = c * (n1 - 2 - i) // (i + 1)
+
+return (v1 - v2) % 10 == 0
+```
+
+---
+
+### 🧠 Giải thích chi tiết:
+
+#### ✅ `s_int = [ord(ch) - 48 for ch in s]`
+
+* `ord(ch)` trả về **mã ASCII** của ký tự `ch`.
+* `'0'` có mã ASCII là `48`, `'1'` là `49`, `'2'` là `50`, v.v.
+* Nên `ord(ch) - 48` sẽ chuyển `'0' → 0`, `'1' → 1`, `'9' → 9`.
+* Kết quả: `s_int` là **danh sách các chữ số của chuỗi `s`** ở dạng số nguyên.
+
+👉 Ví dụ:
+
+```python
+s = "3902"
+s_int = [3, 9, 0, 2]
+```
+
+---
+
+#### ✅ `n1 = n - 1`
+
+* Lưu lại giá trị `n - 1` để **giảm phép tính lặp lại trong vòng for** (tối ưu tốc độ).
+
+---
+
+#### ✅ `for i in range(n):`
+
+* Duyệt qua từng chỉ số `i` từ `0 → n - 1`.
+
+---
+
+#### ✅ `v1 += s_int[i] * c`
+
+* Cộng dồn vào `v1` giá trị của chữ số ở vị trí `i` nhân với hệ số `c`.
+* `c` thay đổi sau mỗi vòng → giống như **hệ số trọng số** của từng vị trí (kiểu như tính giá trị ở dạng tổ hợp hay đa thức).
+
+---
+
+#### ✅ `v2 += s_int[n1 - i] * c`
+
+* Làm tương tự, nhưng lấy **chữ số đối xứng từ cuối chuỗi**.
+* `n1 - i` → ký tự ở vị trí đối xứng (bên phải).
+* Như vậy `v1` tính từ **trái sang phải**, `v2` tính từ **phải sang trái** — hai giá trị đối xứng.
+
+---
+
+#### ✅ `c = c * (n1 - 2 - i) // (i + 1)`
+
+* Cập nhật lại hệ số `c` theo một công thức **giống hệ số trong tổ hợp C(n, k)**.
+* Có thể hiểu là mỗi bước, trọng số `c` thay đổi theo quy luật toán học nhất định để phản ánh vị trí ký tự.
+* Dùng `//` để chia lấy phần nguyên (vì `c` phải là số nguyên).
+
+---
+
+#### ✅ `return (v1 - v2) % 10 == 0`
+
+* Sau khi tính tổng cho hai hướng, nếu **hiệu của hai tổng chia hết cho 10**, thì chuỗi được xem là **đối xứng (hợp lệ)**.
+* `% 10 == 0` nghĩa là hai giá trị có **cùng chữ số tận cùng** (giống nhau modulo 10).
+
+---
+
+### 🧮 Ví dụ minh họa:
+
+Giả sử:
+
+```python
+s = "3902"
+n = 4
+```
+
+| i | s_int[i] | s_int[n1 - i] | c | v1 (cộng dồn) | v2 (cộng dồn) |
+| - | -------- | ------------- | - | ------------- | ------------- |
+| 0 | 3        | 2             | 1 | 3             | 2             |
+| 1 | 9        | 0             | ? | …             | …             |
+
+Sau khi chạy hết, ta được `v1` và `v2`, rồi kiểm tra `(v1 - v2) % 10 == 0`.
+
+Nếu đúng → `return True`, ngược lại `False`.
+
+---
+
+### 🧩 Tóm tắt dễ hiểu:
+
+| Biến                  | Ý nghĩa                                    |
+| --------------------- | ------------------------------------------ |
+| `s_int`               | Danh sách các chữ số trong chuỗi           |
+| `v1`, `v2`            | Hai tổng được tính từ trái và phải         |
+| `c`                   | Hệ số nhân (trọng số) thay đổi theo vị trí |
+| `(v1 - v2) % 10 == 0` | Kiểm tra hai phía có “cân bằng modulo 10”  |
+
+---
+
+👉 Nói ngắn gọn:
+**Thuật toán kiểm tra xem chuỗi số có đối xứng về giá trị toán học (theo modulo 10) hay không**, bằng cách cộng có trọng số từ hai đầu rồi so sánh.
+
+---
+
+Bạn có muốn mình **viết lại đoạn code này đầy đủ với hàm main và chú thích tiếng Việt từng dòng** không?
+Câu hỏi cực kỳ thông minh 👏 — vì đúng rồi, **`c` bắt đầu bằng 1**, nhưng **nó không luôn giữ nguyên**, mà **thay đổi qua từng vòng lặp** theo công thức:
+
+```python
+c = c * (n1 - 2 - i) // (i + 1)
+```
+
+Giờ mình sẽ giải thích **khi nào `c = 1`, khi nào `c = 0` (hoặc trở thành 0)** nhé.
+
+---
+
+## 🧩 1️⃣ Ban đầu `c = 1`
+
+Đây là **giá trị khởi tạo** — mọi hệ số tổ hợp đều bắt đầu bằng 1.
+Ví dụ: hàng đầu tiên của tam giác Pascal là `[1]`.
+
+---
+
+## 🧮 2️⃣ Sau mỗi vòng lặp:
+
+`c` được cập nhật dựa trên công thức:
+
+```python
+c = c * (n1 - 2 - i) // (i + 1)
+```
+
+Trong đó:
+
+* `n1 = n - 1`
+* `i` là chỉ số vòng lặp (bắt đầu từ 0)
+
+Công thức này bắt nguồn từ quy luật sinh hệ số tổ hợp:
+[
+C(n, k+1) = C(n, k) \times \frac{n - k - 1}{k + 1}
+]
+
+---
+
+## 🔹 3️⃣ Khi nào `c = 1`
+
+`c` sẽ bằng **1**:
+
+* Ở lần đầu tiên (`i = 0`), vì chưa nhân gì cả.
+* Hoặc trong một vài trường hợp, phép nhân chia tròn (`//`) vẫn cho kết quả 1.
+
+Ví dụ:
+
+```
+c = 1
+n1 = 3
+i = 0 → c = 1 * (3 - 2 - 0) // (0 + 1) = 1 * 1 // 1 = 1
+```
+
+---
+
+## 🔹 4️⃣ Khi nào `c = 0`
+
+`c` trở thành **0** khi tử số `(n1 - 2 - i)` nhỏ hơn `i + 1`,
+vì phép chia nguyên (`//`) làm **mất phần thập phân**.
+
+Ví dụ:
+Giả sử `n = 4` → `n1 = 3`
+
+| i | Tính `c = c * (n1 - 2 - i) // (i + 1)`  | Kết quả |
+| - | --------------------------------------- | ------- |
+| 0 | `1 * (3 - 2 - 0) // (1)` → `1 * 1 // 1` | ✅ `1`   |
+| 1 | `1 * (3 - 2 - 1) // (2)` → `1 * 0 // 2` | ⚠️ `0`  |
+| 2 | `0 * (3 - 2 - 2) // (3)` → `0`          | vẫn `0` |
+| 3 | `0 * ...`                               | vẫn `0` |
+
+➡️ Khi `i = 1`, `c` trở thành `0`, và vì nhân thêm 0 → tất cả vòng lặp sau `c` luôn là `0`.
+
+---
+
+## 📘 5️⃣ Ý nghĩa:
+
+* `c = 1` → các chữ số đầu tiên (gần giữa) vẫn có trọng số.
+* `c = 0` → các chữ số ở cuối cùng không còn ảnh hưởng, vì vị trí tổ hợp đã vượt giới hạn.
+
+Nói cách khác, thuật toán chỉ **so sánh một phần hữu ích của chuỗi**,
+khi vị trí vượt quá giới hạn đối xứng, hệ số `c` tự động thành `0`.
+
+---
+
+## 🧩 Ví dụ tổng thể:
+
+Cho `s = "3902"` → `n = 4`, `n1 = 3`, bắt đầu `c = 1`
+
+| i | s_int[i] | c trước | v1 +=  | c sau | Ghi chú                   |
+| - | -------- | ------- | ------ | ----- | ------------------------- |
+| 0 | 3        | 1       | +3×1=3 | 1     | c = 1                     |
+| 1 | 9        | 1       | +9×1=9 | 0     | c = 0 (vì (3−2−1)//(2)=0) |
+| 2 | 0        | 0       | +0     | 0     | vẫn 0                     |
+| 3 | 2        | 0       | +0     | 0     | vẫn 0                     |
+
+---
+
+## ✅ Kết luận:
+
+| Trạng thái | Khi xảy ra                           | Ý nghĩa                                                 |
+| ---------- | ------------------------------------ | ------------------------------------------------------- |
+| `c = 1`    | Ở đầu vòng lặp hoặc khi còn đối xứng | hệ số có giá trị                                        |
+| `c = 0`    | Khi `(n1 - 2 - i) < (i + 1)`         | đã hết phần đối xứng, các ký tự sau không ảnh hưởng nữa |
+
+---
+
+Nếu bạn muốn, mình có thể giúp **in ra giá trị `c, v1, v2` theo từng vòng lặp** cho ví dụ `"3902"` để bạn thấy rõ quá trình biến đổi.
+Bạn muốn mình làm không?
+🔥 Rất tinh ý! — đúng là bạn đang **chú ý đến thứ tự cập nhật biến `c`**, và đây là một câu hỏi *rất quan trọng về logic toán học và thứ tự nhân hệ số*.
+
+Giờ ta cùng **phân tích sâu vì sao `c` được cập nhật sau** chứ **không trước**, và chuyện gì xảy ra nếu bạn “đưa `c` lên trước” nhé 👇
+
+---
+
+## 🧩 Code gốc:
+
+```python
+for i in range(n):
+    v1 += s_int[i] * c
+    v2 += s_int[n1 - i] * c
+    c = c * (n1 - 2 - i) // (i + 1)
+```
+
+---
+
+## 🧠 Ý nghĩa thực sự của `c`
+
+`c` ở đây đại diện cho **hệ số tổ hợp (binomial coefficient)** trong dãy Pascal,
+giống như khi bạn tính giá trị ở từng bước của **tam giác Pascal**.
+
+Cụ thể, mỗi lần lặp:
+[
+c = C(n - 2, i)
+]
+và lần sau:
+[
+c_{i+1} = C(n - 2, i + 1)
+]
+
+→ Vì vậy, **`c` hiện tại dùng cho vị trí `i`**,
+và **sau khi xong vị trí đó**, ta **cập nhật `c`** để chuẩn bị cho `i+1`.
+
+---
+
+## ✅ Đó là lý do tại sao:
+
+`v1 += s_int[i] * c`
+phải dùng **giá trị `c` hiện tại (ứng với i)**,
+rồi **mới cập nhật `c`** cho vòng lặp sau.
+
+---
+
+## ⚠️ Nếu bạn "đưa c lên trước" (sai):
+
+Tức là bạn viết:
+
+```python
+for i in range(n):
+    c = c * (n1 - 2 - i) // (i + 1)
+    v1 += s_int[i] * c
+    v2 += s_int[n1 - i] * c
+```
+
+thì lúc đó, **`c` đang là hệ số của vị trí *i+1***,
+nhưng bạn lại nhân nó với **chữ số ở vị trí *i*** → **lệch 1 vị trí** 😵‍💫
+→ Toàn bộ phép cộng dồn `v1`, `v2` sẽ bị sai lệch trọng số.
+
+---
+
+## 🔍 Ví dụ cụ thể:
+
+Giả sử `n = 4 → n1 = 3`,
+ban đầu `c = 1`.
+
+| i | `c` ban đầu | công thức cập nhật | `c` sau | vị trí hợp lệ |
+| - | ----------- | ------------------ | ------- | ------------- |
+| 0 | 1           | `(3−2−0)//(0+1)=1` | 1       | đúng cho i=0  |
+| 1 | 1           | `(3−2−1)//(1+1)=0` | 0       | đúng cho i=1  |
+
+Nếu bạn cập nhật `c` trước, thì ở i=0, `c` đã bị nhân sớm, thành `1` (ok),
+nhưng ở i=1, `c` sẽ là `0` *trước khi* bạn cộng `s_int[1] * c`,
+→ làm cho kết quả bị lệch **một bước sớm**.
+
+---
+
+## 🧩 Kết luận:
+
+| Cách   | Thứ tự                                 | Kết quả                                           |
+| ------ | -------------------------------------- | ------------------------------------------------- |
+| ✅ Đúng | Nhân với `c` → sau đó mới cập nhật `c` | `c` luôn khớp với vị trí hiện tại `i`             |
+| ❌ Sai  | Cập nhật `c` trước rồi mới nhân        | `c` bị lệch sang hệ số của vị trí tiếp theo `i+1` |
+
+---
+
+## 📘 Tóm lại:
+
+👉 `c` phải **được dùng trước, rồi mới cập nhật sau** —
+vì mỗi vòng lặp `i` đang sử dụng **hệ số của vị trí hiện tại**,
+và chỉ **sau khi xong**, ta mới tính hệ số cho vị trí kế tiếp.
+
+---
+
+Nếu bạn muốn, mình có thể cho bạn xem **bảng giá trị c, v1, v2** khi đặt `c` trước và sau để bạn thấy sự khác biệt rõ ràng bằng code Python in ra từng bước.
+Bạn có muốn xem thử không?
+Rất hay 👏 — dòng
+
+```python
+return (v1 - v2) % 10 == 0
+```
+
+chính là **bước cuối cùng** để xác định **chuỗi có “đối xứng số học” hay không**.
+Giờ mình sẽ giải thích rõ ràng, từng ý một nhé 👇
+
+---
+
+## 🧩 Ý nghĩa tổng quát
+
+Sau khi vòng lặp chạy xong, ta đã có:
+
+* `v1`: tổng có trọng số của các chữ số từ **trái sang phải**
+* `v2`: tổng có trọng số của các chữ số từ **phải sang trái**
+
+Mục tiêu là:
+🔹 Nếu hai giá trị này **giống nhau về mặt chữ số cuối (mod 10)** → chuỗi coi như **đối xứng sau các phép cộng mod 10** mà đề bài yêu cầu.
+
+---
+
+## ⚙️ Cụ thể dòng code
+
+```python
+(v1 - v2) % 10 == 0
+```
+
+### Giải thích từng phần:
+
+| Thành phần | Ý nghĩa                                                            |
+| ---------- | ------------------------------------------------------------------ |
+| `v1 - v2`  | So sánh chênh lệch giữa hai giá trị đối xứng                       |
+| `% 10`     | Lấy phần dư chia cho 10 (vì mọi phép toán trong bài là **mod 10**) |
+| `== 0`     | Nếu phần dư = 0 → hai số giống nhau mod 10 → đối xứng              |
+
+---
+
+## 🔢 Ví dụ minh họa
+
+Giả sử chuỗi:
+
+```python
+s = "3902"
+```
+
+Sau khi tính:
+
+```
+v1 = 12
+v2 = 2
+```
+
+→ `(v1 - v2) = 10`
+→ `(v1 - v2) % 10 = 0` ✅
+→ Kết quả `True` → **chuỗi đối xứng mod 10**.
+
+---
+
+## 💡 Vì sao dùng “mod 10”?
+
+Bởi vì trong đề bài gốc (“Check If Digits Are Equal After Operations”),
+mỗi phép cộng giữa hai chữ số đều lấy **phần dư mod 10**
+→ nên kết quả cuối cùng **chỉ phụ thuộc vào chữ số cuối của tổng**,
+không quan tâm toàn bộ giá trị.
+
+Dùng `(v1 - v2) % 10 == 0` là cách nhanh nhất để kiểm tra rằng:
+
+> Hai phía tạo ra cùng một chữ số cuối (sau khi gộp và cộng mod 10).
+
+---
+
+## 🧠 Tóm lại:
+
+| Biểu thức             | Giải thích                                            |
+| --------------------- | ----------------------------------------------------- |
+| `v1`                  | Tổng có trọng số từ trái sang phải                    |
+| `v2`                  | Tổng có trọng số từ phải sang trái                    |
+| `(v1 - v2) % 10 == 0` | Kiểm tra hai phía có tạo cùng kết quả modulo 10 không |
+| ✅ True                | Hai phía đối xứng (hợp lệ)                            |
+| ❌ False               | Không đối xứng                                        |
+
+---
+
+👉 Nói ngắn gọn:
+**Dòng `return (v1 - v2) % 10 == 0` kiểm tra xem hai nửa của chuỗi có cho ra cùng kết quả mod 10 hay không — đây là điều kiện để chuỗi “đối xứng” sau các phép cộng mod 10.**
+
+---
+
+Bạn có muốn mình minh họa lại quá trình tính `v1`, `v2` và phép `% 10` cho ví dụ `"3902"` từng bước (để thấy tại sao ra `True`) không?

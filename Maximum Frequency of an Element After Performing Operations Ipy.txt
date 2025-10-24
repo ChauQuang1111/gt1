@@ -1,0 +1,328 @@
+Maximum Frequency of an Element After Performing Operations I
+class Solution:
+    def maxFrequency(self, nums: List[int], k: int, numOperations: int) -> int:
+        maxi=max(nums)
+        pre=[0]*(maxi+1)
+        prev=ans=0
+        for i in nums:
+            pre[i]+=1
+        cur=sum(pre[:k])
+        for num in range(maxi+1):
+            cur-=pre[num]
+            if num+k<=maxi:
+                cur+=pre[num+k]
+            if num>0:
+                prev+=pre[num-1]
+            if num>k+1:
+                prev-=pre[num-k-1]
+            ans=max(ans,pre[num]+min(numOperations,prev+cur))
+        return ans
+Rất hay 👍 — mình sẽ giải thích **3 dòng này chi tiết** để bạn hiểu rõ vai trò của từng biến trong thuật toán nhé 👇
+
+---
+
+```python
+maxi = max(nums)
+pre = [0] * (maxi + 1)
+prev = ans = 0
+```
+
+---
+
+### 🧩 **1️⃣ `maxi = max(nums)`**
+
+👉 Dòng này lấy **giá trị lớn nhất trong mảng `nums`**.
+Mục đích là để biết ta cần tạo **mảng đếm (`pre`) dài bao nhiêu**.
+
+Ví dụ:
+
+```python
+nums = [1, 4, 5]
+maxi = 5
+```
+
+→ Vì giá trị lớn nhất là 5, ta cần một mảng đếm có chỉ số từ 0 đến 5 (tức là 6 phần tử).
+
+---
+
+### 🧩 **2️⃣ `pre = [0] * (maxi + 1)`**
+
+👉 Tạo một **mảng đếm tần suất** có độ dài `maxi + 1`, khởi tạo toàn bộ bằng 0.
+
+* `pre[i]` sẽ lưu số phần tử **có giá trị bằng `i`** trong mảng `nums`.
+* Sau khi ta duyệt mảng `nums`, ta sẽ tăng `pre[giá_trị]` tương ứng.
+
+Ví dụ:
+
+```python
+nums = [1, 4, 5]
+pre = [0, 0, 0, 0, 0, 0]
+```
+
+Sau khi đếm:
+
+```python
+pre = [0, 1, 0, 0, 1, 1]   # có 1 phần tử =1, 1 phần tử =4, 1 phần tử =5
+```
+
+---
+
+### 🧩 **3️⃣ `prev = ans = 0`**
+
+Hai biến này có vai trò khác nhau:
+
+* **`prev`**:
+  Dùng để đếm **số phần tử nằm bên trái vùng ảnh hưởng hiện tại**
+  (tức là các phần tử có giá trị trong đoạn `[num - k, num - 1]`).
+  Nó được cập nhật dần khi `num` tăng trong vòng lặp.
+
+* **`ans`**:
+  Lưu **kết quả lớn nhất (tần suất tối đa)** mà ta tìm được cho tới thời điểm hiện tại.
+
+Ban đầu, cả hai đều bằng 0 vì chưa xử lý gì.
+
+---
+
+### 📘 **Tóm tắt ý nghĩa 3 dòng:**
+
+| Dòng                     | Mục đích                                                         |
+| ------------------------ | ---------------------------------------------------------------- |
+| `maxi = max(nums)`       | Tìm giá trị lớn nhất để biết cần tạo mảng đếm lớn cỡ nào         |
+| `pre = [0] * (maxi + 1)` | Tạo mảng đếm tần suất các giá trị trong `nums`                   |
+| `prev = ans = 0`         | Khởi tạo biến đếm vùng trái (`prev`) và kết quả lớn nhất (`ans`) |
+
+---
+
+Bạn có muốn mình giải thích thêm **biến `cur`** (xuất hiện ngay sau đó) — nó kết hợp với `prev` để tạo vùng `[num - k, num + k]` — không?
+Rất hay 👏 — hai dòng này cực kỳ quan trọng trong thuật toán, vì chúng **khởi tạo mảng đếm (frequency array)** và **thiết lập vùng cửa sổ ban đầu**.
+Mình sẽ giải thích chi tiết từng dòng nhé 👇
+
+---
+
+```python
+for i in nums:
+    pre[i] += 1
+```
+
+### 🧩 Ý nghĩa:
+
+👉 Duyệt qua từng phần tử `i` trong mảng `nums`,
+và tăng bộ đếm `pre[i]` lên 1 — tức là **đếm tần suất xuất hiện của mỗi giá trị**.
+
+---
+
+### 🔍 Ví dụ:
+
+Giả sử:
+
+```python
+nums = [1, 4, 5]
+maxi = 5
+pre = [0, 0, 0, 0, 0, 0]   # (ban đầu toàn 0)
+```
+
+Sau khi chạy vòng for:
+
+```
+i = 1 → pre[1] += 1 → pre = [0, 1, 0, 0, 0, 0]
+i = 4 → pre[4] += 1 → pre = [0, 1, 0, 0, 1, 0]
+i = 5 → pre[5] += 1 → pre = [0, 1, 0, 0, 1, 1]
+```
+
+➡️ Kết quả:
+`pre[x]` = số phần tử trong `nums` có giá trị bằng `x`.
+
+---
+
+```python
+cur = sum(pre[:k])
+```
+
+### 🧩 Ý nghĩa:
+
+👉 `cur` là **tổng số phần tử nằm trong đoạn [0, k-1]**.
+
+Hay nói cách khác:
+
+* `cur` khởi tạo **vùng cửa sổ ban đầu** của thuật toán sliding window,
+* vùng này tương ứng với các giá trị **nằm trước vị trí `num = 0`** khi ta bắt đầu duyệt.
+
+---
+
+### 🔍 Ví dụ cụ thể:
+
+Giả sử `k = 2`
+→ `pre[:k] = pre[0:2] = [0, 1]`
+→ `sum(pre[:k]) = 1`
+
+=> `cur = 1`
+→ nghĩa là: có 1 phần tử (giá trị 1) nằm trong đoạn `[0, 1]`
+— vùng này là "vùng bên phải ban đầu" của cửa sổ `[num - k, num + k]`.
+
+---
+
+### 🔁 Sau này trong vòng lặp:
+
+* `cur` sẽ luôn đại diện cho **số phần tử nằm trong đoạn (num, num + k]**
+* còn `prev` sẽ đại diện cho **số phần tử trong đoạn [num - k, num - 1]**
+  → 2 biến này kết hợp lại bao phủ vùng `[num - k, num + k]`.
+
+---
+
+### 🧠 Tóm tắt ý nghĩa 2 dòng:
+
+| Dòng code                    | Giải thích                                                                              |
+| ---------------------------- | --------------------------------------------------------------------------------------- |
+| `for i in nums: pre[i] += 1` | Đếm số lần xuất hiện của từng giá trị trong `nums`                                      |
+| `cur = sum(pre[:k])`         | Khởi tạo tổng số phần tử nằm trong vùng `[0, k-1]` để bắt đầu thuật toán sliding window |
+
+---
+
+Bạn có muốn mình giải thích tiếp **vì sao trong vòng for chính lại có `cur -= pre[num]` và `cur += pre[num + k]`** không?
+(đó là phần cửa sổ trượt hoạt động).
+Ok 👇 mình giải thích chi tiết từng dòng trong đoạn code này nhé:
+
+```python
+for num in range(maxi+1):
+    cur -= pre[num]
+```
+
+➡️ `cur` đại diện cho **số phần tử nằm trong khoảng (num+1 … num+k)**.
+Mỗi lần lặp `num` tăng lên 1, ta **loại bỏ** `pre[num]` (vì giá trị `num` không còn trong khoảng đó nữa).
+
+---
+
+```python
+if num + k <= maxi:
+    cur += pre[num + k]
+```
+
+➡️ Nếu phần tử ở vị trí `num + k` vẫn nằm trong giới hạn mảng, ta **thêm** `pre[num + k]` vào `cur`
+→ để cập nhật lại số phần tử nằm trong phạm vi `[num+1 … num+k]`.
+👉 Đây chính là **khoảng phía trên** mà ta có thể biến đổi thành `num` (vì chênh lệch ≤ k).
+
+---
+
+```python
+if num > 0:
+    prev += pre[num - 1]
+```
+
+➡️ `prev` lưu **số phần tử nhỏ hơn num** nhưng **vẫn trong phạm vi có thể tăng lên đến num (±k)**.
+Khi `num` tăng, `num-1` trở thành “cận dưới” mới → ta cộng thêm `pre[num-1]`.
+
+---
+
+```python
+if num > k + 1:
+    prev -= pre[num - k - 1]
+```
+
+➡️ Nếu `num` đã vượt quá `k+1`, thì giá trị `num - k - 1` **nằm ngoài phạm vi có thể tăng lên num nữa**,
+→ nên ta trừ đi `pre[num - k - 1]`.
+Tức là loại bỏ những phần tử quá nhỏ (chênh lệch > k) không thể biến thành `num`.
+
+---
+
+```python
+ans = max(ans, pre[num] + min(numOperations, prev + cur))
+```
+
+➡️ `pre[num]` là **tần suất gốc** của giá trị `num`.
+➡️ `prev + cur` là **tổng số phần tử có thể biến đổi thành num** (vì nằm trong ±k).
+➡️ Nhưng ta chỉ được phép dùng tối đa `numOperations` phép biến đổi,
+nên ta chỉ có thể thêm `min(numOperations, prev + cur)` phần tử.
+→ Cập nhật kết quả lớn nhất `ans`.
+
+---
+
+```python
+return ans
+```
+
+➡️ Trả về **tần suất lớn nhất có thể đạt được** của một phần tử sau khi thực hiện tối đa `numOperations` lần tăng/giảm trong phạm vi `k`.
+
+---
+
+Tóm gọn:
+
+* `pre` = đếm tần suất mỗi giá trị.
+* `cur` = số phần tử trong khoảng phía **trên** có thể giảm xuống `num`.
+* `prev` = số phần tử trong khoảng phía **dưới** có thể tăng lên `num`.
+* Mỗi vòng lặp xét giá trị `num`, cập nhật 2 vùng `prev` và `cur`, rồi tính tần suất tối đa có thể đạt được tại giá trị đó.
+Rất hay — đây là **trọng tâm** của toàn thuật toán 👇
+Ta cùng mổ xẻ kỹ dòng này nhé:
+
+```python
+ans = max(ans, pre[num] + min(numOperations, prev + cur))
+```
+
+### 🧩 Giải thích từng phần:
+
+#### 1️⃣ `pre[num]`
+
+* Là **số phần tử ban đầu bằng `num`** (tần suất gốc).
+  👉 Ví dụ: nếu mảng có ba số `5`, thì `pre[5] = 3`.
+
+#### 2️⃣ `prev + cur`
+
+* Là **tổng số phần tử lân cận** (nhỏ hơn hoặc lớn hơn `num` trong phạm vi `k`)
+  mà **có thể biến đổi** thành `num` sau khi thực hiện các phép cộng/trừ ≤ `k`.
+  👉 Hiểu đơn giản: đây là **số lượng phần tử tiềm năng** có thể trở thành `num`.
+
+#### 3️⃣ `min(numOperations, prev + cur)`
+
+* Ta **chỉ có giới hạn `numOperations` lần biến đổi**,
+  nên nếu `prev + cur` lớn hơn số phép biến đổi cho phép,
+  thì ta chỉ được dùng tối đa `numOperations` trong số đó.
+  ➡️ Do đó ta lấy **giá trị nhỏ hơn** giữa hai số.
+
+#### 4️⃣ `pre[num] + min(numOperations, prev + cur)`
+
+* Đây là **tổng số phần tử bằng `num` sau khi biến đổi**:
+
+  * `pre[num]`: số lượng vốn có.
+  * `min(numOperations, prev + cur)`: số phần tử khác có thể biến thành `num`.
+
+#### 5️⃣ `max(ans, ...)`
+
+* Duyệt qua mọi giá trị `num` khả thi (từ `0` đến `maxi`),
+  và chọn giá trị nào cho **tần suất lớn nhất** sau khi biến đổi.
+  → `ans` luôn lưu giá trị **tần suất tối đa có thể đạt được**.
+
+---
+
+### 🧠 Ví dụ minh họa nhỏ:
+
+Giả sử:
+
+```
+nums = [3, 4, 5]
+k = 1
+numOperations = 2
+```
+
+* Khi xét `num = 4`:
+
+  * `pre[4] = 1`
+  * `prev = 1` (số 3 có thể +1 → 4)
+  * `cur = 1` (số 5 có thể -1 → 4)
+  * `prev + cur = 2`
+  * `min(numOperations, prev + cur) = min(2, 2) = 2`
+    → `pre[4] + 2 = 3`
+
+=> Ta có thể làm **tất cả phần tử thành 4** bằng đúng 2 phép biến đổi.
+=> `ans = 3`
+
+---
+
+✅ **Tóm lại:**
+Công thức
+
+```python
+max(ans, pre[num] + min(numOperations, prev + cur))
+```
+
+nghĩa là:
+
+> “Tìm giá trị `num` mà khi dùng tối đa `numOperations` phép biến đổi trong phạm vi ±k, ta đạt được tần suất xuất hiện cao nhất.”

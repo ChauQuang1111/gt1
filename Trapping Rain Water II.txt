@@ -1,0 +1,311 @@
+ 407. Trapping Rain Water II(03/10/2025)
+class Solution:
+    def trapRainWater(self, heightMap: List[List[int]]) -> int:
+        heap=[]
+
+        m=len(heightMap)
+        n=len(heightMap[0])
+
+        visited=[[False for _ in range(n)] for _ in range(m)]
+        #store boundries
+        for i in range(m):
+            for j in range(n):
+                if i==0 or i==m-1 or j==0 or j==n-1:
+                    heapq.heappush(heap,(heightMap[i][j],i,j))
+                    visited[i][j]=True
+
+        dir=[[0,1],[0,-1],[1,0],[-1,0]]
+
+        #bfs
+        trapped_water=0
+        while heap:
+            height, i ,j = heapq.heappop(heap)
+            for x,y in dir:
+                newX=x+i
+                newY=y+j
+                if 0<newX<m and 0<newY<n and not visited[newX][newY]:
+                    visited[newX][newY]=True
+                    cell_height=heightMap[newX][newY]
+                    if cell_height< height:
+                        trapped_water+=height-cell_height
+                        heapq.heappush(heap, (height,newX,newY))
+                    else:
+                        heapq.heappush(heap, (cell_height,newX,newY))
+                
+        return trapped_water
+
+
+À mình hiểu chỗ bạn đang thắc mắc rồi 👍.
+Trong Python (và nhiều ngôn ngữ khác), khi làm việc với **ma trận 2D (mảng 2 chiều)** thì:
+
+```python
+m = len(heightMap)        # số hàng (rows)
+n = len(heightMap[0])     # số cột (columns)
+```
+
+---
+
+### 🔎 Vì sao:
+
+* `heightMap` là một **list các list** (mỗi phần tử là một hàng).
+  Ví dụ:
+
+  ```python
+  heightMap = [
+      [1, 4, 3, 1, 3, 2],   # row 0
+      [3, 2, 1, 3, 2, 4],   # row 1
+      [2, 3, 3, 2, 3, 1]    # row 2
+  ]
+  ```
+
+* `len(heightMap)` = số phần tử lớn nhất bên ngoài = **số hàng** = 3 → gán cho `m`.
+
+* `len(heightMap[0])` = độ dài của **hàng đầu tiên** = **số cột** = 6 → gán cho `n`.
+
+---
+
+### 🤔 Tại sao lại dùng `heightMap[0]` mà không phải `heightMap`?
+
+* Vì `heightMap` là một **list 2D**, trong đó `heightMap[0]` chính là **một hàng** (list 1D).
+* Muốn biết số cột thì chỉ cần đếm phần tử trong một hàng bất kỳ (thường lấy hàng đầu tiên `0`).
+* Nếu bạn viết `len(heightMap)` thì ra số hàng, **chứ không phải số cột**.
+
+---
+
+✅ Tóm lại:
+
+* `m = len(heightMap)` → tổng số hàng (rows).
+* `n = len(heightMap[0])` → số cột (columns) trong một hàng.
+
+---
+
+Bạn có muốn mình minh họa thêm bằng cách in ra `heightMap`, `heightMap[0]`, `len(heightMap)`, `len(heightMap[0])` để thấy trực tiếp giá trị không?
+Ok, mình giải thích đoạn này chi tiết nha 👍
+
+```python
+if i == 0 or i == m-1 or j == 0 or j == n-1:
+    heapq.heappush(heap, (heightMap[i][j], i, j))
+    visited[i][j] = True
+```
+
+---
+
+### 🔎 Ý nghĩa:
+
+Ở đây bạn đang **quét toàn bộ ma trận** `heightMap` (kích thước `m x n`).
+
+* `i` = chỉ số hàng (0 → m-1).
+* `j` = chỉ số cột (0 → n-1).
+
+Điều kiện:
+
+* `i == 0` → ô nằm ở hàng trên cùng.
+* `i == m-1` → ô nằm ở hàng dưới cùng.
+* `j == 0` → ô nằm ở cột đầu tiên.
+* `j == n-1` → ô nằm ở cột cuối cùng.
+
+👉 Nghĩa là **chỉ chọn các ô ở biên ngoài (boundary cells)**.
+
+---
+
+### 🔎 Hành động:
+
+1. `heapq.heappush(heap, (heightMap[i][j], i, j))`
+   → Đưa ô biên `(giá trị, tọa độ)` vào **min-heap**.
+
+   * Giá trị `heightMap[i][j]` = độ cao của ô.
+   * Min-heap giúp ta luôn biết ô biên thấp nhất để bắt đầu tính nước.
+
+2. `visited[i][j] = True`
+   → Đánh dấu ô này đã xử lý (không duyệt lại nữa).
+
+---
+
+### 🤔 Tại sao phải đưa biên vào trước?
+
+* Vì **nước không thể tràn ra ngoài biên** → biên là "bức tường" đầu tiên giữ nước.
+* Từ biên, ta sẽ mở rộng dần vào trong (BFS), và khi đó chiều cao biên thấp nhất quyết định mực nước tối đa có thể giữ.
+
+---
+
+### 📌 Ví dụ nhỏ:
+
+```
+heightMap =
+[
+  [1,4,3],
+  [3,2,5],
+  [2,3,4]
+]
+```
+
+* Các ô biên là:
+  `(0,0)=1, (0,1)=4, (0,2)=3, (1,0)=3, (1,2)=5, (2,0)=2, (2,1)=3, (2,2)=4`.
+* Tất cả được đẩy vào heap.
+* Từ đây, BFS sẽ luôn chọn ô thấp nhất (ví dụ (0,0)=1), rồi mở rộng vào trong.
+
+---
+
+👉 Tóm lại:
+Đoạn code này lấy tất cả **ô biên** làm điểm xuất phát, vì chúng là **rào chắn ban đầu** trong quá trình tính lượng nước bị giữ.
+
+---
+
+Bạn có muốn mình giải thích tiếp cách mà **heap + BFS mở rộng dần từ biên vào trong** hoạt động sau đoạn này không?
+À 👍 mình giải thích cái `visited[i][j] = True` nhé:
+
+---
+
+### 1. Ý nghĩa biến `visited`
+
+* `visited` là **ma trận đánh dấu** (kích thước `m x n`, cùng size với `heightMap`).
+* Mặc định ban đầu tất cả là `False`.
+* Khi một ô đã **được đưa vào heap** hoặc **đã xử lý**, ta đánh dấu `True` để:
+
+  * Tránh **đưa lại ô đó vào heap lần nữa**.
+  * Tránh **duyệt lại ô đó nhiều lần** (sẽ gây vòng lặp vô hạn).
+
+---
+
+### 2. Tại sao biên (`boundary`) phải set `True` ngay?
+
+Vì:
+
+* Biên đã là **điểm xuất phát** → chắc chắn được xử lý đầu tiên.
+* Nếu không set `True`, khi BFS mở rộng từ bên trong, ta có thể lại push ô biên đó một lần nữa → **trùng lặp**.
+
+---
+
+### 3. Ví dụ nhỏ
+
+Giả sử `visited` ban đầu:
+
+```
+False False False
+False False False
+False False False
+```
+
+Khi gặp ô biên `(0,0)`:
+
+```python
+heapq.heappush(heap, (heightMap[0][0], 0, 0))
+visited[0][0] = True
+```
+
+Lúc này `visited`:
+
+```
+True  False False
+False False False
+False False False
+```
+
+👉 Vậy khi BFS lan tới `(0,0)` lần nữa → nó **thấy True** và bỏ qua, không push thêm vào heap.
+
+---
+
+📌 **Kết luận**:
+`visited[i][j] = True` để **đảm bảo mỗi ô chỉ được xử lý đúng một lần**, tránh trùng lặp và vòng lặp vô hạn.
+
+---
+
+Bạn có muốn mình vẽ cái **luồng BFS + visited check** bằng sơ đồ để thấy rõ tại sao phải đánh dấu ngay từ biên không?
+Ok 👍 mình sẽ giải thích từng dòng trong đoạn code này để bạn thấy rõ cách hoạt động nhé:
+
+---
+
+```python
+trapped_water = 0
+```
+
+👉 Biến dùng để **tích lũy tổng lượng nước** có thể hứng lại.
+
+---
+
+```python
+while heap:
+    height, i, j = heapq.heappop(heap)
+```
+
+* `heap` đang lưu các ô theo **chiều cao nhỏ nhất ở trên cùng** (min-heap).
+* Mỗi lần, ta lấy ra ô **thấp nhất** hiện tại từ heap → `(height, i, j)`.
+
+  * Đây chính là “mực nước biên” tạm thời để so sánh với các ô bên trong.
+
+---
+
+```python
+for x, y in dir:
+    newX = x + i
+    newY = y + j
+```
+
+👉 Duyệt 4 hướng (trái, phải, trên, dưới) từ ô `(i, j)` sang ô `(newX, newY)`.
+
+---
+
+```python
+if 0 < newX < m and 0 < newY < n and not visited[newX][newY]:
+```
+
+* Điều kiện hợp lệ:
+
+  1. `(newX, newY)` phải nằm **bên trong ma trận** (không vượt biên).
+  2. Chưa được thăm (`not visited`) → tránh trùng lặp.
+
+---
+
+```python
+visited[newX][newY] = True
+cell_height = heightMap[newX][newY]
+```
+
+* Đánh dấu đã thăm.
+* Lấy chiều cao của ô mới (`cell_height`).
+
+---
+
+```python
+if cell_height < height:
+    trapped_water += height - cell_height
+    heapq.heappush(heap, (height, newX, newY))
+```
+
+* Nếu ô mới **thấp hơn mực nước hiện tại** (`cell_height < height`):
+
+  * Nước sẽ **bị giữ lại** = `(height - cell_height)`.
+  * Sau đó, push vào heap với chiều cao `height` (vì nước lấp lên đến mực `height`).
+
+---
+
+```python
+else:
+    heapq.heappush(heap, (cell_height, newX, newY))
+```
+
+* Nếu ô mới cao hơn hoặc bằng `height`:
+
+  * Không giữ nước.
+  * Nhưng nó trở thành **rào chắn mới** → push vào heap với chiều cao thật của nó (`cell_height`).
+
+---
+
+```python
+return trapped_water
+```
+
+👉 Trả về tổng lượng nước đã hứng được.
+
+---
+
+📌 **Ý tưởng cốt lõi**:
+
+* Luôn mở rộng từ ô thấp nhất ra ngoài bằng BFS (qua heap).
+* Nếu gặp ô thấp hơn, tính nước giữ lại và coi như nó được “lấp lên”.
+* Nếu gặp ô cao hơn, coi nó là **biên mới**.
+* Lặp đến khi heap trống.
+
+---
+
+Bạn có muốn mình minh họa bằng **ma trận nhỏ 3x3** để thấy rõ cách heap thay đổi và `trapped_water` tăng dần không?

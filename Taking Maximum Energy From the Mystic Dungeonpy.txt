@@ -1,0 +1,707 @@
+Taking Maximum Energy From the Mystic Dungeon
+class Solution:
+    def maximumEnergy(self, energy: List[int], k: int) -> int:
+        dp = energy[:]
+        for i in range(len(energy) - k - 1, -1, -1):
+            dp[i] += dp[i + k]
+        return max(dp)
+       
+	   
+	   
+Rất tốt 👏 — dòng
+
+```python
+dp = energy[:]
+```
+
+nhìn đơn giản nhưng **rất quan trọng** trong thuật toán này.
+Cùng giải thích chi tiết nhé 👇
+
+---
+
+### 🧩 1️⃣ Hiểu ý nghĩa của `dp = energy[:]`
+
+* `energy[:]` nghĩa là **tạo một bản sao (copy)** của list `energy`.
+* Nếu viết `dp = energy` thì `dp` và `energy` sẽ **trỏ tới cùng một mảng trong bộ nhớ** → thay đổi `dp` sẽ làm thay đổi `energy`.
+* Còn `dp = energy[:]` tạo **một bản sao độc lập**.
+
+Ví dụ nhỏ:
+
+```python
+energy = [2, -3, 5]
+dp = energy[:]   # sao chép toàn bộ mảng
+dp[0] = 10
+print(energy)  # [2, -3, 5]  -> KHÔNG thay đổi
+```
+
+Nếu viết:
+
+```python
+dp = energy
+dp[0] = 10
+print(energy)  # [10, -3, 5]  -> bị thay đổi
+```
+
+→ Vậy `[:]` dùng để **copy mảng mà không ảnh hưởng đến bản gốc**.
+
+---
+
+### 💡 2️⃣ Về mặt thuật toán
+
+* Ban đầu, `dp[i]` = `energy[i]`.
+* Sau đó, ta cập nhật `dp[i]` = `energy[i] + dp[i + k]`.
+
+→ Mỗi `dp[i]` biểu diễn **tổng năng lượng tối đa có thể thu được**
+bắt đầu từ vị trí `i` và **đi nhảy cách k** về phía sau.
+
+---
+
+### 🔁 Quá trình cập nhật
+
+```python
+for i in range(len(energy) - k - 1, -1, -1):
+    dp[i] += dp[i + k]
+```
+
+Đi từ phải sang trái, ta cộng thêm giá trị “bước nhảy k phía sau”
+để tính dần các tổng năng lượng tối đa.
+
+---
+
+### ✅ Ví dụ minh họa:
+
+Giả sử:
+
+```python
+energy = [2, -3, 5, -1, 2, 4]
+k = 2
+```
+
+Bước 1: copy mảng
+`dp = [2, -3, 5, -1, 2, 4]`
+
+Bước 2: cập nhật từ `i = len(energy) - k - 1 = 3`
+→ chạy `i = 3, 2, 1, 0`
+
+| i | dp[i + k] | dp[i] trước | dp[i] sau | Giải thích |
+| - | --------- | ----------- | --------- | ---------- |
+| 3 | dp[5]=4   | -1          | 3         | -1 + 4     |
+| 2 | dp[4]=2   | 5           | 7         | 5 + 2      |
+| 1 | dp[3]=3   | -3          | 0         | -3 + 3     |
+| 0 | dp[2]=7   | 2           | 9         | 2 + 7      |
+
+→ Cuối cùng `dp = [9, 0, 7, 3, 2, 4]`
+
+`max(dp) = 9` ✅ → kết quả.
+
+---
+
+### 🧠 Kết luận
+
+| Mục đích                         | Giải thích                                                        |
+| -------------------------------- | ----------------------------------------------------------------- |
+| `dp = energy[:]`                 | Tạo bản sao độc lập của `energy` để lưu tổng năng lượng tính toán |
+| Vì sao không dùng `dp = energy`? | Nếu làm vậy sẽ ghi đè lên dữ liệu gốc, gây lỗi logic              |
+| Ý nghĩa `dp[i]`                  | Tổng năng lượng tối đa nếu bắt đầu từ vị trí i và nhảy cách k     |
+| `max(dp)`                        | Kết quả cuối cùng – năng lượng tối đa có thể thu được             |
+
+---
+
+Bạn có muốn mình thêm **hình minh họa (mũi tên chỉ hướng nhảy dp[i] → dp[i+k])** để nhìn trực quan không?
+Rất tốt 👏 — đây là **phần cốt lõi** của thuật toán động (Dynamic Programming).
+Cùng phân tích **từng chi tiết**, dễ hiểu và có logic nhé 👇
+
+---
+
+## 🧩 Toàn bộ đoạn cần hiểu:
+
+```python
+for i in range(len(energy) - k - 1, -1, -1):
+    dp[i] += dp[i + k]
+return max(dp)
+```
+
+---
+
+## 🧠 1️⃣ Ý tưởng tổng thể
+
+* Ta đang tính **tổng năng lượng tối đa** có thể thu được khi bắt đầu ở vị trí `i`.
+* Nếu bạn bắt đầu ở `i`, bạn sẽ **nhảy đến i + k, i + 2k, i + 3k...** cho đến khi vượt khỏi mảng.
+* Nên công thức là:
+
+[
+dp[i] = energy[i] + dp[i + k]
+]
+
+nếu `i + k` còn nằm trong mảng.
+
+---
+
+## 🔁 2️⃣ Vì sao duyệt ngược (`-1, -1, -1`)
+
+```python
+for i in range(len(energy) - k - 1, -1, -1):
+```
+
+Ta duyệt **từ phải sang trái**, vì:
+
+* `dp[i]` **phụ thuộc** vào `dp[i + k]`.
+* Nếu đi từ trái sang phải, `dp[i + k]` chưa được tính.
+* Đi **ngược lại** thì `dp[i + k]` đã có sẵn → dùng được ngay.
+
+🧠 Đây là đặc trưng của **Dynamic Programming dạng từ cuối lên đầu**.
+
+---
+
+## 📊 3️⃣ Giải thích phạm vi `range(len(energy) - k - 1, -1, -1)`
+
+Giả sử:
+
+```
+n = len(energy)
+```
+
+* Bắt đầu tại `n - k - 1`,
+  vì các chỉ số từ `n - k` đến `n - 1` **không có i + k** (vượt mảng).
+  Nên ta **không cộng được gì thêm** cho chúng — giữ nguyên.
+* Kết thúc tại `-1` để bao gồm `i = 0`.
+
+---
+
+## ⚙️ 4️⃣ Dòng cập nhật DP
+
+```python
+dp[i] += dp[i + k]
+```
+
+=>
+[
+dp[i] = energy[i] + dp[i + k]
+]
+
+Nếu ta bắt đầu từ `i`, ta lấy năng lượng hiện tại `energy[i]`
+và cộng thêm tổng tối đa từ điểm `i + k`.
+
+---
+
+## 🔚 5️⃣ Kết quả cuối cùng
+
+```python
+return max(dp)
+```
+
+→ vì ta có thể **bắt đầu ở bất kỳ vị trí nào**,
+nên ta chỉ cần lấy **giá trị lớn nhất** trong `dp`.
+
+---
+
+## 🧩 Ví dụ minh họa
+
+```python
+energy = [2, -3, 5, -1, 2, 4]
+k = 2
+```
+
+| i | energy[i] | dp[i+k] | dp[i] sau cập nhật |
+| - | --------- | ------- | ------------------ |
+| 3 | -1        | 4       | 3                  |
+| 2 | 5         | 2       | 7                  |
+| 1 | -3        | 3       | 0                  |
+| 0 | 2         | 7       | 9                  |
+
+`dp = [9, 0, 7, 3, 2, 4]`
+`max(dp) = 9 ✅`
+
+---
+
+## 🎯 Tóm tắt dễ nhớ
+
+| Dòng code                                      | Ý nghĩa                                         |
+| ---------------------------------------------- | ----------------------------------------------- |
+| `dp = energy[:]`                               | Tạo bản sao để lưu tổng tối đa từng vị trí      |
+| `for i in range(len(energy) - k - 1, -1, -1):` | Duyệt ngược từ phải sang trái                   |
+| `dp[i] += dp[i + k]`                           | Cập nhật tổng năng lượng tối đa từ vị trí i     |
+| `return max(dp)`                               | Trả về tổng năng lượng lớn nhất có thể đạt được |
+
+---
+
+Bạn có muốn mình viết lại phiên bản **có chú thích chi tiết từng dòng** cho đoạn Python này (dễ học và dễ ghi nhớ khi ôn LeetCode) không?
+Rất hay 👏 — dòng
+
+```python
+dp[i] += dp[i + k]
+```
+
+chính là **trái tim** của thuật toán 💥
+Ta cùng giải thích **toán học + trực quan + ví dụ** nhé 👇
+
+---
+
+## 🧩 1️⃣ Ý nghĩa của bài toán
+
+Bạn có một dãy năng lượng:
+
+```
+energy[0], energy[1], ..., energy[n-1]
+```
+
+và một bước nhảy `k`.
+
+Tại mỗi vị trí `i`, bạn có thể **nhảy đến i + k, i + 2k, i + 3k, …**
+cho đến khi ra ngoài mảng.
+
+Mục tiêu:
+➡️ tìm **đường đi** cho tổng năng lượng lớn nhất.
+
+---
+
+## 🧠 2️⃣ Đặt công thức quy hoạch động (DP)
+
+Gọi:
+[
+dp[i] = \text{tổng năng lượng tối đa nếu bắt đầu từ vị trí } i
+]
+
+Nếu ta **đứng ở i**, ta được ngay `energy[i]`.
+Sau đó ta **có thể nhảy đến i + k** (nếu còn trong mảng),
+và tiếp tục lấy thêm năng lượng tối đa từ đó.
+
+Vậy công thức:
+[
+dp[i] = energy[i] + dp[i + k]
+]
+
+---
+
+## ⚙️ 3️⃣ Trong code Python
+
+Dòng:
+
+```python
+dp[i] += dp[i + k]
+```
+
+nghĩa là:
+
+```python
+dp[i] = dp[i] + dp[i + k]
+```
+
+nhưng vì ban đầu ta đã gán:
+
+```python
+dp = energy[:]
+```
+
+nên `dp[i]` **ban đầu chính là energy[i]**,
+nên phép cộng trên tương đương với:
+[
+dp[i] = energy[i] + dp[i + k]
+]
+
+---
+
+## 🔢 4️⃣ Ví dụ cụ thể
+
+Giả sử:
+
+```python
+energy = [2, -3, 5, -1, 2, 4]
+k = 2
+```
+
+Ta khởi tạo:
+
+```python
+dp = [2, -3, 5, -1, 2, 4]
+```
+
+Duyệt ngược từ `i = len(energy) - k - 1 = 3` về `0`.
+
+| i | dp[i] ban đầu | dp[i + k] | dp[i] sau khi cộng | Giải thích                 |
+| - | ------------- | --------- | ------------------ | -------------------------- |
+| 3 | -1            | 4         | 3                  | energy[3] + dp[5] = -1 + 4 |
+| 2 | 5             | 2         | 7                  | energy[2] + dp[4] = 5 + 2  |
+| 1 | -3            | 3         | 0                  | energy[1] + dp[3] = -3 + 3 |
+| 0 | 2             | 7         | 9                  | energy[0] + dp[2] = 2 + 7  |
+
+Kết quả:
+`dp = [9, 0, 7, 3, 2, 4]`
+→ `max(dp) = 9 ✅`
+
+---
+
+## 🎯 5️⃣ Ý nghĩa trực quan
+
+👉 `dp[i + k]` là “năng lượng tối đa” **nếu bạn nhảy thêm một bước từ i**
+👉 `dp[i]` là “năng lượng tại i + tất cả những gì bạn có thể lấy từ i + k trở đi”
+
+Nói cách khác:
+
+> Mỗi vị trí i tự “hưởng lợi” từ kết quả tối ưu đã tính sẵn ở i + k.
+
+Đó là **cách dynamic programming tiết kiệm thời gian** —
+vì bạn không cần tính lại từng đường đi.
+
+---
+
+## 🧩 Tóm tắt ngắn gọn
+
+| Biểu thức            | Ý nghĩa                                                 |
+| -------------------- | ------------------------------------------------------- |
+| `dp[i]`              | năng lượng tối đa nếu bắt đầu từ i                      |
+| `dp[i + k]`          | năng lượng tối đa nếu bắt đầu từ i + k                  |
+| `dp[i] += dp[i + k]` | cộng năng lượng ở i với tổng tối đa từ i + k            |
+| Hướng duyệt          | từ phải sang trái, vì `dp[i]` phụ thuộc vào `dp[i + k]` |
+
+---
+
+Bạn có muốn mình vẽ **sơ đồ mũi tên minh họa dp[i] → dp[i+k]** để thấy rõ mối liên hệ không?
+Tuyệt vời 😎 — đây là **sơ đồ mũi tên minh họa** cho dòng
+👉 `dp[i] += dp[i + k]`
+giúp bạn **nhìn thấy rõ cách DP “truyền giá trị” qua từng bước nhảy**.
+
+---
+
+### 🧩 Ví dụ minh họa:
+
+Giả sử ta có:
+
+```
+energy = [2, -3, 5, -1, 2, 4]
+k = 2
+```
+
+Ta chia các chỉ số thành **những nhóm cách nhau k = 2**:
+
+```
+Nhóm 1 (bắt đầu từ 0):  0 → 2 → 4
+Nhóm 2 (bắt đầu từ 1):  1 → 3 → 5
+```
+
+---
+
+### 🔁 Mũi tên biểu diễn `dp[i] += dp[i + k]`
+
+#### 🧠 Nhóm 1:
+
+```
+index:  0     2     4
+energy: 2     5     2
+         ↑     ↑
+         │     │
+     dp[0]=energy[0]+dp[2]
+     dp[2]=energy[2]+dp[4]
+```
+
+Tức là:
+
+```
+dp[4] = 2          (vì 4 + 2 = 6 ra khỏi mảng)
+dp[2] = 5 + 2 = 7
+dp[0] = 2 + 7 = 9
+```
+
+🟢 Tổng cộng: `9` là năng lượng tối đa cho nhóm này.
+
+---
+
+#### 🧠 Nhóm 2:
+
+```
+index:  1     3     5
+energy: -3    -1     4
+          ↑     ↑
+          │     │
+      dp[1]=energy[1]+dp[3]
+      dp[3]=energy[3]+dp[5]
+```
+
+Tức là:
+
+```
+dp[5] = 4
+dp[3] = -1 + 4 = 3
+dp[1] = -3 + 3 = 0
+```
+
+🟡 Tổng cộng: `4` là năng lượng tối đa của nhóm này (nếu bắt đầu từ 5).
+
+---
+
+### 🎯 Tổng hợp:
+
+```
+energy = [2, -3, 5, -1, 2, 4]
+dp      = [9, 0, 7, 3, 2, 4]
+```
+
+→ Mũi tên mô tả hướng cộng dồn (ngược phải → trái):
+
+```
+(0) ←── (2) ←── (4)
+(1) ←── (3) ←── (5)
+```
+
+---
+
+### 📘 Giải thích trực quan:
+
+* Mỗi mũi tên `←` là **một bước cộng dp[i] += dp[i + k]**
+* Nghĩa là giá trị ở vị trí `i + k` được **“chuyền ngược về”** cho `i`
+* Cứ thế, năng lượng **tích lũy ngược lại** từ phải sang trái.
+
+---
+
+Bạn có muốn mình **vẽ lại sơ đồ này ở dạng hình ảnh trực quan** (dạng khối và mũi tên màu sắc: xanh → đỏ) để bạn dễ hình dung hơn không?
+Rất hay 👏 — câu này là **trọng tâm trong Dynamic Programming (DP)**.
+Tui giải thích thật dễ hiểu cho bạn nhé:
+
+---
+
+## 🎯 Mục tiêu của công thức `dp[i] += dp[i + k]`
+
+Công thức này dùng khi:
+
+* Bạn **đi ngược** trong mảng (từ phải sang trái),
+* Mỗi bước bạn **cộng thêm giá trị ở vị trí cách `k` bước về phía sau**.
+
+---
+
+## 🧩 Hiểu trực quan:
+
+Giả sử:
+
+```
+energy = [2, 3, 5, 4, 1]
+k = 2
+```
+
+Ta có:
+
+```
+i = 0  1  2  3  4
+```
+
+### Bước 1️⃣: Khởi tạo
+
+Ban đầu:
+
+```
+dp[i] = energy[i]
+```
+
+tức là:
+
+```
+dp = [2, 3, 5, 4, 1]
+```
+
+---
+
+### Bước 2️⃣: Duyệt ngược và cộng dồn
+
+Khi bạn thấy `dp[i] += dp[i + k]`,
+nghĩa là:
+
+> “Tại vị trí i, tôi không chỉ lấy energy[i],
+> mà còn cộng thêm giá trị tốt nhất ở ô cách đó k vị trí.”
+
+---
+
+### 💡 Ví dụ cụ thể
+
+Bắt đầu duyệt từ phải sang trái:
+
+#### i = 3:
+
+```
+dp[3] += dp[3 + 2] → dp[3] += dp[5]
+```
+
+nhưng `dp[5]` không tồn tại → bỏ qua
+
+=> `dp[3] = 4`
+
+---
+
+#### i = 2:
+
+```
+dp[2] += dp[2 + 2] → dp[2] += dp[4]
+```
+
+=> `dp[2] = 5 + 1 = 6`
+
+---
+
+#### i = 1:
+
+```
+dp[1] += dp[1 + 2] → dp[1] += dp[3]
+```
+
+=> `dp[1] = 3 + 4 = 7`
+
+---
+
+#### i = 0:
+
+```
+dp[0] += dp[0 + 2] → dp[0] += dp[2]
+```
+
+=> `dp[0] = 2 + 6 = 8`
+
+---
+
+### ✅ Kết quả cuối cùng:
+
+```
+dp = [8, 7, 6, 4, 1]
+```
+
+---
+
+## 🧠 Giải thích ý nghĩa
+
+| Vị trí | Diễn giải                                                | Kết quả |
+| :----: | :------------------------------------------------------- | :-----: |
+|  dp[0] | energy[0] + năng lượng tốt nhất từ ô cách 2 bước (dp[2]) |    8    |
+|  dp[1] | energy[1] + năng lượng tốt nhất từ ô cách 2 bước (dp[3]) |    7    |
+|  dp[2] | energy[2] + năng lượng tốt nhất từ ô cách 2 bước (dp[4]) |    6    |
+
+---
+
+## 🔍 Kết luận
+
+`dp[i] += dp[i + k]` nghĩa là:
+
+> “Nếu tôi đứng ở vị trí `i`,
+> tôi có thể nhảy sang vị trí `i + k`,
+> nên tổng năng lượng của tôi là năng lượng tại `i` cộng thêm năng lượng tốt nhất mà tôi đạt được ở `i + k`.”
+
+---
+
+Bạn có muốn tui vẽ **sơ đồ mũi tên** minh họa cách `dp[i] += dp[i + k]` cộng dồn qua từng bước (kiểu DP “chảy ngược”) không?
+Xem hình 1 lần là hiểu liền.
+Câu hỏi của bạn **rất hay** 👍 — và đúng là cốt lõi của Dynamic Programming (DP):
+
+> “Tại sao lại **nghĩ ra** được công thức `dp[i] += dp[i + k]`?”
+> “Nền tảng toán học hay logic nào dẫn đến công thức đó?”
+
+Giờ ta đi từng bước để **hiểu từ gốc** nhé 👇
+
+---
+
+## 🌱 1️⃣ Hiểu bài toán gốc
+
+Bạn có:
+
+```
+energy = [e₀, e₁, e₂, ..., eₙ₋₁]
+```
+
+và bạn **được phép nhảy k bước** sang phải mỗi lần.
+
+Mục tiêu:
+
+> Tìm **tổng năng lượng tối đa** bạn có thể nhận được khi bắt đầu ở **bất kỳ vị trí nào**.
+
+---
+
+## 🧩 2️⃣ Nhận ra mối quan hệ giữa các vị trí
+
+Nếu bạn **đứng ở vị trí i**, bạn có thể:
+
+* **nhận energy[i]**, và
+* **tiếp tục đi đến vị trí i + k, i + 2k, i + 3k...** (nếu còn trong mảng)
+
+➡️ Tổng năng lượng khi bắt đầu ở `i` =
+`energy[i] + energy[i + k] + energy[i + 2k] + ...`
+
+---
+
+## 🧠 3️⃣ Tư duy quy hoạch động (Dynamic Programming)
+
+Thay vì tính tổng lặp đi lặp lại, ta để:
+
+```
+dp[i] = tổng năng lượng tối đa nếu bắt đầu từ vị trí i
+```
+
+Rõ ràng, nếu từ `i` bạn **nhảy tiếp đến i + k**, thì:
+
+```
+dp[i] = energy[i] + dp[i + k]
+```
+
+🎯 Đây chính là công thức **quy hoạch động (DP recurrence)**.
+Nó thể hiện mối quan hệ giữa trạng thái `i` và trạng thái `i + k`.
+
+---
+
+## 📏 4️⃣ Vì sao phải duyệt ngược?
+
+Bởi vì `dp[i]` **phụ thuộc vào dp[i + k]**,
+nên bạn **phải biết dp[i + k] trước khi tính dp[i]**.
+
+→ do đó ta **duyệt ngược** (từ phải qua trái).
+
+---
+
+## 🧮 5️⃣ Viết công thức tính
+
+Ban đầu:
+
+```
+dp[i] = energy[i]
+```
+
+→ năng lượng chỉ tính tại chỗ.
+
+Sau đó, ta **cập nhật theo quan hệ DP**:
+
+```
+dp[i] += dp[i + k]
+```
+
+vì dp[i + k] đã lưu tổng năng lượng tốt nhất bắt đầu tại i + k.
+
+---
+
+## 🧠 6️⃣ Tư duy tổng quát
+
+Công thức này sinh ra từ **nguyên lý tối ưu con (optimal substructure)**:
+
+> “Bài toán lớn có thể được giải bằng cách ghép kết quả tối ưu của các bài toán con nhỏ hơn.”
+
+Ở đây:
+
+* Kết quả tối ưu bắt đầu ở i phụ thuộc vào
+* Kết quả tối ưu bắt đầu ở i + k
+
+nên ta dùng công thức `dp[i] = energy[i] + dp[i + k]`.
+
+---
+
+## ✅ 7️⃣ Tóm lại
+
+| Thành phần           | Ý nghĩa                                                  |
+| :------------------- | :------------------------------------------------------- |
+| `dp[i]`              | Tổng năng lượng tối đa nếu bắt đầu ở vị trí i            |
+| `dp[i + k]`          | Tổng năng lượng tối đa nếu bắt đầu ở vị trí i + k        |
+| `dp[i] += dp[i + k]` | Cập nhật trạng thái i dựa trên bài toán con i + k        |
+| Duyệt ngược          | Vì trạng thái hiện tại phụ thuộc vào trạng thái phía sau |
+
+---
+
+👉 **Nói dễ hiểu:**
+Công thức này không phải “tự nhiên mà có”,
+nó xuất phát từ **mối quan hệ đệ quy giữa các vị trí cách nhau k bước**,
+và quy hoạch động chính là cách **lưu lại và tái sử dụng** các kết quả con đó.
+
+---
+
+Nếu bạn muốn, tui có thể minh họa công thức này bằng **sơ đồ mũi tên DP** (vẽ dòng năng lượng từ i → i + k → i + 2k), giúp bạn thấy rõ tại sao phải cộng như vậy.
+Bạn có muốn tui vẽ không?

@@ -1,0 +1,495 @@
+Largest Triangle Area
+from itertools import combinations
+
+class Solution:
+    def largestTriangleArea(self, points: list[list[int]]) -> float:
+        return max(
+            abs(getVector(a, b, c)) / 2
+            for a, b, c in combinations(getBoundary(points), 3)
+        )
+def getBoundary(points):
+    points = [(a, b) for a, b in points]
+    points.sort(key=lambda x: (x[0], x[1]))
+
+    upper = []
+    lower = []
+
+    for point in points:
+
+        while len(lower) >= 2 and getVector(lower[-2], lower[-1], point) < 0:
+            lower.pop()
+        lower.append(point)
+
+        while len(upper) >= 2 and getVector(upper[-2], upper[-1], point) > 0:
+            upper.pop()
+        upper.append(point)
+
+    return list(set(upper + lower))
+
+def getVector(a, b, c):
+    return (b[0] - a[0]) * (b[1] - c[1]) - (b[1] - a[1]) * (b[0] - c[0])
+	
+
+
+Rồi 👍 mình giải thích rõ đoạn này:
+
+```python
+def largestTriangleArea(self, points: list[list[int]]) -> float:
+    return max(
+        abs(getVector(a, b, c)) / 2
+        for a, b, c in combinations(getBoundary(points), 3)
+    )
+```
+
+---
+
+### 📌 Giải thích từng phần
+
+1. **`getBoundary(points)`**
+
+   * Hàm này lấy **convex hull** (bao lồi) của tập hợp điểm.
+   * Vì tam giác có diện tích lớn nhất chắc chắn phải tạo bởi 3 điểm nằm trên convex hull (không cần xét điểm bên trong).
+
+2. **`combinations(getBoundary(points), 3)`**
+
+   * Sinh ra tất cả các **bộ 3 điểm khác nhau** từ convex hull.
+   * Mỗi bộ 3 điểm ứng với một tam giác.
+
+3. **`getVector(a, b, c)`**
+
+   * Đây là công thức cross product (tích có hướng) để tính **gấp đôi diện tích tam giác** tạo bởi 3 điểm `a, b, c`.
+   * Kết quả có thể âm (tùy hướng quay), nên ta dùng `abs(...)`.
+
+4. **`abs(getVector(a, b, c)) / 2`**
+
+   * Diện tích tam giác = ½ × |cross product|.
+   * Vì cross product = 2 × diện tích.
+
+5. **`max(...)`**
+
+   * Duyệt tất cả tam giác từ các điểm trên hull → lấy diện tích lớn nhất.
+
+---
+
+### 📌 Thuật toán tổng quát
+
+1. Tìm convex hull của tập điểm (loại bỏ điểm nằm trong).
+2. Duyệt qua mọi bộ 3 điểm trên convex hull.
+3. Tính diện tích tam giác bằng cross product.
+4. Trả về diện tích lớn nhất.
+
+---
+
+👉 Ví dụ:
+Input: `points = [[0,0],[0,1],[1,0],[0,2],[2,0]]`
+
+* Convex hull = `[(0,0), (2,0), (0,2)]`
+* Tam giác tạo bởi 3 điểm này có diện tích = 2 → đây là diện tích lớn nhất.
+
+---
+
+Bạn có muốn mình vẽ **hình minh họa bằng ASCII hoặc hình vẽ** để dễ hình dung convex hull + tam giác lớn nhất không?
+À 👍, cái mình ghi:
+
+```
+Convex hull = [(0,0), (2,0), (0,2)]
+```
+
+---
+
+### 📌 Giải thích
+
+* **Convex hull (bao lồi)** là **đa giác lồi nhỏ nhất bao trùm tất cả các điểm** trong tập hợp.
+* Nói dễ hiểu: giống như lấy dây chun buộc quanh tất cả các điểm → phần bao ngoài chính là convex hull.
+
+---
+
+### 📌 Trong ví dụ:
+
+Input:
+
+```
+points = [[0,0],[0,1],[1,0],[0,2],[2,0]]
+```
+
+Các điểm:
+
+* (0,0)
+* (0,1)
+* (1,0)
+* (0,2)
+* (2,0)
+
+Convex hull của chúng là:
+
+* (0,0) (góc trái dưới)
+* (2,0) (góc phải dưới)
+* (0,2) (góc trái trên)
+
+Còn điểm (0,1) và (1,0) nằm **bên trong** tam giác này nên không thuộc convex hull.
+
+👉 Vậy convex hull = `[(0,0), (2,0), (0,2)]`.
+
+---
+
+Bạn có muốn mình vẽ **hình trên tọa độ** để minh họa convex hull này không?
+Ok mình giải thích chi tiết đoạn code này nhé 👇
+
+```python
+def getBoundary(points):
+    # Đảm bảo points là list các tuple (x, y)
+    points = [(a, b) for a, b in points]
+
+    # Sắp xếp các điểm theo hoành độ (x), nếu x bằng thì theo tung độ (y)
+    # → chuẩn bị cho thuật toán dựng convex hull
+    points.sort(key=lambda x: (x[0], x[1]))
+
+    # upper: lưu nửa trên của convex hull
+    # lower: lưu nửa dưới của convex hull
+    upper = []
+    lower = []
+```
+
+---
+
+### 📌 Ý nghĩa từng bước:
+
+1. **`points = [(a, b) for a, b in points]`**
+
+   * Chỉ đơn giản là chuẩn hóa input → đảm bảo mỗi phần tử là cặp `(x, y)`.
+
+2. **`points.sort(key=lambda x: (x[0], x[1]))`**
+
+   * Sắp xếp theo `x` trước, nếu bằng nhau thì theo `y`.
+   * Đây là bước chuẩn bị cho thuật toán **Monotone Chain** để dựng convex hull.
+   * Sau khi sort, các điểm đi từ trái → phải (theo trục hoành).
+
+3. **`upper = []`, `lower = []`**
+
+   * Ta sẽ xây dựng convex hull bằng cách tách thành:
+
+     * `lower`: nửa dưới (bao từ trái qua phải, phía dưới)
+     * `upper`: nửa trên (bao từ trái qua phải, phía trên)
+   * Cuối cùng ghép 2 nửa lại sẽ được toàn bộ convex hull.
+
+---
+
+👉 Tóm lại:
+Hàm `getBoundary` đang chuẩn bị dữ liệu cho **thuật toán dựng convex hull bằng Monotone Chain**.
+
+* Sort các điểm trước.
+* Dùng 2 mảng `upper` và `lower` để xây dựng phần trên và dưới của hull.
+
+---
+
+Bạn có muốn mình giải thích tiếp **while len(lower) >= 2 and getVector(...)** trong hàm này không?
+Rồi, mình giải thích đoạn này chi tiết nhé 👇
+
+```python
+for point in points:
+
+    # Xây dựng convex hull nửa dưới (lower hull)
+    while len(lower) >= 2 and getVector(lower[-2], lower[-1], point) < 0:
+        lower.pop()
+    lower.append(point)
+
+    # Xây dựng convex hull nửa trên (upper hull)
+    while len(upper) >= 2 and getVector(upper[-2], upper[-1], point) > 0:
+        upper.pop()
+    upper.append(point)
+
+return list(set(upper + lower))
+```
+
+---
+
+### 🔎 Giải thích:
+
+1. **`for point in points:`**
+
+   * Lần lượt duyệt từng điểm (đã được sort theo x rồi y).
+   * Mỗi `point` sẽ được thêm vào `lower` và `upper`.
+
+---
+
+2. **Xử lý `lower` (nửa dưới):**
+
+```python
+while len(lower) >= 2 and getVector(lower[-2], lower[-1], point) < 0:
+    lower.pop()
+lower.append(point)
+```
+
+* `getVector(a, b, c)` chính là **diện tích có hướng** (cross product) của tam giác `(a, b, c)`.
+
+  * Kết quả dương → quay trái (left turn).
+  * Kết quả âm → quay phải (right turn).
+  * Kết quả 0 → thẳng hàng.
+
+* Với **lower hull**, ta cần giữ đường bao **quay trái** (convex).
+
+  * Nếu `getVector < 0` tức là đang quay phải → không thuộc convex hull → bỏ (`pop`) điểm giữa (`lower[-1]`).
+
+* Sau đó thêm `point` vào.
+
+---
+
+3. **Xử lý `upper` (nửa trên):**
+
+```python
+while len(upper) >= 2 and getVector(upper[-2], upper[-1], point) > 0:
+    upper.pop()
+upper.append(point)
+```
+
+* Ngược lại với `lower`, ở `upper` ta cần giữ đường bao **quay phải**.
+* Nếu `getVector > 0` (quay trái) → không hợp lệ → bỏ điểm giữa.
+* Sau đó thêm `point` vào.
+
+---
+
+4. **Kết quả cuối cùng:**
+
+```python
+return list(set(upper + lower))
+```
+
+* Ghép `upper` và `lower` lại thành một convex hull đầy đủ.
+* Dùng `set` để loại bỏ điểm trùng lặp (vì 2 nửa có thể chứa điểm đầu/cuối giống nhau).
+
+---
+
+### 📌 Tóm gọn:
+
+* Đoạn code này chính là **thuật toán Monotone Chain** để dựng convex hull:
+
+  * Duyệt tất cả điểm từ trái sang phải.
+  * Dùng cross product (`getVector`) để kiểm tra hướng quay.
+  * Pop ra nếu không đúng chiều convex.
+* Sau khi chạy xong → ta thu được danh sách điểm trên đường bao ngoài cùng (`boundary`).
+
+---
+
+👉 Bạn có muốn mình vẽ sơ đồ trực quan (minh họa quay trái/quay phải với cross product) cho dễ hình dung không?
+À mình hiểu rồi 🚀 bạn đang thắc mắc tại sao lại có:
+
+* Trong vòng `while` thì dùng điều kiện
+
+```python
+len(lower) >= 2 and getVector(lower[-2], lower[-1], point)
+```
+
+* Nhưng khi trả về thì lại là
+
+```python
+list(set(upper + lower))
+```
+
+---
+
+### 1. Vì sao `len(lower) >= 2`?
+
+* Khi kiểm tra hướng quay (`getVector`), ta cần **3 điểm**:
+
+  * `lower[-2]` (điểm áp chót)
+  * `lower[-1]` (điểm cuối hiện tại)
+  * `point` (điểm sắp thêm)
+* Nếu `len(lower) < 2` thì không đủ điểm để kiểm tra nên không cần làm gì → chỉ thêm thẳng `point`.
+
+---
+
+### 2. Vì sao lại `list(set(upper + lower))`?
+
+* Sau khi duyệt xong:
+
+  * `lower` chứa nửa dưới convex hull.
+  * `upper` chứa nửa trên convex hull.
+* Nhưng **điểm đầu và điểm cuối** (ví dụ: điểm trái nhất, điểm phải nhất) sẽ có trong cả `lower` và `upper`.
+* Nếu ta chỉ `upper + lower` thì bị **trùng điểm** → cần loại bỏ.
+* Dùng `set(...)` để bỏ trùng, rồi `list(...)` để biến lại thành danh sách.
+
+Ví dụ nhỏ:
+
+```python
+points = [(0,0), (2,0), (2,2), (0,2)]
+```
+
+* `lower = [(0,0), (2,0), (2,2)]`
+* `upper = [(0,2), (0,0), (2,0)]`
+* Ghép lại: `[(0,0), (2,0), (2,2), (0,2), (0,0), (2,0)]` (thừa điểm)
+* Sau khi `set`: `[(0,0), (2,0), (2,2), (0,2)]` ✅ chính là convex hull.
+
+---
+
+👉 Nếu bạn muốn **giữ nguyên thứ tự hull** (theo chiều kim đồng hồ hoặc ngược lại) thì không nên dùng `set`, mà chỉ cần `upper[:-1] + lower[:-1]`.
+
+---
+
+Bạn có muốn mình viết lại code theo cách **không dùng `set`** (giữ thứ tự hull rõ ràng) để so sánh không?
+À mình hiểu ý bạn rồi 👍. Bạn đang nhầm giữa **tam giác** và **kiểm tra hướng quay trong convex hull**.
+Để mình phân tích rõ:
+
+---
+
+### 1. Tam giác thì đúng, phải có **3 điểm**
+
+Nhưng trong đoạn code convex hull, ta **chưa cần tạo tam giác**, mà chỉ kiểm tra hướng quay (left turn hay right turn).
+
+Hướng quay (cross product) cần 3 điểm:
+
+* `lower[-2]` → điểm áp chót trong hull
+* `lower[-1]` → điểm cuối trong hull
+* `point` → điểm mới đang xét
+
+---
+
+### 2. Vì sao `len(lower) >= 2` là đủ?
+
+* Khi `len(lower) = 2`, ta đã có **2 điểm trong hull**.
+* Cộng thêm `point` (điểm mới) thì tổng cộng = **3 điểm** → đủ để kiểm tra hướng quay.
+
+👉 Nghĩa là **không cần `>= 3`**, vì điểm thứ 3 chính là `point` đang xét.
+
+---
+
+### 3. Ví dụ minh họa
+
+Giả sử ta có các điểm theo thứ tự:
+
+```
+A(0,0), B(2,0), C(1,1)
+```
+
+* Bắt đầu: `lower = [A]`
+* Thêm B → `lower = [A,B]` (`len = 2`)
+* Xét C: cần kiểm tra hướng của (A, B, C).
+
+  * Lúc này dùng `lower[-2] = A`, `lower[-1] = B`, `point = C`
+  * Đủ 3 điểm → OK ✅
+
+Nếu điều kiện là `> 2`, thì sẽ bỏ qua bước kiểm tra ở đây, dẫn đến sai convex hull.
+
+---
+
+✅ **Kết luận:**
+`len(lower) >= 2` là chuẩn, vì với 2 điểm có sẵn + điểm mới xét = đủ 3 điểm để kiểm tra hướng quay.
+Nếu bắt `> 2` thì sẽ yêu cầu có 3 điểm sẵn, cộng thêm `point` thành 4 điểm → thừa.
+
+---
+
+Bạn có muốn mình viết lại thuật toán convex hull với **hình minh họa** (từng bước thêm điểm, pop, giữ lại hull) để dễ hình dung hơn không?
+Hàm `getVector(a, b, c)` bạn đưa chính là công thức tính **tích có hướng (cross product 2D)** để xác định **hướng quay** khi đi từ điểm `a → b → c`.
+
+---
+
+### Công thức
+
+```python
+def getVector(a, b, c):
+    return (b[0] - a[0]) * (b[1] - c[1]) - (b[1] - a[1]) * (b[0] - c[0])
+```
+
+Trong đó:
+
+* `a = (ax, ay)`
+* `b = (bx, by)`
+* `c = (cx, cy)`
+
+Ta tính:
+[
+\text{cross} = (bx - ax) \cdot (cy - ay) - (by - ay) \cdot (cx - ax)
+]
+
+---
+
+### Ý nghĩa
+
+* Nếu `cross > 0`: ba điểm tạo thành **quay trái (counter-clockwise, CCW)**.
+* Nếu `cross < 0`: ba điểm tạo thành **quay phải (clockwise, CW)**.
+* Nếu `cross = 0`: ba điểm **thẳng hàng (collinear)**.
+
+---
+
+### Ví dụ
+
+1. **Quay trái**
+   `a=(0,0), b=(1,0), c=(1,1)`
+   [
+   cross = (1-0)(1-0) - (0-0)(1-0) = 1 > 0
+   ]
+   👉 CCW (quay trái).
+
+2. **Quay phải**
+   `a=(0,0), b=(1,0), c=(1,-1)`
+   [
+   cross = (1-0)(-1-0) - (0-0)(1-0) = -1 < 0
+   ]
+   👉 CW (quay phải).
+
+3. **Thẳng hàng**
+   `a=(0,0), b=(1,0), c=(2,0)`
+   [
+   cross = (1-0)(0-0) - (0-0)(2-0) = 0
+   ]
+   👉 3 điểm thẳng hàng.
+
+---
+
+✅ Trong thuật toán convex hull (Monotone Chain), `getVector` được dùng để:
+
+* Nếu `cross < 0` (quay phải) → **bỏ bớt điểm** vì hull phải giữ đường bao lồi quay trái.
+* Nếu `cross >= 0` → giữ lại điểm.
+
+---
+
+Bạn có muốn mình vẽ hình minh họa `cross product` để thấy rõ **quay trái/quay phải/thẳng hàng** không?
+`from itertools import combinations` là lệnh **import** trong Python để dùng hàm `combinations` từ thư viện chuẩn `itertools`.
+
+---
+
+### 👉 `itertools.combinations(iterable, r)`
+
+* Sinh ra **tất cả các tập hợp con** có độ dài `r` từ một `iterable`.
+* Các phần tử trong mỗi tổ hợp được lấy theo thứ tự ban đầu (không sắp xếp lại).
+* Không lặp lại phần tử.
+
+---
+
+### Ví dụ
+
+```python
+from itertools import combinations
+
+nums = [1, 2, 3, 4]
+
+# Lấy tất cả tổ hợp 2 phần tử
+for comb in combinations(nums, 2):
+    print(comb)
+```
+
+**Output:**
+
+```
+(1, 2)
+(1, 3)
+(1, 4)
+(2, 3)
+(2, 4)
+(3, 4)
+```
+
+---
+
+### Trong bài toán "Largest Triangle Area"
+
+```python
+for a, b, c in combinations(points, 3):
+    # a, b, c là 3 điểm khác nhau
+    # tính diện tích tam giác (a, b, c)
+```
+
+Nghĩa là: **tự động lấy tất cả bộ ba điểm trong `points` để xét tam giác lớn nhất**.
+
+---
+
+Bạn có muốn mình viết lại đoạn code `largestTriangleArea` **không dùng `combinations`** (dùng 3 vòng `for` lồng nhau như Java) để bạn so sánh không?

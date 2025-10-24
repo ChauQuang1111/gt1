@@ -1,0 +1,354 @@
+Lexicographically Smallest String After Applying Operations
+from math import gcd
+
+class Solution:
+    def findLexSmallestString(self, s: str, a: int, b: int) -> str:
+        s = list(map(int, s))
+        n = len(s)
+        step = gcd(b, n)
+        g = gcd(a, 10)
+        ans = [10]
+
+        def modify(start: int) -> None:
+            ch = t[start]
+            inc = ch % g - ch
+            if inc:
+                for j in range(start, n, 2):
+                    t[j] = (t[j] + inc) % 10
+
+        for i in range(0, n, step):      
+            t = s[i:] + s[:i]
+            modify(1)
+            if step % 2:
+                modify(0)
+            ans = min(ans, t)
+
+        return ''.join(map(str, ans))
+		
+Rất hay 👍 — đây chính là phần cốt lõi của thuật toán, nên mình sẽ giải thích thật kỹ và dễ hiểu nhé.
+Đoạn code này nằm trong hàm `modify(start: int)` của phiên bản Python, nhiệm vụ của nó là **cộng thêm giá trị `a` (mod 10)** vào **các vị trí chẵn hoặc lẻ** trong chuỗi số để làm cho chuỗi **nhỏ nhất có thể** về mặt từ điển.
+
+---
+
+## 🧩 Code gốc:
+
+```python
+def modify(start: int) -> None:
+    ch = t[start]
+    inc = ch % g - ch
+    if inc:
+        for j in range(start, n, 2):
+            t[j] = (t[j] + inc) % 10
+```
+
+---
+
+## 🧠 Ý tưởng tổng quát
+
+Ta được phép **cộng a (mod 10)** nhiều lần vào các chữ số **ở vị trí lẻ** (và nếu điều kiện cho phép thì cả **chẵn**).
+Mục tiêu của `modify` là:
+👉 *Làm cho các chữ số ở các vị trí được chọn nhỏ nhất có thể (0–9).*
+
+---
+
+## 🔹 Biến `start`
+
+* `start = 1` → xử lý **vị trí lẻ** (odd indices).
+* `start = 0` → xử lý **vị trí chẵn** (even indices).
+* Bước nhảy `j += 2` giúp chỉ cập nhật các vị trí đó.
+
+---
+
+## 🔹 Dòng `ch = t[start]`
+
+* Lấy chữ số đầu tiên trong nhóm (ví dụ, chữ số đầu tiên ở vị trí lẻ/chẵn).
+* Ta sẽ tìm cách giảm chữ số này xuống mức nhỏ nhất có thể.
+
+---
+
+## 🔹 Dòng `inc = ch % g - ch`
+
+### Giải thích:
+
+Ta biết rằng khi cộng `a` nhiều lần mod 10, ta chỉ có thể đạt một số giá trị nhất định, và các giá trị này **cách nhau bội số của `g = gcd(a, 10)`**.
+
+Ví dụ:
+
+* Nếu `a = 4` → `g = 2`
+* Các chữ số có thể đạt là `{ch, ch+2, ch+4, ch+6, ch+8}` mod 10.
+
+→ Nghĩa là chữ số nhỏ nhất có thể đạt được là `ch % g`.
+
+---
+
+### Do đó:
+
+`inc = ch % g - ch`
+→ Là **độ thay đổi cần cộng thêm** để giảm `ch` xuống giá trị nhỏ nhất trong cùng chu kỳ.
+
+Nhưng vì phép cộng có thể mod 10, nên sau đó ta sẽ làm:
+
+```python
+(t[j] + inc) % 10
+```
+
+để đảm bảo kết quả nằm trong khoảng `[0, 9]`.
+
+---
+
+## 🔹 Vòng lặp `for j in range(start, n, 2)`
+
+* Duyệt tất cả các chữ số **ở cùng nhóm** (chẵn/lẻ).
+* Mỗi chữ số `t[j]` được cập nhật bằng công thức:
+
+  ```python
+  t[j] = (t[j] + inc) % 10
+  ```
+
+  → Nghĩa là cộng `inc` lần theo mod 10.
+
+---
+
+## 🔹 Ví dụ minh họa
+
+Giả sử:
+
+```
+t = [5, 8, 3, 9]
+a = 4  → g = gcd(4,10) = 2
+start = 1  (xử lý vị trí lẻ)
+```
+
+Bước 1️⃣: `ch = t[1] = 8`
+`inc = 8 % 2 - 8 = 0 - 8 = -8`
+
+Bước 2️⃣: Cập nhật các vị trí lẻ:
+
+```
+t[1] = (8 + (-8)) % 10 = 0
+t[3] = (9 + (-8)) % 10 = 1
+```
+
+✅ Kết quả: `t = [5, 0, 3, 1]`
+→ Các chữ số lẻ giờ nhỏ hơn hẳn, giúp chuỗi nhỏ hơn về mặt từ điển.
+
+---
+
+## 🧾 Tóm lại
+
+| Dòng                           | Giải thích                                                                    |
+| ------------------------------ | ----------------------------------------------------------------------------- |
+| `ch = t[start]`                | Lấy chữ số đầu tiên trong nhóm (lẻ/chẵn) để tham chiếu                        |
+| `inc = ch % g - ch`            | Tính lượng cần cộng để đạt giá trị nhỏ nhất có thể (trong cùng chu kỳ mod 10) |
+| `for j in range(start, n, 2):` | Duyệt toàn bộ các vị trí chẵn/lẻ                                              |
+| `t[j] = (t[j] + inc) % 10`     | Cộng `inc` theo mod 10 để giảm các chữ số xuống mức nhỏ nhất                  |
+
+---
+
+Nếu bạn muốn, mình có thể **viết lại phiên bản này có `print()` minh họa từng bước** (để bạn thấy rõ giá trị `ch`, `inc`, `t[j]` thay đổi như thế nào trong từng vòng) — bạn có muốn mình làm không?
+Rất tốt 👍 — đoạn code này là phần **chính** trong lời giải của bài **LeetCode 1625 – Lexicographically Smallest String After Applying Operations**, và mình sẽ giải thích kỹ, từng dòng, để bạn hiểu *vì sao thuật toán hoạt động* nhé.
+
+---
+
+## 🌟 Mục tiêu bài toán
+
+Ta có một chuỗi số `s`, và hai phép biến đổi:
+
+1. **Phép cộng (`add`)**:
+   Cộng `a` (mod 10) vào tất cả các chữ số **ở vị trí lẻ**.
+   → Có thể thực hiện nhiều lần.
+
+2. **Phép xoay (`rotate`)**:
+   Dịch vòng chuỗi sang phải `b` bước.
+   → Cũng có thể thực hiện nhiều lần.
+
+Ta cần tìm **chuỗi nhỏ nhất về mặt từ điển (lexicographically smallest)** có thể đạt được sau khi áp dụng **một chuỗi tùy ý các phép biến đổi**.
+
+---
+
+## 💡 Ý tưởng chính của thuật toán
+
+Vì phép xoay là **tuần hoàn**, nên ta không cần xoay vô hạn lần, mà chỉ cần xét các **vị trí xoay khác biệt** — số lượng này bằng `step = gcd(b, n)`.
+
+→ Có nghĩa là: sau mỗi `step` lần xoay, chuỗi sẽ quay về vị trí cũ.
+
+---
+
+## 🔍 Phân tích từng dòng code
+
+### 🧩 1️⃣ Dòng lặp chính
+
+```python
+for i in range(0, n, step):
+```
+
+* `n`: độ dài chuỗi `s`
+* `step = gcd(b, n)`
+
+→ Duyệt qua **tất cả các vị trí xoay có thể khác nhau** (chỉ cần cách nhau `step`).
+
+---
+
+### 🧩 2️⃣ Xoay chuỗi `s`
+
+```python
+t = s[i:] + s[:i]
+```
+
+* Dịch chuỗi sang trái `i` ký tự (tương đương xoay phải `n - i` ký tự).
+* Ví dụ:
+
+  ```
+  s = [1,2,3,4,5], i = 2 → t = [3,4,5,1,2]
+  ```
+
+`→` Bây giờ ta sẽ xử lý chuỗi `t` sau khi xoay.
+
+---
+
+### 🧩 3️⃣ Gọi `modify(1)`
+
+```python
+modify(1)
+```
+
+* Gọi hàm `modify` để **cộng a (mod 10)** vào **vị trí lẻ (odd indices)** của `t`.
+* Mục đích: làm cho các chữ số ở vị trí lẻ nhỏ nhất có thể.
+
+---
+
+### 🧩 4️⃣ Kiểm tra nếu có thể thay đổi vị trí chẵn
+
+```python
+if step % 2:
+    modify(0)
+```
+
+* Nếu `step` là **số lẻ**, thì việc xoay chuỗi `b` ký tự **thay đổi chẵn/lẻ giữa các vị trí**.
+
+🧠 Tức là:
+Nếu sau vài lần xoay, **vị trí chẵn** có thể trở thành **vị trí lẻ** → ta có thể cộng `a` vào cả hai loại vị trí.
+
+→ Do đó, nếu `step` lẻ, ta có thể `modify(0)` để tối ưu thêm cho các chữ số **ở vị trí chẵn**.
+
+---
+
+### 🧩 5️⃣ So sánh kết quả nhỏ nhất
+
+```python
+ans = min(ans, t)
+```
+
+* Sau khi áp dụng phép cộng (và xoay), ta có một chuỗi `t`.
+* Dùng `min()` để chọn chuỗi nhỏ nhất theo **thứ tự từ điển (lexicographically smallest)**.
+
+---
+
+### 🧩 6️⃣ Trả kết quả cuối cùng
+
+```python
+return ''.join(map(str, ans))
+```
+
+* Chuyển mảng số `ans` thành chuỗi ký tự, ví dụ:
+  `[1, 2, 3] → "123"`
+
+---
+
+## 🧠 Tổng kết quy trình
+
+| Bước | Hành động                   | Mục tiêu                                 |
+| ---- | --------------------------- | ---------------------------------------- |
+| 1    | Xác định `step = gcd(b, n)` | Biết số chu kỳ xoay cần xét              |
+| 2    | Duyệt `i` theo bước `step`  | Xét từng trạng thái xoay khác biệt       |
+| 3    | Tạo chuỗi xoay `t`          | Mô phỏng kết quả sau xoay                |
+| 4    | `modify(1)`                 | Làm nhỏ các chữ số ở vị trí lẻ           |
+| 5    | Nếu `step` lẻ → `modify(0)` | Làm nhỏ luôn cả vị trí chẵn (nếu có thể) |
+| 6    | `ans = min(ans, t)`         | Giữ chuỗi nhỏ nhất                       |
+| 7    | Trả kết quả                 | Chuỗi nhỏ nhất có thể đạt được           |
+
+---
+
+## 📘 Ví dụ minh họa
+
+Giả sử:
+
+```
+s = "5525", a = 9, b = 2
+```
+
+### Các bước chính:
+
+1. `step = gcd(2, 4) = 2`
+2. Xét i = 0 và i = 2
+
+   * i = 0 → t = [5,5,2,5]
+   * i = 2 → t = [2,5,5,5]
+3. Gọi `modify(1)` (vị trí lẻ)
+
+   * Với a=9 → có thể biến số ở vị trí 1,3 thành nhỏ hơn
+4. Vì step=2 (chẵn) → không modify(0)
+5. So sánh hai chuỗi nhỏ nhất, chọn chuỗi **lexicographically smallest**
+
+Kết quả cuối cùng:
+
+```
+"2050"
+```
+
+---
+
+👉 Tóm lại:
+Đoạn code này **tạo ra mọi xoay có thể**, rồi **giảm nhỏ nhất có thể từng chữ số** bằng phép cộng `a (mod 10)` theo quy luật toán học (chu kỳ mod 10), sau đó chọn **chuỗi nhỏ nhất về mặt từ điển**.
+Rất hay — câu này:
+
+```python
+t = s[i:] + s[:i]
+```
+
+chính là **thao tác xoay (rotate)** chuỗi `s` sang trái `i` ký tự.
+Mình giải thích cụ thể nhé 👇
+
+---
+
+### 🧠 Giả sử:
+
+```python
+s = [1, 2, 3, 4, 5]
+i = 2
+```
+
+---
+
+### 📘 Giải thích chi tiết:
+
+* `s[i:]` lấy **phần tử từ vị trí i đến hết**, tức là `[3, 4, 5]`
+* `s[:i]` lấy **phần tử từ đầu đến i - 1**, tức là `[1, 2]`
+* Khi cộng (`+`) hai danh sách lại:
+
+  ```python
+  t = s[i:] + s[:i] = [3, 4, 5] + [1, 2] = [3, 4, 5, 1, 2]
+  ```
+
+---
+
+### 🎯 Ý nghĩa trong bài toán:
+
+* Đây là **một phép xoay chuỗi (rotation)** — dịch trái `i` ký tự (hoặc tương đương dịch phải `n - i` ký tự).
+* Mỗi lần xoay như vậy mô phỏng **phép biến đổi rotate(b)** trong đề bài, giúp ta kiểm tra tất cả các trạng thái khác nhau của chuỗi sau các phép xoay.
+
+---
+
+### 🔁 Ví dụ khác:
+
+Giả sử `s = "5525"`, `b = 2`, thì:
+
+* `i = 0 → t = "5525"`
+* `i = 2 → t = "2555"`
+
+Hai trạng thái này tương ứng với:
+
+* Xoay 0 ký tự (giữ nguyên)
+* Xoay phải 2 ký tự
+
+→ Sau đó thuật toán sẽ tiếp tục áp dụng phép **add (cộng a)** để tìm chuỗi nhỏ nhất trong các trạng thái xoay này.

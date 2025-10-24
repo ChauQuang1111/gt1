@@ -1,0 +1,754 @@
+Successful Pairs of Spells and Potions
+class Solution:
+    def successfulPairs(self, spells: List[int], potions: List[int], success: int) -> List[int]:
+        max_spells = max(spells)
+        smaller_count = [0]*(max_spells+1) # TO DO
+        # print(len(smaller_count))
+        for num in potions:
+            curr = success//num
+            if success%num != 0: #we want round up
+                curr += 1
+            if curr > max_spells:
+                continue
+            smaller_count[curr] += 1
+        # we do the cummlative sums
+        for i in range(1,len(smaller_count)):
+            smaller_count[i] += smaller_count[i-1]
+        
+        ans = []
+        for num in spells:
+            ans.append(smaller_count[num])
+        return ans
+		
+		
+Rất hay 👏 — ta cùng phân tích từng dòng thật chi tiết nhé:
+
+Đây là đoạn code trong Python từ thuật toán tối ưu (O(N + M)), không dùng sắp xếp hay tìm kiếm nhị phân:
+
+```python
+for num in potions:
+    curr = success // num
+    if success % num != 0:  # we want round up
+        curr += 1
+    if curr > max_spells:
+        continue
+    smaller_count[curr] += 1
+```
+
+---
+
+## 🎯 Mục tiêu chung
+
+Đoạn code này duyệt qua **từng potion** để tính ra **ngưỡng nhỏ nhất của spell** cần thiết để đạt “success”.
+Cụ thể, ta cần:
+[
+spell \times potion \ge success
+]
+
+Muốn biết **từ spell nào trở lên thì phép nhân này thành công**, ta biến đổi:
+
+[
+spell \ge \frac{success}{potion}
+]
+
+---
+
+## 🧩 Giải thích từng dòng
+
+### 🔹 `for num in potions:`
+
+→ Duyệt qua từng potion trong danh sách `potions`.
+Mỗi `num` đại diện cho **giá trị sức mạnh của một potion**.
+
+---
+
+### 🔹 `curr = success // num`
+
+→ Đây là phép chia nguyên (floor division).
+Tức là ta đang tính:
+[
+curr = \left\lfloor \frac{success}{potion} \right\rfloor
+]
+`curr` là **giá trị tối thiểu của spell** cần có (chưa làm tròn lên).
+
+Ví dụ:
+
+* Nếu `success = 10`, `potion = 3`
+  thì `success // num = 3`
+
+---
+
+### 🔹 `if success % num != 0:  # we want round up`
+
+→ Nếu phép chia không chia hết (`success % num != 0`),
+tức là có dư ⇒ cần **làm tròn lên**.
+
+---
+
+### 🔹 `curr += 1`
+
+→ Cộng thêm 1 để **làm tròn lên** (ceiling division).
+Tức là thay vì lấy 3, ta lấy 4 (vì 3 * 3 < 10 nhưng 4 * 3 = 12 ≥ 10).
+→ Giống như trong Java `(success + spell - 1) / spell`.
+
+---
+
+### 🔹 `if curr > max_spells:`
+
+→ Nếu spell cần thiết (`curr`) **lớn hơn tất cả spell hiện có**,
+thì **không có spell nào đủ mạnh** để kết hợp với potion này ⇒ bỏ qua (`continue`).
+
+---
+
+### 🔹 `smaller_count[curr] += 1`
+
+→ `smaller_count` là mảng đếm (frequency array).
+Mỗi phần tử `smaller_count[x]` lưu **số potion mà cần spell ≥ x** để thành công.
+
+Ví dụ:
+Nếu `curr = 4`, nghĩa là **mọi spell có sức mạnh ≥ 4** sẽ thành công với potion này.
+Ta đánh dấu `+1` vào vị trí `4` để ghi nhận điều đó.
+
+---
+
+## 🧠 Tổng kết ý nghĩa đoạn code
+
+| Dòng code                          | Ý nghĩa                                  |
+| ---------------------------------- | ---------------------------------------- |
+| `curr = success // num`            | Tính spell tối thiểu (chưa làm tròn)     |
+| `if success % num != 0: curr += 1` | Làm tròn lên vì spell phải đủ mạnh       |
+| `if curr > max_spells: continue`   | Bỏ qua nếu spell yếu hơn mọi spell có    |
+| `smaller_count[curr] += 1`         | Đếm potion tương ứng cho ngưỡng spell đó |
+
+---
+
+👉 **Hiểu ngắn gọn:**
+Đoạn này giúp ta tính ra, với mỗi potion, “từ spell nào trở lên thì có thể kết hợp thành công”.
+Sau đó, mảng `smaller_count` sẽ được dùng để tính tích lũy (prefix sum), từ đó nhanh chóng biết được với mỗi spell có bao nhiêu potion hợp lệ.
+Rất tốt 👍 — đoạn này là phần **tích lũy kết quả** sau khi ta đã đếm số lượng potion cần cho từng ngưỡng spell ở bước trước.
+Cùng phân tích **từng dòng chi tiết** nhé 👇
+
+---
+
+### 🔹 Mã nguồn
+
+```python
+for i in range(1, len(smaller_count)):
+    smaller_count[i] += smaller_count[i - 1]
+    
+ans = []
+for num in spells:
+    ans.append(smaller_count[num])
+return ans
+```
+
+---
+
+## 🧠 Mục tiêu
+
+Sau khi vòng lặp đầu tiên tạo mảng `smaller_count`,
+trong đó:
+
+> `smaller_count[x]` = số lượng **potion cần spell ≥ x** để đạt success,
+
+thì giờ ta cần biến mảng này thành:
+
+> `smaller_count[x]` = **số lượng potion mà spell có sức mạnh ≤ x vẫn thắng được.**
+
+Hay nói cách khác:
+Ta tính **tổng tích lũy (prefix sum)** để mỗi vị trí `i` biết **tổng số potion** mà spell ≤ `i` có thể thành công.
+
+---
+
+## 🧩 Giải thích từng dòng
+
+### 🔹 `for i in range(1, len(smaller_count)):`
+
+→ Duyệt qua mảng `smaller_count` từ vị trí 1 đến cuối.
+
+---
+
+### 🔹 `smaller_count[i] += smaller_count[i - 1]`
+
+→ Cộng dồn giá trị trước đó để tạo **mảng cộng dồn (prefix sum)**.
+
+Ví dụ minh họa:
+
+| i | smaller_count[i] (ban đầu) | smaller_count[i] (sau khi cộng dồn) | Ý nghĩa                          |
+| - | -------------------------- | ----------------------------------- | -------------------------------- |
+| 0 | 0                          | 0                                   | —                                |
+| 1 | 2                          | 2                                   | Có 2 potion phù hợp từ spell ≥ 1 |
+| 2 | 1                          | 3                                   | Có 3 potion phù hợp từ spell ≥ 2 |
+| 3 | 1                          | 4                                   | Có 4 potion phù hợp từ spell ≥ 3 |
+
+Sau bước này, `smaller_count[i]` = tổng số potion mà spell **≥ i** sẽ có thể ghép thành công.
+
+---
+
+### 🔹 `ans = []`
+
+→ Tạo danh sách kết quả rỗng để lưu số lượng potion tương ứng với từng spell.
+
+---
+
+### 🔹 `for num in spells:`
+
+→ Duyệt qua từng spell trong danh sách `spells`.
+
+---
+
+### 🔹 `ans.append(smaller_count[num])`
+
+→ Với mỗi spell có giá trị `num`,
+ta tra ngay trong `smaller_count[num]`
+→ đây là **số potion thành công** mà spell đó có thể ghép được.
+
+Ví dụ:
+
+* Nếu spell = 3 và `smaller_count[3] = 5`
+  ⇒ có 5 potion mà 3 × potion ≥ success.
+
+---
+
+### 🔹 `return ans`
+
+→ Trả về danh sách kết quả `ans`,
+trong đó `ans[i]` = số potion thành công ứng với spell `spells[i]`.
+
+---
+
+## 🎯 Tổng kết ý nghĩa
+
+| Bước                                     | Mục đích                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------- |
+| `smaller_count[i] += smaller_count[i-1]` | Tạo mảng cộng dồn để biết với spell ≥ i có bao nhiêu potion phù hợp |
+| `ans.append(smaller_count[num])`         | Lấy kết quả cho từng spell cụ thể                                   |
+| `return ans`                             | Trả danh sách kết quả cuối cùng                                     |
+
+---
+
+✅ **Tóm lại:**
+Sau khi đếm số potion yêu cầu cho từng spell (bước trước),
+phần code này **cộng dồn và ánh xạ kết quả lại cho từng spell cụ thể**.
+Nhờ đó, ta biết với mỗi spell có thể ghép được **bao nhiêu potion để đạt “success”** mà không cần phải tính đi tính lại từng cặp.
+Câu hỏi rất hay 👏 — đây là **cốt lõi của mảng cộng dồn (prefix sum)**.
+Giải thích chi tiết nhé 👇
+
+---
+
+## 🧠 Mục tiêu
+
+Lệnh:
+
+```python
+smaller_count[i] += smaller_count[i - 1]
+```
+
+có nghĩa là:
+
+> “Giá trị ở vị trí `i` **bao gồm cả giá trị trước đó** (ở `i-1`)”.
+
+Hay nói cách khác, ta đang **cộng dồn** số lượng phần tử tính đến vị trí hiện tại.
+
+---
+
+## 📊 Ví dụ trực quan
+
+Giả sử sau bước đếm, mảng `smaller_count` ban đầu là:
+
+| i | smaller_count[i] | Ý nghĩa (ban đầu)         |
+| - | ---------------- | ------------------------- |
+| 0 | 0                | (Không có spell nào ≥ 0)  |
+| 1 | 2                | Có 2 potion cần spell ≥ 1 |
+| 2 | 3                | Có 3 potion cần spell ≥ 2 |
+| 3 | 1                | Có 1 potion cần spell ≥ 3 |
+
+---
+
+### ➡ Khi ta chạy:
+
+```python
+for i in range(1, len(smaller_count)):
+    smaller_count[i] += smaller_count[i - 1]
+```
+
+thì:
+
+| i | smaller_count[i] (sau khi cộng) | Cách tính | Ý nghĩa                                     |
+| - | ------------------------------- | --------- | ------------------------------------------- |
+| 0 | 0                               | —         | —                                           |
+| 1 | 2                               | 2 + 0     | Tổng potion cho spell ≥ 1                   |
+| 2 | 5                               | 3 + 2     | Tổng potion cho spell ≥ 2 hoặc ≥ 1          |
+| 3 | 6                               | 1 + 5     | Tổng potion cho spell ≥ 3 hoặc ≥ 2 hoặc ≥ 1 |
+
+---
+
+## 🔍 Vậy tại sao lại là `i - 1`?
+
+* `i` là vị trí **hiện tại** trong mảng.
+* `i - 1` là **vị trí ngay trước đó**.
+
+Ta cộng chúng lại để:
+
+> Giá trị ở `i` chứa **tổng của tất cả các giá trị từ đầu đến i**.
+
+Cụ thể:
+
+* `smaller_count[i - 1]` = tổng potion tính đến **vị trí trước i**.
+* `smaller_count[i]` = số potion cần cho đúng spell = i.
+  → Khi cộng lại, `smaller_count[i]` mới = **tổng số potion tính đến spell = i**.
+
+---
+
+## 🧩 Tóm gọn
+
+| Thành phần           | Vai trò                                    |
+| -------------------- | ------------------------------------------ |
+| `smaller_count[i]`   | Giá trị tại vị trí hiện tại                |
+| `smaller_count[i-1]` | Tổng các giá trị trước đó                  |
+| `+=`                 | Cộng dồn để biến mảng thành **prefix sum** |
+
+---
+
+✅ **Tóm lại:**
+`smaller_count[i] += smaller_count[i-1]` giúp biến mảng đếm đơn lẻ thành **mảng cộng dồn**,
+để khi ta truy vấn `smaller_count[num]`, ta có ngay **tổng số potion phù hợp cho mọi spell ≤ num**
+— không cần phải tính lại từng phần tử.
+Tốt lắm 👍 mình cùng xem ví dụ thật cụ thể để bạn thấy rõ **vì sao cần `i - 1` và chuyện gì xảy ra khi cộng dồn** nhé.
+
+---
+
+## 🎯 Đề bài (giản lược)
+
+Ta có:
+
+* `spells = [1, 2, 3]`
+* `potions = [2, 3, 5]`
+* `success = 10`
+
+Ta muốn biết **với mỗi spell**, có bao nhiêu potion khiến
+[
+spell \times potion \ge 10
+]
+
+---
+
+## 🔹 Bước 1: Xác định ngưỡng `curr` (giá trị spell tối thiểu cần để đạt success)
+
+Với từng potion:
+
+| Potion | success // potion | success % potion | curr (= ceil(success / potion)) |
+| ------ | ----------------- | ---------------- | ------------------------------- |
+| 2      | 5                 | 0                | 5                               |
+| 3      | 3                 | 1                | 4                               |
+| 5      | 2                 | 0                | 2                               |
+
+Nghĩa là:
+
+* potion = 2 → cần spell ≥ 5
+* potion = 3 → cần spell ≥ 4
+* potion = 5 → cần spell ≥ 2
+
+---
+
+## 🔹 Bước 2: Đếm xem mỗi spell (từ 1 đến max_spells = 3) có bao nhiêu potion đạt điều kiện
+
+Ban đầu:
+
+```python
+smaller_count = [0, 0, 0, 0, 0, 0]  # độ dài = max_spells+1 = 6
+```
+
+Ta duyệt qua từng `curr`:
+
+| curr | Giải thích                                         | smaller_count sau bước này |
+| ---- | -------------------------------------------------- | -------------------------- |
+| 5    | cần spell ≥ 5 → quá lớn (vì max_spells=3) → bỏ qua | `[0, 0, 0, 0, 0, 0]`       |
+| 4    | cần spell ≥ 4 → quá lớn → bỏ qua                   | `[0, 0, 0, 0, 0, 0]`       |
+| 2    | cần spell ≥ 2 → cộng 1 vào vị trí 2                | `[0, 0, 1, 0, 0, 0]`       |
+
+---
+
+## 🔹 Bước 3: Cộng dồn (prefix sum)
+
+```python
+for i in range(1, len(smaller_count)):
+    smaller_count[i] += smaller_count[i-1]
+```
+
+| i | smaller_count[i] trước | smaller_count[i-1] | smaller_count[i] sau |
+| - | ---------------------- | ------------------ | -------------------- |
+| 1 | 0                      | 0                  | 0                    |
+| 2 | 1                      | 0                  | 1                    |
+| 3 | 0                      | 1                  | 1                    |
+| 4 | 0                      | 1                  | 1                    |
+| 5 | 0                      | 1                  | 1                    |
+
+Kết quả cuối:
+
+```
+smaller_count = [0, 0, 1, 1, 1, 1]
+```
+
+---
+
+## 🔹 Bước 4: Duyệt spells để lấy kết quả
+
+| Spell | smaller_count[num] | Kết quả (số potion đủ điều kiện) |
+| ----- | ------------------ | -------------------------------- |
+| 1     | 0                  | 0                                |
+| 2     | 1                  | 1                                |
+| 3     | 1                  | 1                                |
+
+→ ✅ `ans = [0, 1, 1]`
+
+---
+
+## 🔍 Tại sao cần `i - 1`?
+
+Nếu không có dòng
+
+```python
+smaller_count[i] += smaller_count[i - 1]
+```
+
+thì mảng `smaller_count` chỉ biết **riêng từng giá trị spell bắt đầu từ đâu cần dùng potion**,
+nhưng **không biết cộng dồn các potion có thể dùng cho spell lớn hơn**.
+
+Nhờ có phép cộng dồn này:
+
+* `smaller_count[2]` = tổng potion cần spell ≥ 2
+* `smaller_count[3]` = tổng potion cần spell ≥ 3 (bao gồm cả potion của spell ≥ 2)
+
+---
+
+✅ **Tóm lại:**
+`smaller_count[i] += smaller_count[i-1]` giúp biến mảng đếm thành **mảng cộng dồn**,
+để mỗi vị trí `i` biết **tổng số potion phù hợp cho tất cả spell ≥ i**.
+Ok 👍 ta cùng đi **từng bước bằng ví dụ cụ thể**, để hiểu **tại sao lại có `i - 1`** trong dòng này:
+
+```python
+smaller_count[i] += smaller_count[i-1]
+```
+
+---
+
+### 🎯 Giả sử:
+
+Ta có mảng `potions = [2, 3, 5]`
+và `success = 10`
+
+---
+
+### ✅ Bước 1: Tính ngưỡng `curr = ceil(success / potion)`
+
+Cần biết mỗi potion cần spell ≥ bao nhiêu để đạt sản phẩm ≥ `success`.
+
+| Potion | success / potion | ceil(success/potion) = curr |
+| :----- | :--------------- | :-------------------------- |
+| 2      | 10 / 2 = 5       | 5                           |
+| 3      | 10 / 3 = 3.33    | 4                           |
+| 5      | 10 / 5 = 2       | 2                           |
+
+=> `curr` values là: `[5, 4, 2]`
+
+---
+
+### ✅ Bước 2: Tăng đếm `smaller_count[curr]`
+
+Giả sử `max_spells = 10`, ta tạo mảng `smaller_count` có kích thước 11 (index 0–10).
+Mỗi `curr` nghĩa là:
+➡️ “Tất cả spell có **giá trị ≥ curr** sẽ thành công với potion này.”
+
+```python
+smaller_count = [0]*11
+```
+
+Sau khi chạy vòng:
+
+```python
+for num in potions:
+    curr = ceil(success / num)
+    smaller_count[curr] += 1
+```
+
+Ta có:
+
+|   i  | smaller_count[i] | Ý nghĩa                   |
+| :--: | :--------------- | :------------------------ |
+|   0  | 0                | không dùng                |
+|   2  | 1                | có 1 potion cần spell ≥ 2 |
+|   4  | 1                | có 1 potion cần spell ≥ 4 |
+|   5  | 1                | có 1 potion cần spell ≥ 5 |
+| khác | 0                | không cần spell ở mức đó  |
+
+Kết quả:
+
+```
+smaller_count = [0,0,1,0,1,1,0,0,0,0,0]
+```
+
+---
+
+### ✅ Bước 3: Tính **tích lũy** bằng:
+
+```python
+for i in range(1, len(smaller_count)):
+    smaller_count[i] += smaller_count[i-1]
+```
+
+|  i  | smaller_count[i-1] | smaller_count[i] trước | smaller_count[i] sau | Giải thích                        |
+| :-: | :----------------: | :--------------------: | :------------------: | :-------------------------------- |
+|  1  |          0         |            0           |           0          | cộng dồn                          |
+|  2  |          0         |            1           |           1          | tổng số potion cần spell ≥ 2 là 1 |
+|  3  |          1         |            0           |           1          | tổng số potion cần spell ≥ 3 là 1 |
+|  4  |          1         |            1           |           2          | tổng số potion cần spell ≥ 4 là 2 |
+|  5  |          2         |            1           |           3          | tổng số potion cần spell ≥ 5 là 3 |
+
+Kết quả:
+
+```
+smaller_count = [0,0,1,1,2,3,3,3,3,3,3]
+```
+
+---
+
+### 💡 Ý nghĩa của `i-1`:
+
+* Ta **cộng dồn giá trị trước đó (`i-1`)** để biết **tổng số potion có ngưỡng ≤ i**.
+* Nói cách khác: `smaller_count[i]` sau phép cộng dồn cho biết **có bao nhiêu potion có thể thành công nếu spell ≥ i**.
+
+---
+
+### ✅ Ví dụ dùng:
+
+Nếu spell = 4 ⇒ `ans = smaller_count[4] = 2`
+→ có 2 potion (loại 4 và 5) sẽ thành công.
+
+---
+
+👉 **Tóm lại:**
+`smaller_count[i] += smaller_count[i-1]` là **tạo mảng tích lũy (prefix sum)** để biết tại mỗi mức spell, có **bao nhiêu potion trở lên** có thể kết hợp thành công.
+Phần `i-1` là để cộng dồn giá trị liền trước đó — **không có nó thì không thể tính tổng tích lũy**.
+Tốt, giờ ta cùng **giải thích cách tính từng dòng trong bảng đó** thật rõ nhé 👇
+
+Giả sử ban đầu:
+
+```
+smaller_count = [0, 0, 1, 0, 2, 0]
+```
+
+Ta sẽ chạy vòng lặp:
+
+```python
+for i in range(1, len(smaller_count)):
+    smaller_count[i] += smaller_count[i-1]
+```
+
+---
+
+### 🧮 Giải thích chi tiết từng bước
+
+| i     | smaller_count[i-1] | smaller_count[i] trước | smaller_count[i] sau | Giải thích                                                                                   |
+| ----- | ------------------ | ---------------------- | -------------------- | -------------------------------------------------------------------------------------------- |
+| **1** | 0                  | 0                      | 0                    | Ở vị trí 1, ta cộng với phần tử liền trước (0 + 0 = 0) → chưa có potion nào trước đó.        |
+| **2** | 0                  | 1                      | 1                    | Ở vị trí 2, cộng với phần tử trước đó (1 + 0 = 1) → tổng cộng có 1 potion yêu cầu spell ≥ 2. |
+| **3** | 1                  | 0                      | 1                    | Ở vị trí 3, cộng với phần tử trước (0 + 1 = 1) → tổng cộng có 1 potion yêu cầu spell ≥ 3.    |
+| **4** | 1                  | 2                      | 3                    | Ở vị trí 4, cộng với phần tử trước (2 + 1 = 3) → tổng cộng có 3 potion yêu cầu spell ≥ 4.    |
+| **5** | 3                  | 0                      | 3                    | Ở vị trí 5, cộng với phần tử trước (0 + 3 = 3) → tổng cộng có 3 potion yêu cầu spell ≥ 5.    |
+
+---
+
+### ✅ Kết quả cuối:
+
+```
+smaller_count = [0, 0, 1, 1, 3, 3]
+```
+
+---
+
+### 🧠 Tóm lại:
+
+Mỗi lần lặp, ta lấy giá trị hiện tại `smaller_count[i]`
+➕ cộng với giá trị trước đó `smaller_count[i-1]`
+→ để biết **tổng số potion có thể dùng được với spell ≥ i**.
+
+Nói đơn giản:
+👉 `smaller_count[i] += smaller_count[i-1]` là **cộng dồn tất cả potion đủ điều kiện đến mức i**.
+
+---
+
+Bạn có muốn mình vẽ sơ đồ minh họa quá trình cộng dồn bằng cột (kiểu histogram cộng dần lên) cho dễ nhìn hơn không?
+Tốt 👍
+Dưới đây là **sơ đồ minh họa trực quan (kiểu cột)** cho phép bạn **nhìn thấy vì sao lại có `i-1` trong `smaller_count[i] += smaller_count[i-1]`** nhé 👇
+
+---
+
+### 🎯 Giả sử ta có:
+
+```
+smaller_count = [0, 0, 1, 0, 2, 0]
+```
+
+Mỗi chỉ số (index) thể hiện **mức spell cần có**, còn giá trị là **số potion phù hợp chính xác với mức spell đó**
+(nghĩa là *bắt đầu từ mức spell này trở lên* có thể thành công với potion tương ứng).
+
+---
+
+### 🧱 Biểu đồ ban đầu:
+
+```
+Index:          0  1  2  3  4  5
+smaller_count: [0, 0, 1, 0, 2, 0]
+                │  │  █  │  ██ │
+                0  0  1  0  2  0
+```
+
+→ Có 1 potion yêu cầu spell ≥ 2
+→ Có 2 potion yêu cầu spell ≥ 4
+
+---
+
+### 🚀 Bắt đầu cộng dồn (prefix sum)
+
+Ta chạy `for i in range(1, len(smaller_count)): smaller_count[i] += smaller_count[i-1]`
+
+| Bước | i | smaller_count trước | smaller_count sau  | Giải thích                 |
+| ---- | - | ------------------- | ------------------ | -------------------------- |
+| 1    | 1 | [0, 0, 1, 0, 2, 0]  | [0, 0, 1, 0, 2, 0] | Cộng 0+0 → vẫn 0           |
+| 2    | 2 | [0, 0, 1, 0, 2, 0]  | [0, 0, 1, 0, 2, 0] | 1+0 = 1 (tổng đến spell=2) |
+| 3    | 3 | [0, 0, 1, 0, 2, 0]  | [0, 0, 1, 1, 2, 0] | 0+1 = 1 (tổng đến spell=3) |
+| 4    | 4 | [0, 0, 1, 1, 2, 0]  | [0, 0, 1, 1, 3, 0] | 2+1 = 3 (tổng đến spell=4) |
+| 5    | 5 | [0, 0, 1, 1, 3, 0]  | [0, 0, 1, 1, 3, 3] | 0+3 = 3 (tổng đến spell=5) |
+
+---
+
+### 🧩 Kết quả cuối cùng:
+
+```
+smaller_count = [0, 0, 1, 1, 3, 3]
+```
+
+### 📊 Biểu đồ sau cộng dồn:
+
+```
+Index:          0  1  2  3  4  5
+smaller_count: [0, 0, 1, 1, 3, 3]
+                │  │  █  █  ███ ███
+                0  0  1  1  3   3
+```
+
+---
+
+### 💡 Giải thích ý nghĩa:
+
+Sau khi cộng dồn, mỗi `smaller_count[i]` cho biết
+
+> Có **bao nhiêu potion** mà spell ≥ i **có thể ghép thành cặp thành công**.
+
+Vì vậy ta phải **cộng với phần tử liền trước (`i-1`)** để biết **tổng số potion tích lũy đến mức spell hiện tại**.
+
+---
+
+Bạn có muốn mình chuyển ví dụ này sang **code Java minh họa chạy từng bước** (in ra từng giá trị của `i` và `smaller_count` sau mỗi vòng lặp) để dễ hiểu hơn không?
+Tốt lắm 👇
+Dưới đây là **code Java minh họa chi tiết** cho bạn thấy cách hoạt động của dòng
+`smaller_count[i] += smaller_count[i-1];` — tức là **cộng dồn tích lũy (prefix sum)**.
+
+---
+
+### 🧩 Code minh họa:
+
+```java
+import java.util.*;
+
+public class PrefixSumDemo {
+    public static void main(String[] args) {
+        // Ban đầu, mỗi chỉ số thể hiện mức spell yêu cầu,
+        // còn giá trị là số potion tương ứng
+        int[] smaller_count = {0, 0, 1, 0, 2, 0};
+        System.out.println("Trước khi cộng dồn:");
+        printArray(smaller_count);
+
+        // Cộng dồn giá trị (prefix sum)
+        for (int i = 1; i < smaller_count.length; i++) {
+            System.out.println("\nVòng lặp i = " + i);
+            System.out.println("Trước: smaller_count[" + i + "] = " + smaller_count[i]);
+            System.out.println("Cộng thêm smaller_count[" + (i - 1) + "] = " + smaller_count[i - 1]);
+
+            // Dòng quan trọng:
+            smaller_count[i] += smaller_count[i - 1];
+
+            System.out.println("Sau: smaller_count[" + i + "] = " + smaller_count[i]);
+            printArray(smaller_count);
+        }
+
+        System.out.println("\nSau khi cộng dồn xong:");
+        printArray(smaller_count);
+    }
+
+    // Hàm in mảng ra màn hình
+    public static void printArray(int[] arr) {
+        System.out.print("smaller_count = [");
+        for (int i = 0; i < arr.length; i++) {
+            System.out.print(arr[i]);
+            if (i != arr.length - 1) System.out.print(", ");
+        }
+        System.out.println("]");
+    }
+}
+```
+
+---
+
+### 🧠 Kết quả khi chạy:
+
+```
+Trước khi cộng dồn:
+smaller_count = [0, 0, 1, 0, 2, 0]
+
+Vòng lặp i = 1
+Trước: smaller_count[1] = 0
+Cộng thêm smaller_count[0] = 0
+Sau: smaller_count[1] = 0
+smaller_count = [0, 0, 1, 0, 2, 0]
+
+Vòng lặp i = 2
+Trước: smaller_count[2] = 1
+Cộng thêm smaller_count[1] = 0
+Sau: smaller_count[2] = 1
+smaller_count = [0, 0, 1, 0, 2, 0]
+
+Vòng lặp i = 3
+Trước: smaller_count[3] = 0
+Cộng thêm smaller_count[2] = 1
+Sau: smaller_count[3] = 1
+smaller_count = [0, 0, 1, 1, 2, 0]
+
+Vòng lặp i = 4
+Trước: smaller_count[4] = 2
+Cộng thêm smaller_count[3] = 1
+Sau: smaller_count[4] = 3
+smaller_count = [0, 0, 1, 1, 3, 0]
+
+Vòng lặp i = 5
+Trước: smaller_count[5] = 0
+Cộng thêm smaller_count[4] = 3
+Sau: smaller_count[5] = 3
+smaller_count = [0, 0, 1, 1, 3, 3]
+
+Sau khi cộng dồn xong:
+smaller_count = [0, 0, 1, 1, 3, 3]
+```
+
+---
+
+### 💡 Kết luận:
+
+* `smaller_count[i - 1]` giúp ta **lấy tổng số potion có thể ghép được ở mức spell thấp hơn**
+  → Khi cộng vào `smaller_count[i]`, ta có **tổng tích lũy đến spell hiện tại**.
+* Sau bước này, ta dễ dàng biết được **với mỗi spell ≥ i**, có bao nhiêu potion sẽ thành công.
+
+---
+
+Bạn có muốn mình thêm **ví dụ hoàn chỉnh với spells và potions thật (giống đề LeetCode 2300)** để minh họa kết quả cuối cùng không?

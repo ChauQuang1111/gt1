@@ -1,0 +1,183 @@
+Spam number
+import java.util.regex.*; // Thư viện regex để làm việc với biểu thức chính quy (Regular Expression)
+
+public class SpamDetector {
+    // Regex định nghĩa format số điện thoại: +A (BBB) CCC-DDDD
+    // +A: dấu + và ít nhất một chữ số
+    // (BBB): 3 chữ số nằm trong ngoặc
+    // CCC: 3 chữ số
+    // DDDD: 4 chữ số
+    private static final String PHONE_REGEX = "\\+\\d+ \\(\\d{3}\\) \\d{3}-\\d{4}";
+
+    // Danh sách area code (BBB) nằm trong "blacklist"
+    private static final String[] SPAM_AREAS = {"123", "666", "999"};
+
+    // Hàm kiểm tra số điện thoại có phải spam hay không
+    public static boolean isSpam(String phoneNumber) {
+        // 1. Kiểm tra số có đúng format hay không
+        if (!phoneNumber.matches(PHONE_REGEX)) {
+            return true; // Nếu không đúng định dạng => spam
+        }
+
+        // 2. Tạo regex có nhóm bắt để tách country, area, local parts
+        Pattern p = Pattern.compile("\\+(\\d+) \\((\\d{3})\\) (\\d{3})-(\\d{4})");
+        Matcher m = p.matcher(phoneNumber);
+
+        // 3. Nếu regex khớp
+        if (m.matches()) {
+            String areaCode = m.group(2);   // Lấy phần area code (BBB)
+            String localLast4 = m.group(4); // Lấy 4 số cuối (DDDD)
+
+            // 4. Kiểm tra area code có nằm trong danh sách spam không
+            for (String spamArea : SPAM_AREAS) {
+                if (areaCode.equals(spamArea)) {
+                    return true; // Nếu nằm trong blacklist => spam
+                }
+            }
+
+            // 5. Kiểm tra 4 số cuối có phải toàn giống nhau không (vd: 1111, 2222)
+            // localLast4.chars() => chuyển chuỗi thành stream ký tự
+            // distinct() => loại bỏ trùng lặp
+            // count() => đếm số ký tự khác nhau
+            // Nếu count == 1 => tất cả ký tự giống nhau
+            if (localLast4.chars().distinct().count() == 1) {
+                return true; // Spam
+            }
+        }
+
+        // 6. Nếu vượt qua tất cả kiểm tra thì không phải spam
+        return false;
+    }
+
+    public static void main(String[] args) {
+        // Một vài số điện thoại để kiểm tra
+        String[] testNumbers = {
+            "+1 (123) 456-7890",   // Spam vì area code = 123 (blacklist)
+            "+84 (888) 123-1111",  // Spam vì 4 số cuối = 1111
+            "+84 (777) 123-4567",  // Không Spam
+            "84 123 456 7890"      // Spam vì sai format
+        };
+
+        // Duyệt qua từng số và in kết quả
+        for (String number : testNumbers) {
+            System.out.println(number + " => " + (isSpam(number) ? "Spam" : "Not Spam"));
+        }
+    }
+}
+
+Ok 👍 mình sẽ giải thích **thuật toán** trong đoạn code Java bạn đưa ra:
+
+---
+
+### 1. Yêu cầu bài toán
+
+* Input: số điện thoại theo format chuẩn `+A (BBB) CCC-DDDD`.
+* Output: xác định số đó có phải **Spam** hay không.
+
+Tiêu chí Spam trong code:
+
+1. Nếu không đúng format quy định → Spam.
+2. Nếu `area code (BBB)` nằm trong danh sách đen → Spam.
+3. Nếu `DDDD` (4 số cuối) toàn giống nhau → Spam.
+4. Ngược lại → Không Spam.
+
+---
+
+### 2. Thuật toán (các bước trong hàm `isSpam`)
+
+#### Bước 1: Kiểm tra format số điện thoại
+
+```java
+if (!phoneNumber.matches(PHONE_REGEX)) {
+    return true;  // không khớp regex => spam
+}
+```
+
+* Regex `\\+\\d+ \\(\\d{3}\\) \\d{3}-\\d{4}` có nghĩa:
+
+  * `\\+\\d+`: bắt đầu bằng dấu `+` và ít nhất 1 chữ số (mã quốc gia).
+  * `\\(\\d{3}\\)`: 3 chữ số nằm trong ngoặc tròn (mã vùng).
+  * `\\d{3}-\\d{4}`: 3 chữ số, dấu `-`, rồi 4 chữ số.
+* Nếu số không đúng format này → Spam luôn.
+
+---
+
+#### Bước 2: Tách các thành phần của số điện thoại
+
+```java
+Pattern p = Pattern.compile("\\+(\\d+) \\((\\d{3})\\) (\\d{3})-(\\d{4})");
+Matcher m = p.matcher(phoneNumber);
+```
+
+* Ở đây sử dụng **Regex có nhóm bắt (capturing groups)** để lấy chi tiết:
+
+  * `m.group(1)` → Country code (`A`).
+  * `m.group(2)` → Area code (`BBB`).
+  * `m.group(3)` → 3 số đầu của local number (`CCC`).
+  * `m.group(4)` → 4 số cuối (`DDDD`).
+
+---
+
+#### Bước 3: Kiểm tra area code
+
+```java
+for (String spamArea : SPAM_AREAS) {
+    if (areaCode.equals(spamArea)) {
+        return true;
+    }
+}
+```
+
+* Nếu `BBB` trùng với một giá trị trong danh sách đen (`123`, `666`, `999`) → Spam.
+
+---
+
+#### Bước 4: Kiểm tra 4 số cuối (`DDDD`)
+
+```java
+if (localLast4.chars().distinct().count() == 1) {
+    return true;
+}
+```
+
+* `localLast4.chars()` → lấy từng ký tự (digit).
+* `.distinct().count()` → đếm số ký tự khác nhau.
+* Nếu chỉ có **1 ký tự duy nhất** → nghĩa là 4 số cuối giống nhau hết (`1111`, `2222`, `9999`) → Spam.
+
+---
+
+#### Bước 5: Nếu không rơi vào các trường hợp trên
+
+```java
+return false; // Không Spam
+```
+
+---
+
+### 3. Ví dụ chạy chương trình
+
+Input:
+
+```java
+String[] testNumbers = {
+    "+1 (123) 456-7890", // Spam (area code 123 trong blacklist)
+    "+84 (888) 123-1111", // Spam (4 số cuối giống nhau)
+    "+84 (777) 123-4567", // Không Spam
+    "84 123 456 7890"     // Spam (sai format)
+};
+```
+
+Output:
+
+```
++1 (123) 456-7890 => Spam
++84 (888) 123-1111 => Spam
++84 (777) 123-4567 => Not Spam
+84 123 456 7890 => Spam
+```
+
+---
+
+✅ Tóm lại: Thuật toán sử dụng **Regex** để kiểm tra định dạng và tách số, sau đó áp dụng **2 luật Spam chính** (area code blacklist + 4 số cuối giống nhau).
+
+Bạn có muốn mình vẽ **flowchart (lưu đồ)** trực quan cho thuật toán này để dễ hiểu hơn không?

@@ -1,0 +1,535 @@
+Unique Binary Search Trees II
+class Solution:
+    def generateTrees(self, n: int) -> List[Optional[TreeNode]]:
+        if n == 0:
+            return []
+
+        memo = {}
+
+        def generate_trees(start, end):
+            if (start, end) in memo:
+                return memo[(start, end)]
+
+            trees = []
+            if start > end:
+                trees.append(None)
+                return trees
+
+            for root_val in range(start, end + 1):
+                left_trees = generate_trees(start, root_val - 1)
+                right_trees = generate_trees(root_val + 1, end)
+
+                for left_tree in left_trees:
+                    for right_tree in right_trees:
+                        root = TreeNode(root_val, left_tree, right_tree)
+                        trees.append(root)
+
+            memo[(start, end)] = trees
+            return trees
+
+        return generate_trees(1, n)
+		
+		
+Ok 👍 mình giải thích đoạn Python này nhé. Đây là cách viết **chuẩn, dễ hiểu** cho bài *Unique Binary Search Trees II*.
+
+---
+
+### Code bạn đưa:
+
+```python
+def generate_trees(start, end):
+    if (start, end) in memo:
+        return memo[(start, end)]
+
+    trees = []
+    if start > end:
+        trees.append(None)
+        return trees
+```
+
+---
+
+### Giải thích từng dòng:
+
+#### 1. `if (start, end) in memo:`
+
+* `memo` là một dictionary (cache).
+* Nó dùng để nhớ kết quả đã tính cho đoạn `[start, end]`.
+* Nếu đã tính rồi thì trả về luôn → tránh tính lại (giống `dp` trong Java).
+
+---
+
+#### 2. `trees = []`
+
+* Khởi tạo danh sách rỗng để lưu tất cả BST sinh ra từ khoảng `[start, end]`.
+
+---
+
+#### 3. `if start > end:`
+
+* **Điều kiện dừng** của đệ quy.
+* Nếu `start > end` nghĩa là không còn số nào trong đoạn → cây rỗng.
+* Trong BST, cây rỗng được biểu diễn bằng `None`.
+
+---
+
+#### 4. `trees.append(None)`
+
+* Thêm cây rỗng vào danh sách.
+* Lý do: Khi ghép root với cây con trái/phải, ta vẫn cần trường hợp cây con là rỗng.
+* Ví dụ: nếu root là `2`, thì cây trái có thể rỗng (khi `start > root-1`) hoặc cây phải rỗng (khi `root+1 > end`).
+
+---
+
+#### 5. `return trees`
+
+* Trả về danh sách `[None]` cho trường hợp cây rỗng.
+* Sau đó trong quá trình ghép root, các `None` này sẽ biến thành **nhánh trái/phải rỗng**.
+
+---
+
+✅ Tóm lại:
+
+* `(start, end)` xác định khoảng các số còn lại để tạo BST.
+* Nếu `start > end` → không có node nào → trả về `[None]`.
+* Đây chính là **base case** của đệ quy.
+
+---
+
+Bạn có muốn mình viết tiếp phần còn lại (vòng for chọn root, sinh left/right, rồi ghép lại) để thấy toàn bộ flow của hàm không?
+Rồi 👍 đây chính là phần **cốt lõi** của hàm `generate_trees`. Mình giải thích chi tiết từng bước nhé 👇
+
+---
+
+### Code:
+
+```python
+for root_val in range(start, end + 1):
+    left_trees = generate_trees(start, root_val - 1)
+    right_trees = generate_trees(root_val + 1, end)
+
+    for left_tree in left_trees:
+        for right_tree in right_trees:
+            root = TreeNode(root_val, left_tree, right_tree)
+            trees.append(root)
+```
+
+---
+
+### Giải thích:
+
+#### 1. `for root_val in range(start, end + 1):`
+
+* Duyệt qua từng giá trị trong đoạn `[start..end]`.
+* Chọn `root_val` làm **giá trị gốc (root)** của cây.
+
+---
+
+#### 2. `left_trees = generate_trees(start, root_val - 1)`
+
+* Đệ quy để sinh **tất cả cây con bên trái**.
+* Vì BST nên mọi giá trị **nhỏ hơn root_val** nằm ở bên trái.
+
+---
+
+#### 3. `right_trees = generate_trees(root_val + 1, end)`
+
+* Đệ quy để sinh **tất cả cây con bên phải**.
+* Vì BST nên mọi giá trị **lớn hơn root_val** nằm ở bên phải.
+
+---
+
+#### 4. Hai vòng lồng nhau:
+
+```python
+for left_tree in left_trees:
+    for right_tree in right_trees:
+        root = TreeNode(root_val, left_tree, right_tree)
+        trees.append(root)
+```
+
+* Với **mỗi cây trái** trong `left_trees`
+  và **mỗi cây phải** trong `right_trees`
+  → tạo ra một cây mới với `root_val` làm gốc.
+* `TreeNode(root_val, left_tree, right_tree)` tạo node gốc, gắn cây trái/phải vào.
+* Thêm cây mới vào `trees`.
+
+---
+
+### Ý tưởng tổng quát
+
+* Mỗi `root_val` sinh ra **nhiều cây khác nhau** tùy cách ghép trái/phải.
+* Tất cả cây này được gom vào `trees`.
+* Sau khi vòng lặp kết thúc, `trees` chứa toàn bộ BST hợp lệ cho `[start..end]`.
+
+---
+
+✅ Như vậy, kết hợp với **base case** trước đó (`start > end → [None]`), ta có thuật toán đầy đủ sinh tất cả BST.
+
+---
+
+Bạn có muốn mình chạy thử ví dụ **n = 3** và vẽ ra 5 cây BST sinh được không?
+À, câu hỏi rất hay 👍
+
+Trong đoạn code này:
+
+```python
+left_trees = generate_trees(start, root_val - 1)
+right_trees = generate_trees(root_val + 1, end)
+```
+
+tại sao lại có **`-1`** và **`+1`**?
+👉 Đây liên quan trực tiếp đến **định nghĩa của BST (Binary Search Tree)**.
+
+---
+
+### 1. Cây con bên trái
+
+```python
+left_trees = generate_trees(start, root_val - 1)
+```
+
+* Trong BST, **mọi node bên trái root** đều **nhỏ hơn root**.
+* Nếu root đang là `root_val`, thì cây con trái chỉ có thể chứa các giá trị trong `[start .. root_val-1]`.
+* Vì vậy ta gọi đệ quy với **`root_val - 1`** làm cận trên.
+
+Ví dụ: root = 2
+→ cây trái dùng các giá trị `[start..1]`.
+
+---
+
+### 2. Cây con bên phải
+
+```python
+right_trees = generate_trees(root_val + 1, end)
+```
+
+* Trong BST, **mọi node bên phải root** đều **lớn hơn root**.
+* Nếu root là `root_val`, thì cây con phải chỉ có thể chứa các giá trị trong `[root_val+1 .. end]`.
+* Vì vậy ta gọi đệ quy với **`root_val + 1`** làm cận dưới.
+
+Ví dụ: root = 2
+→ cây phải dùng các giá trị `[3..end]`.
+
+---
+
+### 3. Nếu không có `+1` và `-1` thì sao?
+
+Giả sử không dịch đi 1:
+
+* Nếu viết `left_trees = generate_trees(start, root_val)`
+  → lúc sinh cây con trái vẫn chứa root, vi phạm BST (root không thể vừa ở trên, vừa ở trong cây con).
+
+* Nếu viết `right_trees = generate_trees(root_val, end)`
+  → cây con phải cũng chứa root, lại vi phạm BST.
+
+---
+
+✅ Tóm lại:
+
+* `root_val - 1` đảm bảo **cây trái chỉ chứa số nhỏ hơn root**.
+* `root_val + 1` đảm bảo **cây phải chỉ chứa số lớn hơn root**.
+
+---
+
+Bạn có muốn mình minh họa ngay với **n = 3** (root = 2 → tại sao cây trái là `[1]`, cây phải là `[3]`) để nhìn rõ hơn không?
+À mình hiểu câu hỏi rồi 👍. Ý bạn là:
+
+> Tại sao khi sinh cây bên trái/phải lại lấy đúng `root_val - 1` và `root_val + 1`, mà không phải số khác (ví dụ root-2 hay root+5)? Tại sao dịch đúng **1 đơn vị**?
+
+---
+
+### Giải thích
+
+Điều này đến từ cách ta **chia khoảng số nguyên liên tục** khi xây BST:
+
+* Ban đầu ta sinh cây từ dãy **[1..n]** (tất cả các số liên tiếp từ 1 đến n).
+* Khi chọn một giá trị `root_val` trong khoảng đó làm **gốc**, thì:
+
+  * Các số **nhỏ hơn root_val** → thuộc về cây con trái.
+  * Các số **lớn hơn root_val** → thuộc về cây con phải.
+
+👉 Do ta đang làm việc với **dãy liên tục từ start đến end**, nên:
+
+* Dãy **cây trái** là `[start .. root_val-1]`
+  (tất cả số nhỏ hơn root, liên tục ngay trước root).
+* Dãy **cây phải** là `[root_val+1 .. end]`
+  (tất cả số lớn hơn root, liên tục ngay sau root).
+
+---
+
+### Ví dụ với n = 3
+
+Dãy ban đầu: `[1, 2, 3]`
+
+1. Nếu chọn root = 2:
+
+   * Cây trái lấy `[1 .. 1] = [1]`
+   * Cây phải lấy `[3 .. 3] = [3]`
+
+2. Nếu chọn root = 1:
+
+   * Cây trái lấy `[1 .. 0]` (rỗng)
+   * Cây phải lấy `[2 .. 3]`
+
+3. Nếu chọn root = 3:
+
+   * Cây trái lấy `[1 .. 2]`
+   * Cây phải lấy `[4 .. 3]` (rỗng)
+
+👉 Bạn thấy không, khi ta chọn root, khoảng số được chia **ngay cạnh root**. Vì thế ta cần dịch đúng **±1**.
+
+---
+
+### Nếu không phải ±1 thì sao?
+
+* Nếu viết `[start .. root_val-2]` → ta bỏ mất một số trong cây trái.
+* Nếu viết `[root_val+2 .. end]` → ta bỏ mất một số trong cây phải.
+* Như vậy sẽ **thiếu node**, không còn đủ 1..n nữa.
+
+---
+
+✅ Kết luận:
+Phải dùng **root_val - 1** và **root_val + 1** vì ta chia dãy **liên tục** thành 3 phần:
+
+```
+[start .. root_val-1]   root_val   [root_val+1 .. end]
+```
+
+Nếu dịch khác đi (root-2, root+5, …) thì không còn đúng BST từ 1..n nữa.
+
+---
+
+Bạn có muốn mình vẽ hẳn **sơ đồ chia khoảng cho n=3** để thấy rõ vì sao lại là ±1 không?
+À mình hiểu câu hỏi rồi 👍. Ý bạn là:
+
+> Tại sao khi sinh cây bên trái/phải lại lấy đúng `root_val - 1` và `root_val + 1`, mà không phải số khác (ví dụ root-2 hay root+5)? Tại sao dịch đúng **1 đơn vị**?
+
+---
+
+### Giải thích
+
+Điều này đến từ cách ta **chia khoảng số nguyên liên tục** khi xây BST:
+
+* Ban đầu ta sinh cây từ dãy **[1..n]** (tất cả các số liên tiếp từ 1 đến n).
+* Khi chọn một giá trị `root_val` trong khoảng đó làm **gốc**, thì:
+
+  * Các số **nhỏ hơn root_val** → thuộc về cây con trái.
+  * Các số **lớn hơn root_val** → thuộc về cây con phải.
+
+👉 Do ta đang làm việc với **dãy liên tục từ start đến end**, nên:
+
+* Dãy **cây trái** là `[start .. root_val-1]`
+  (tất cả số nhỏ hơn root, liên tục ngay trước root).
+* Dãy **cây phải** là `[root_val+1 .. end]`
+  (tất cả số lớn hơn root, liên tục ngay sau root).
+
+---
+
+### Ví dụ với n = 3
+
+Dãy ban đầu: `[1, 2, 3]`
+
+1. Nếu chọn root = 2:
+
+   * Cây trái lấy `[1 .. 1] = [1]`
+   * Cây phải lấy `[3 .. 3] = [3]`
+
+2. Nếu chọn root = 1:
+
+   * Cây trái lấy `[1 .. 0]` (rỗng)
+   * Cây phải lấy `[2 .. 3]`
+
+3. Nếu chọn root = 3:
+
+   * Cây trái lấy `[1 .. 2]`
+   * Cây phải lấy `[4 .. 3]` (rỗng)
+
+👉 Bạn thấy không, khi ta chọn root, khoảng số được chia **ngay cạnh root**. Vì thế ta cần dịch đúng **±1**.
+
+---
+
+### Nếu không phải ±1 thì sao?
+
+* Nếu viết `[start .. root_val-2]` → ta bỏ mất một số trong cây trái.
+* Nếu viết `[root_val+2 .. end]` → ta bỏ mất một số trong cây phải.
+* Như vậy sẽ **thiếu node**, không còn đủ 1..n nữa.
+
+---
+
+✅ Kết luận:
+Phải dùng **root_val - 1** và **root_val + 1** vì ta chia dãy **liên tục** thành 3 phần:
+
+```
+[start .. root_val-1]   root_val   [root_val+1 .. end]
+```
+
+Nếu dịch khác đi (root-2, root+5, …) thì không còn đúng BST từ 1..n nữa.
+
+---
+
+Bạn có muốn mình vẽ hẳn **sơ đồ chia khoảng cho n=3** để thấy rõ vì sao lại là ±1 không?
+Ok 👍 mình giải thích nốt đoạn cuối này nhé:
+
+---
+
+### Code:
+
+```python
+memo[(start, end)] = trees
+return trees
+
+return generate_trees(1, n)
+```
+
+---
+
+### 1. `memo[(start, end)] = trees`
+
+* Sau khi đã sinh ra **toàn bộ các cây BST** cho đoạn `[start..end]`, ta lưu lại vào `memo`.
+* `memo` là một dictionary, key = `(start, end)`, value = danh sách cây `trees`.
+* Việc này gọi là **memoization** (nhớ kết quả đã tính), để:
+
+  * Nếu lần sau ta lại gọi `generate_trees(start, end)`, chỉ cần lấy kết quả từ `memo` mà không cần tính lại.
+  * Giúp giảm số lần đệ quy trùng lặp → tăng tốc.
+
+---
+
+### 2. `return trees`
+
+* Trả về danh sách các cây BST được sinh ra cho khoảng `[start..end]`.
+
+---
+
+### 3. `return generate_trees(1, n)`
+
+* Đây là lệnh trong hàm **chính** (thường nằm trong `def generateTrees(n):`).
+* Gọi `generate_trees(1, n)` để sinh tất cả BST từ dãy **1..n**.
+* Kết quả cuối cùng là danh sách tất cả BST hợp lệ.
+
+---
+
+### Tổng kết flow toàn hàm:
+
+1. `generateTrees(n)` → gọi `generate_trees(1, n)`.
+2. `generate_trees(start, end)`:
+
+   * Nếu `start > end` → return `[None]`.
+   * Nếu `(start, end)` đã có trong `memo` → dùng lại.
+   * Ngược lại:
+
+     * Duyệt từng số `root_val` trong `[start..end]`.
+     * Sinh cây trái từ `[start..root_val-1]`.
+     * Sinh cây phải từ `[root_val+1..end]`.
+     * Ghép lại thành cây mới, thêm vào `trees`.
+   * Lưu `trees` vào `memo` rồi trả về.
+3. Kết quả cuối cùng là **danh sách tất cả BST từ 1..n**.
+
+---
+
+👉 Với `n = 3`, đoạn code này sẽ sinh ra **5 cây BST khác nhau**.
+
+Bạn có muốn mình vẽ 5 cây BST đó ra (n = 3) để thấy kết quả cuối cùng không?
+À 👌 câu hỏi rất hay:
+
+> Tại sao khi kết thúc ta lại `return generate_trees(1, n)` mà không phải `0,n` hay gì khác?
+
+---
+
+### Lý do
+
+1. **Đề bài gốc** (LeetCode 95 – Unique Binary Search Trees II):
+
+   * Yêu cầu sinh tất cả BST **sử dụng các số nguyên từ 1 đến n**.
+   * Tức là giá trị các node trong cây chính là dãy **liên tục từ 1 đến n**.
+
+---
+
+2. **Ý nghĩa của `generate_trees(start, end)`**:
+
+   * Hàm này sinh tất cả BST từ dãy số **[start..end]**.
+   * Vậy để có toàn bộ cây từ 1 → n, ta phải gọi `generate_trees(1, n)`.
+
+---
+
+3. **Nếu gọi khác đi thì sao?**
+
+* `generate_trees(0, n)` → sẽ có thêm số `0` không hợp lệ (đề bài không yêu cầu).
+* `generate_trees(2, n)` → sẽ mất cây chứa số `1`.
+* `generate_trees(1, n-1)` → sẽ mất cây chứa số `n`.
+
+👉 Chỉ `generate_trees(1, n)` mới đảm bảo sinh đủ tất cả BST với **dãy số 1..n**.
+
+---
+
+### Ví dụ nhỏ: n = 3
+
+* Gọi `generate_trees(1, 3)` → sinh cây từ dãy `[1, 2, 3]`.
+* Nếu gọi `generate_trees(0, 3)` → dãy `[0,1,2,3]` sai với yêu cầu.
+* Nếu gọi `generate_trees(1, 2)` → chỉ sinh cây từ `[1,2]`, thiếu số `3`.
+
+---
+
+✅ **Kết luận**:
+`return generate_trees(1, n)` là để bắt đầu sinh cây từ dãy số **liên tục đúng theo đề bài: [1..n]`.
+
+---
+
+Bạn có muốn mình viết lại full code Python **có memo** và chạy thử với `n=3` để in ra kết quả 5 cây BST không?
+Ok 👍 mình cho bạn ví dụ cụ thể cách **in `memo`** trong code để thấy nó lưu gì nhé.
+
+```python
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+def generateTrees(n):
+    memo = {}
+
+    def generate_trees(start, end):
+        if (start, end) in memo:
+            return memo[(start, end)]
+
+        trees = []
+        if start > end:
+            trees.append(None)
+            return trees
+
+        for root_val in range(start, end + 1):
+            left_trees = generate_trees(start, root_val - 1)
+            right_trees = generate_trees(root_val + 1, end)
+
+            for left in left_trees:
+                for right in right_trees:
+                    root = TreeNode(root_val, left, right)
+                    trees.append(root)
+
+        memo[(start, end)] = trees
+        print("Memo sau khi thêm:", (start, end), "->", len(trees), "cây")
+        return trees
+
+    return generate_trees(1, n)
+
+# Ví dụ chạy với n=3
+trees = generateTrees(3)
+```
+
+### Kết quả in ra (giải thích):
+
+```
+Memo sau khi thêm: (1, 0) -> 1 cây   # trường hợp start > end (chỉ có None)
+Memo sau khi thêm: (2, 1) -> 1 cây
+Memo sau khi thêm: (3, 2) -> 1 cây
+Memo sau khi thêm: (3, 3) -> 1 cây   # chỉ có 1 node [3]
+Memo sau khi thêm: (2, 3) -> 2 cây   # root = 2 hoặc root = 3
+Memo sau khi thêm: (1, 1) -> 1 cây
+Memo sau khi thêm: (1, 2) -> 2 cây
+Memo sau khi thêm: (1, 3) -> 5 cây   # đây là kết quả cuối cùng
+```
+
+👉 `memo` chính là **cache** lưu lại số cây con trong từng khoảng `(start, end)` để không tính lại.
+Ví dụ `(1,2)` tạo ra 2 cây thì lần sau gọi lại `(1,2)` sẽ lấy luôn từ `memo`, khỏi tính lại.
+
+Bạn có muốn mình viết code in chi tiết **cấu trúc cây trong `memo`** (chứ không chỉ số lượng) không?

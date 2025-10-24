@@ -1,0 +1,213 @@
+Long word 
+Ok, mình giải thích nhé:
+
+**Đề bài**:
+
+* Input: một câu (sentence).
+* Output: từ dài nhất trong câu.
+
+**Quy tắc**:
+
+1. **Bỏ qua dấu chấm “.”** khi tính độ dài của từ. Ví dụ: `"end."` → `"end"` có độ dài 3 chứ không phải 4.
+2. Nếu có **nhiều từ cùng độ dài**, trả về **từ đầu tiên** gặp được trong câu.
+
+---
+
+### Ví dụ minh họa:
+
+**Input**:
+
+```
+"This is a simple sentence."
+```
+
+**Các bước xử lý**:
+
+* Cắt câu thành từng từ: `["This", "is", "a", "simple", "sentence."]`
+* Xử lý bỏ dấu chấm:
+
+  * `"sentence."` → `"sentence"`
+* Tính độ dài:
+
+  * `"This"` → 4
+  * `"is"` → 2
+  * `"a"` → 1
+  * `"simple"` → 6
+  * `"sentence"` → 8
+* Từ dài nhất = `"sentence"`
+
+**Output**:
+
+```
+"sentence"
+```
+
+---
+
+### Trường hợp có nhiều từ cùng độ dài
+
+**Input**:
+
+```
+"Cat dog bird."
+```
+
+* `"Cat"` = 3
+* `"dog"` = 3
+* `"bird."` → `"bird"` = 4
+
+=> Từ dài nhất = `"bird"`
+
+**Input**:
+
+```
+"Run fly sky."
+```
+
+* `"Run"` = 3
+* `"fly"` = 3
+* `"sky."` → `"sky"` = 3
+
+Tất cả đều 3 ký tự → chọn **từ đầu tiên** `"Run"`
+
+**Output**:
+
+```
+"Run"
+```
+
+---
+
+👉 Vậy tóm gọn:
+
+* Bỏ dấu chấm cuối từ.
+* Tìm từ có độ dài lớn nhất.
+* Nếu có nhiều từ cùng độ dài → trả về từ đầu tiên.
+
+Bạn có muốn mình viết **code Java hoặc Python** minh họa luôn không?
+public class LongestWordFinder {
+    public static String findLongestWord(String sentence) {
+        String[] words = sentence.split(" ");
+        String longest = "";
+        
+        for (String word : words) {
+            // Bỏ dấu chấm ở cuối từ
+            if (word.endsWith(".")) {
+                word = word.substring(0, word.length() - 1);
+            }
+            
+            if (word.length() > longest.length()) {
+                longest = word;
+            }
+        }
+        return longest;
+    }
+
+    public static void main(String[] args) {
+        String sentence1 = "This is a simple sentence.";
+        String sentence2 = "Run fly sky.";
+        
+        System.out.println(findLongestWord(sentence1)); // Output: sentence
+        System.out.println(findLongestWord(sentence2)); // Output: Run
+    }
+}
+Ok, mình sẽ viết code Java để giải quyết bài này.
+
+### Ý tưởng code:
+
+1. Nhận câu input.
+2. Dùng `split(" ")` để tách thành các từ.
+3. Với mỗi từ, bỏ dấu chấm ở cuối (nếu có).
+4. Tính độ dài và so sánh để tìm từ dài nhất.
+5. Nếu nhiều từ có cùng độ dài, giữ từ **đầu tiên**.
+
+---
+
+### Code Java:
+
+```java
+public class LongestWordFinder {
+    public static String findLongestWord(String sentence) {
+        String[] words = sentence.split(" ");
+        String longest = "";
+        
+        for (String word : words) {
+            // Bỏ dấu chấm ở cuối từ
+            if (word.endsWith(".")) {
+                word = word.substring(0, word.length() - 1);
+            }
+            
+            if (word.length() > longest.length()) {
+                longest = word;
+            }
+        }
+        return longest;
+    }
+
+    public static void main(String[] args) {
+        String sentence1 = "This is a simple sentence.";
+        String sentence2 = "Run fly sky.";
+        
+        System.out.println(findLongestWord(sentence1)); // Output: sentence
+        System.out.println(findLongestWord(sentence2)); // Output: Run
+    }
+}
+```
+
+---
+
+📌 Giải thích nhanh:
+
+* `split(" ")` → tách các từ bằng dấu cách.
+* `endsWith(".")` → kiểm tra nếu từ có dấu chấm ở cuối.
+* `substring(0, word.length() - 1)` → xóa dấu chấm cuối.
+* So sánh độ dài để cập nhật `longest`.
+
+Bạn có muốn mình viết thêm version mà **bỏ luôn dấu phẩy, chấm hỏi, chấm than** (không chỉ dấu `.`) không?
+
+
+Ok, mình viết luôn bản **Python** nhé.
+
+### Ý tưởng giống Java:
+
+1. Nhận câu input.
+2. Dùng `split()` để tách thành các từ.
+3. Nếu từ có dấu chấm ở cuối → bỏ đi.
+4. So sánh độ dài để tìm từ dài nhất.
+5. Nếu có nhiều từ cùng độ dài, chọn từ **đầu tiên**.
+
+---
+
+### Code Python:
+
+```python
+def find_longest_word(sentence: str) -> str:
+    words = sentence.split()
+    longest = ""
+    
+    for word in words:
+        # Bỏ dấu chấm ở cuối
+        if word.endswith("."):
+            word = word[:-1]
+        
+        if len(word) > len(longest):
+            longest = word
+    
+    return longest
+
+
+# Test thử
+print(find_longest_word("This is a simple sentence."))  # Output: sentence
+print(find_longest_word("Run fly sky."))                # Output: Run
+```
+
+---
+
+📌 Giải thích:
+
+* `split()` → tách câu theo khoảng trắng.
+* `endswith(".")` → kiểm tra từ có dấu chấm cuối.
+* `word[:-1]` → bỏ ký tự cuối cùng (dấu chấm).
+* So sánh độ dài, lưu lại từ dài nhất.
+
+👉 Bạn có muốn mình nâng cấp luôn thành version **bỏ tất cả dấu câu** (.,!?...) chứ không chỉ `.` không?

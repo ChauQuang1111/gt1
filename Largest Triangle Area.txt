@@ -1,0 +1,186 @@
+Largest Triangle Area
+class Solution {
+    static {
+        Solution s = new Solution();
+        for (int i = 0; i < 500; i++)
+            s.largestTriangleArea(new int[][]{{0,0},{0,0},{0,0}});
+    }
+    public double largestTriangleArea(int[][] points) {
+        int n = points.length;
+        double area = 0;
+        for (int i = 0; i < n - 2; i++){
+            for (int j = i+1; j < n - 1; j++){
+                for (int k = j + 1; k < n; k++){
+                   double a = max(points[i],points[j],points[k]);
+                    if (a > area){
+                        area = a;
+                    }
+                }
+            }
+        }
+        return area;
+    }
+    public double max(int p1[],int p2[], int p3[]){
+        double area = 0.5*Math.abs(p1[0]*(p2[1]-p3[1])+p2[0]*(p3[1]-p1[1])+p3[0]*(p1[1]-p2[1]));
+        return area;
+    }
+}
+
+Ok, mình giải thích chi tiết thuật toán trong Java của bạn nhé 👇
+
+---
+
+### 📌 Đề bài: *Largest Triangle Area*
+
+* Input: Một mảng các điểm `points[i] = [xi, yi]`.
+* Output: Diện tích lớn nhất có thể tạo thành từ **bất kỳ 3 điểm khác nhau** trong mảng.
+
+---
+
+### 📌 Code của bạn
+
+```java
+public double largestTriangleArea(int[][] points) {
+    int n = points.length;
+    double area = 0;
+
+    // Duyệt qua tất cả bộ ba điểm khác nhau (i, j, k)
+    for (int i = 0; i < n - 2; i++) {
+        for (int j = i + 1; j < n - 1; j++) {
+            for (int k = j + 1; k < n; k++) {
+                // Tính diện tích tam giác tạo bởi points[i], points[j], points[k]
+                double a = max(points[i], points[j], points[k]);
+
+                // Cập nhật kết quả lớn nhất
+                if (a > area) {
+                    area = a;
+                }
+            }
+        }
+    }
+    return area;
+}
+```
+
+---
+
+### 📌 Hàm tính diện tích tam giác
+
+```java
+public double max(int[] p1, int[] p2, int[] p3) {
+    // Công thức diện tích theo định thức:
+    // area = 0.5 * |x1(y2 - y3) + x2(y3 - y1) + x3(y1 - y2)|
+    double area = 0.5 * Math.abs(
+        p1[0] * (p2[1] - p3[1]) +
+        p2[0] * (p3[1] - p1[1]) +
+        p3[0] * (p1[1] - p2[1])
+    );
+    return area;
+}
+```
+
+---
+
+### 📌 Giải thích thuật toán
+
+1. **Duyệt tất cả bộ 3 điểm khác nhau (i, j, k)**
+
+   * Sử dụng 3 vòng `for` lồng nhau.
+   * Mỗi bộ 3 điểm tạo thành 1 tam giác (hoặc thẳng hàng → diện tích = 0).
+
+2. **Tính diện tích tam giác từ 3 điểm**
+
+   * Dùng công thức **shoelace** (công thức tọa độ hình học).
+   * Kết quả luôn dương nhờ `Math.abs`.
+
+3. **Cập nhật diện tích lớn nhất**
+
+   * Nếu diện tích mới tính được `a > area`, thì gán lại `area = a`.
+
+4. **Trả về kết quả**
+
+   * Sau khi duyệt hết, biến `area` sẽ lưu diện tích tam giác lớn nhất.
+
+---
+
+### 📌 Độ phức tạp
+
+* Có `n` điểm.
+* Số bộ ba điểm = `C(n, 3) = n * (n-1) * (n-2) / 6`.
+* Mỗi bộ ba tính diện tích O(1).
+  👉 Độ phức tạp: **O(n³)**.
+  Với `n ≤ 50` (theo LeetCode), vẫn chạy tốt.
+
+---
+
+👉 Bạn có muốn mình viết lại đoạn code này sang **Python phiên bản 3 vòng `for` lồng nhau** (giống Java, không dùng `combinations`) để dễ so sánh không?
+À mình giải thích rõ dòng này nhé 👇
+
+```java
+double a = max(points[i], points[j], points[k]);
+```
+
+---
+
+### 📌 Ý nghĩa
+
+* `points` là mảng 2D lưu các điểm, ví dụ:
+
+  ```java
+  points = [[0,0], [0,1], [1,0], [1,1]];
+  ```
+
+  * `points[i]` là một điểm dạng `[x, y]`, ví dụ `[0, 1]`.
+
+* `max(points[i], points[j], points[k])` là **hàm phụ** do bạn viết ở dưới:
+
+  ```java
+  public double max(int[] p1, int[] p2, int[] p3) {
+      double area = 0.5 * Math.abs(
+          p1[0] * (p2[1] - p3[1]) +
+          p2[0] * (p3[1] - p1[1]) +
+          p3[0] * (p1[1] - p2[1])
+      );
+      return area;
+  }
+  ```
+
+  * Nó nhận **3 điểm `p1, p2, p3`** làm tham số.
+  * Trả về diện tích tam giác được tạo bởi 3 điểm đó (dùng công thức tọa độ).
+
+---
+
+### 📌 Ví dụ minh họa
+
+Giả sử:
+
+```java
+points = [[0,0], [0,1], [1,0]];
+```
+
+* Lúc `i=0, j=1, k=2`:
+  `points[i] = [0,0], points[j] = [0,1], points[k] = [1,0]`.
+
+Gọi hàm:
+
+```java
+double a = max([0,0], [0,1], [1,0]);
+```
+
+Trong hàm `max`:
+
+```
+area = 0.5 * | 0*(1-0) + 0*(0-0) + 1*(0-1) |
+     = 0.5 * | 0 + 0 -1 |
+     = 0.5 * 1
+     = 0.5
+```
+
+👉 Diện tích tam giác = `0.5`.
+
+---
+
+➡️ Nói ngắn gọn:
+Dòng `double a = max(points[i], points[j], points[k]);` là để **tính diện tích tam giác tạo bởi 3 điểm (points[i], points[j], points[k])**.
+
+Bạn có muốn mình vẽ hình minh họa bằng ASCII (tam giác với các tọa độ) để thấy công thức diện tích hoạt động thế nào không?

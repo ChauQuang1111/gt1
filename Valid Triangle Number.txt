@@ -1,0 +1,161 @@
+Valid Triangle Number
+from typing import List
+
+class Solution:
+    def triangleNumber(self, nums: List[int]) -> int:
+        nums.sort()   # B1: Sắp xếp mảng tăng dần
+        n = len(nums)
+        ans = 0       # Kết quả cuối cùng: số bộ ba (a, b, c) tạo thành tam giác
+
+        # B2: Duyệt qua từng phần tử nums[i] coi như cạnh lớn nhất (c)
+        for i in range(n-1, 1, -1):   # i chạy từ n-1 -> 2
+            c = nums[i]
+
+            # Trường hợp 1: Nếu cạnh nhỏ nhất + cạnh nhỏ thứ 2 > c,
+            # thì bất kỳ 3 số nào từ 0..i đều tạo thành tam giác
+            if nums[0] + nums[1] > c:
+                # Tính số cách chọn 3 phần tử trong (i+1) số: C(i+1, 3)
+                ans += (i + 1) * i * (i - 1) // 6
+                break   # Không cần xét tiếp vì i càng lớn thì điều kiện càng thỏa
+
+            # Trường hợp 2: Nếu hai cạnh lớn nhất trong [0..i-1] cộng lại < c,
+            # thì không thể tạo tam giác nào với cạnh c này
+            if nums[i-2] + nums[i-1] < c:
+                continue
+
+            # Trường hợp 3: Dùng 2 con trỏ để đếm số cặp (a, b) thỏa mãn
+            l, r = 0, i-1
+            while l < r:
+                if nums[l] + nums[r] > c:
+                    # Nếu nums[l] + nums[r] > c thì tất cả cặp (nums[l..r-1], nums[r]) đều hợp lệ
+                    ans += r - l
+                    r -= 1   # Giảm r để kiểm tra cặp nhỏ hơn
+                else:
+                    # Nếu nums[l] + nums[r] <= c thì tăng l để làm tổng lớn hơn
+                    l += 1
+
+        return ans
+À, mình giải thích chi tiết công thức đó nhé 👇
+
+```python
+if nums[0] + nums[1] > c:
+    ans += (i + 1) * i * (i - 1) // 6
+    break
+```
+
+### 1️⃣ Tại sao lại có công thức này?
+
+* Khi bạn xét `c = nums[i]` (cạnh lớn nhất trong nhóm `0..i`), nếu **hai cạnh nhỏ nhất** `nums[0] + nums[1]` vẫn > `c`,
+  thì điều đó có nghĩa là **mọi cặp (a, b) khác trong [0..i-1] cộng với c cũng > c** (vì các cạnh khác đều ≥ `nums[0]` và `nums[1]`).
+
+➡️ Nói cách khác: **Bất kỳ 3 cạnh nào trong đoạn [0..i] đều tạo thành tam giác hợp lệ**.
+
+---
+
+### 2️⃣ Số cách chọn 3 cạnh bất kỳ trong [0..i]
+
+Trong đoạn [0..i] có **i+1 phần tử**.
+Số bộ ba `(a, b, c)` chọn được chính là **tổ hợp chập 3**:
+
+$$
+C(i+1, 3) = \frac{(i+1) \cdot i \cdot (i-1)}{6}
+$$
+
+---
+
+### 3️⃣ Vì sao dùng công thức tổ hợp?
+
+* Nếu đã biết tất cả 3 cạnh trong [0..i] hợp lệ, ta không cần chạy vòng lặp hay dùng hai con trỏ để đếm nữa.
+* Thay vào đó, chỉ cần cộng **số bộ ba hợp lệ** = `C(i+1, 3)` vào `ans` rồi **break**, vì khi `i` giảm thì càng nhỏ, điều kiện này càng vẫn đúng.
+
+---
+
+✅ Ví dụ:
+`nums = [3, 4, 5, 6]` (đã sort).
+Xét `i = 3` (`c = 6`):
+
+* `nums[0] + nums[1] = 3+4 = 7 > 6` → tất cả 4 số đều có thể chọn thành tam giác.
+* Số bộ ba = `C(4, 3) = 4`.
+
+---
+
+👉 Công thức `(i+1)*i*(i-1)//6` chính là số **tam giác tối đa có thể tạo ra từ (i+1) cạnh đầu tiên**.
+
+---
+
+Bạn có muốn mình viết lại code **bỏ luôn phần hai con trỏ** và thay hoàn toàn bằng công thức tổ hợp nếu có thể áp dụng không?
+Ok 👍 mình giải thích chi tiết đoạn hai con trỏ này nhé:
+
+```python
+if nums[l] + nums[r] > c:
+    # Nếu nums[l] + nums[r] > c thì tất cả cặp (nums[l..r-1], nums[r]) đều hợp lệ
+    ans += r - l
+    r -= 1   # Giảm r để kiểm tra cặp nhỏ hơn
+else:
+    # Nếu nums[l] + nums[r] <= c thì tăng l để làm tổng lớn hơn
+    l += 1
+```
+
+---
+
+### Bối cảnh
+
+* Ta đã cố định **cạnh lớn nhất** `c = nums[i]`.
+* Ta cần tìm hai cạnh khác từ đoạn `[0..i-1]` để tạo tam giác.
+* Điều kiện: `nums[l] + nums[r] > c`.
+
+---
+
+### Ý tưởng hai con trỏ
+
+* `l` bắt đầu từ **trái (0)** → số nhỏ nhất.
+* `r` bắt đầu từ **phải (i-1)** → số lớn nhất trước `c`.
+
+Ta dịch chuyển `l` và `r` để kiểm tra các cặp `(nums[l], nums[r])`.
+
+---
+
+### Trường hợp 1: `nums[l] + nums[r] > c`
+
+* Nếu `nums[l] + nums[r] > c` thì **mọi số nằm giữa `l..r-1` kết hợp với `nums[r]` đều hợp lệ**.
+  Vì dãy đã **sắp xếp tăng dần**, nên:
+
+  ```
+  nums[l] <= nums[l+1] <= ... <= nums[r-1] <= nums[r]
+  ```
+
+  → Nếu `nums[l] + nums[r] > c`, thì:
+
+  ```
+  nums[l+1] + nums[r] > c
+  nums[l+2] + nums[r] > c
+  ...
+  nums[r-1] + nums[r] > c
+  ```
+* Vậy ta có thêm `r - l` bộ ba hợp lệ.
+* Sau đó `r--` để tiếp tục xét số nhỏ hơn.
+
+---
+
+### Trường hợp 2: `nums[l] + nums[r] <= c`
+
+* Khi tổng chưa đủ để vượt qua `c`, thì muốn lớn hơn ta phải **tăng `l`** (vì tăng số nhỏ nhất thì tổng tăng).
+* Do đó `l++`.
+
+---
+
+### Tóm gọn
+
+* Nếu tổng > c → đếm tất cả các cặp `(l..r-1, r)` và dịch `r`.
+* Nếu tổng ≤ c → dịch `l` để thử số lớn hơn.
+
+---
+
+👉 Đây là "kỹ thuật two pointers" quen thuộc khi mảng đã **sort**:
+
+* Một con trỏ đi từ trái, một từ phải.
+* Giúp giảm từ **O(n³)** (3 vòng for) xuống **O(n²)**.
+
+---
+
+Bạn có muốn mình minh họa **bằng ví dụ cụ thể** (ví dụ `[2, 3, 4, 5]`) để thấy rõ cách `l, r` di chuyển không?

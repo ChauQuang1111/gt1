@@ -1,0 +1,1046 @@
+ 3494. Find the Minimum Amount of Time to Brew Potions(09/10/2025)
+class Solution{
+    public long minTime(int[] skill, int[] mana) {
+        int n = skill.length, m = mana.length;
+        long[] acc = new long[n + 1];
+        for (int i = 0; i < n; i++) {
+            acc[i + 1] = acc[i] + skill[i];
+        }
+        long t = 0, t2 = 0;
+        for (int j = 1; j < m; j++) {
+            t2 = 0;
+            for (int i = 0; i < n; i++) {
+                t2 = Math.max(t2, t + mana[j - 1] * acc[i + 1] - mana[j] * acc[i]);
+            }
+            t = t2;
+        }
+        return t + mana[m - 1] * acc[n];
+    }
+}
+Rất hay — đoạn này là **bước tính prefix sum (tổng tích lũy)**, và nó cực kỳ quan trọng trong thuật toán này 💡
+Giải thích chi tiết từng dòng nhé 👇
+
+---
+
+```java
+long[] acc = new long[n + 1];
+```
+
+* Tạo mảng `acc` có kích thước `n + 1` để lưu **tổng kỹ năng tích lũy (prefix sum)**.
+* Dùng `long` để tránh tràn số khi cộng nhiều giá trị lớn.
+* `acc[0] = 0` mặc định — nghĩa là trước khi bắt đầu, tổng kỹ năng là 0.
+
+---
+
+```java
+for (int i = 0; i < n; i++) {
+    acc[i + 1] = acc[i] + skill[i];
+}
+```
+
+👉 Giải thích từng bước:
+
+* Duyệt qua từng chỉ số `i` trong mảng `skill`.
+* Mỗi bước, cộng giá trị `skill[i]` vào tổng trước đó `acc[i]` và lưu vào `acc[i + 1]`.
+
+---
+
+📘 **Ví dụ minh họa:**
+Giả sử:
+
+```java
+skill = [3, 5, 2];
+```
+
+Ta sẽ có:
+
+| i | skill[i] | acc[i] | acc[i + 1] = acc[i] + skill[i] |
+| - | -------- | ------ | ------------------------------ |
+| 0 | 3        | 0      | 3                              |
+| 1 | 5        | 3      | 8                              |
+| 2 | 2        | 8      | 10                             |
+
+➡️ Kết quả cuối cùng:
+
+```
+acc = [0, 3, 8, 10]
+```
+
+---
+
+### 🧠 Ý nghĩa:
+
+`acc[i]` cho biết **tổng kỹ năng của tất cả potion từ 0 đến i-1**
+→ dùng để nhanh chóng tính tổng kỹ năng giữa hai điểm bất kỳ trong O(1):
+
+```
+Tổng skill từ vị trí a đến b = acc[b + 1] - acc[a]
+```
+
+---
+
+Bạn có muốn mình giải thích luôn **vì sao cần dùng prefix sum (acc)** trong công thức `t2 = max(t2, t + mana[j - 1] * acc[i + 1] - mana[j] * acc[i])` không?
+Câu hỏi rất hay 👍 — dòng
+
+```java
+long[] acc = new long[n + 1];
+```
+
+có **`+1`** là vì **ý tưởng prefix sum (tổng tích lũy)** luôn cần **một phần tử “đệm” ở đầu (index 0)** để biểu diễn “tổng trống = 0”.
+
+---
+
+### 🧠 Giải thích chi tiết:
+
+Giả sử bạn có mảng:
+
+```java
+skill = [3, 5, 2]; // n = 3
+```
+
+Nếu bạn tạo `acc = new long[n]`, thì acc chỉ có 3 phần tử: `acc[0]`, `acc[1]`, `acc[2]`.
+
+Khi bạn muốn lưu **tổng kỹ năng của 0 → i**, bạn sẽ gặp vấn đề:
+
+* Tổng trước khi bắt đầu (tức là chưa lấy phần tử nào) không có chỗ để lưu.
+* Cần một phần tử **acc[0] = 0** để đại diện cho “tổng rỗng”.
+
+---
+
+### ✅ Cách tính prefix sum chuẩn:
+
+Khi khai báo `acc = new long[n + 1];`, ta có:
+
+| i | Ý nghĩa              | acc[i] |
+| - | -------------------- | ------ |
+| 0 | không lấy potion nào | 0      |
+| 1 | tổng đến skill[0]    | 3      |
+| 2 | tổng đến skill[1]    | 8      |
+| 3 | tổng đến skill[2]    | 10     |
+
+→ `acc[i + 1] = acc[i] + skill[i]`
+
+---
+
+### 💡 Lợi ích:
+
+1. **Tránh lỗi index out of bound** khi tính `acc[i + 1]`.
+2. **Dễ tính tổng đoạn con**:
+   Tổng từ `skill[l]` đến `skill[r]` = `acc[r + 1] - acc[l]`
+
+Ví dụ:
+
+```
+Tổng skill[1..2] = acc[3] - acc[1] = 10 - 3 = 7
+```
+
+---
+
+Tóm lại:
+
+* `+1` giúp **có một chỗ để lưu tổng ban đầu = 0**.
+* Giúp tính nhanh các tổng đoạn mà không cần kiểm tra điều kiện đặc biệt cho phần tử đầu tiên.
+
+---
+
+Bạn có muốn mình minh họa bằng ví dụ có vòng for đầy đủ để thấy `acc[i+1]` được tính như thế nào trong từng bước không?
+Rất tốt 👏 — đây là **cốt lõi của cách tính prefix sum (tổng tích lũy)**, nên mình sẽ giải thích thật chi tiết, dễ hiểu từng ký tự nhé 👇
+
+---
+
+### 📘 Câu lệnh:
+
+```java
+acc[i + 1] = acc[i] + skill[i];
+```
+
+---
+
+### 🧠 Ý tưởng tổng quát:
+
+* `acc[i]` lưu **tổng kỹ năng của tất cả potion từ 0 đến i-1**.
+* `skill[i]` là **kỹ năng của potion thứ i** (hiện tại).
+  → Khi bạn thêm potion thứ `i`, tổng mới sẽ là:
+
+```
+(tổng cũ) + (giá trị mới)
+```
+
+---
+
+### 🧩 Giải thích từng phần:
+
+| Thành phần   | Ý nghĩa                                 |
+| ------------ | --------------------------------------- |
+| `acc[i]`     | tổng kỹ năng từ potion 0 đến potion i-1 |
+| `skill[i]`   | kỹ năng của potion thứ i                |
+| `acc[i + 1]` | tổng kỹ năng từ potion 0 đến potion i   |
+
+---
+
+### 🧮 Ví dụ minh họa:
+
+Giả sử:
+
+```java
+skill = [2, 5, 3];
+long[] acc = new long[4];  // n + 1 = 4
+// ban đầu acc = [0, 0, 0, 0]
+```
+
+**Bắt đầu vòng lặp:**
+
+#### ✅ i = 0:
+
+```
+acc[1] = acc[0] + skill[0]
+       = 0 + 2
+       = 2
+```
+
+→ acc = [0, 2, 0, 0]
+
+#### ✅ i = 1:
+
+```
+acc[2] = acc[1] + skill[1]
+       = 2 + 5
+       = 7
+```
+
+→ acc = [0, 2, 7, 0]
+
+#### ✅ i = 2:
+
+```
+acc[3] = acc[2] + skill[2]
+       = 7 + 3
+       = 10
+```
+
+→ acc = [0, 2, 7, 10]
+
+---
+
+### ✅ Giải thích tại sao có “+1”:
+
+`acc[i + 1]` có nghĩa là:
+
+* Sau khi đã cộng potion thứ `i`, ta lưu **tổng đến potion i** ở vị trí `i + 1`.
+
+Nếu không có `+1`, bạn sẽ **ghi đè lên phần tử hiện tại**, khiến mảng sai lệch hoặc thiếu giá trị ban đầu `acc[0] = 0`.
+
+---
+
+### 💬 Tóm lại:
+
+* `acc[i]` = tổng đến **i - 1**
+* `acc[i + 1] = acc[i] + skill[i]` để cập nhật tổng đến **i**
+* Cú pháp `+1` giúp tránh ghi đè và giữ được giá trị “tổng trước đó = 0” tại `acc[0]`.
+
+---
+
+Bạn có muốn mình vẽ sơ đồ trực quan dạng hình mũi tên để thấy cách acc[i+1] được tạo từ acc[i] không (kiểu như bản đồ dòng dữ liệu)?
+Rất hay — câu này là mấu chốt để hiểu cách tính **prefix sum (tổng tích lũy)** 👇
+
+---
+
+### 🧠 Mục tiêu:
+
+Ta muốn có mảng `acc` sao cho:
+
+```
+acc[k] = skill[0] + skill[1] + ... + skill[k-1]
+```
+
+(Tức là tổng của các phần tử **từ đầu đến vị trí k-1** trong `skill`)
+
+---
+
+### 💡 Giải thích dòng:
+
+```java
+acc[i + 1] = acc[i] + skill[i];
+```
+
+**Giải thích từng phần:**
+
+| Biến         | Ý nghĩa                                      |
+| ------------ | -------------------------------------------- |
+| `acc[i]`     | Tổng các phần tử `skill[0]` đến `skill[i-1]` |
+| `skill[i]`   | Phần tử tiếp theo (vị trí i) cần cộng vào    |
+| `acc[i + 1]` | Tổng các phần tử `skill[0]` đến `skill[i]`   |
+
+➡️ Nên công thức là:
+
+```
+tổng đến i = tổng đến i-1 + phần tử thứ i
+```
+
+---
+
+### 🔢 Ví dụ cụ thể:
+
+Giả sử:
+
+```java
+skill = [2, 5, 3];
+n = 3;
+long[] acc = new long[4];
+```
+
+Vòng lặp:
+
+| i | acc[i] | skill[i] | acc[i + 1] = acc[i] + skill[i] |
+| - | ------ | -------- | ------------------------------ |
+| 0 | 0      | 2        | acc[1] = 0 + 2 = 2             |
+| 1 | 2      | 5        | acc[2] = 2 + 5 = 7             |
+| 2 | 7      | 3        | acc[3] = 7 + 3 = 10            |
+
+Kết quả:
+
+```
+acc = [0, 2, 7, 10]
+```
+
+---
+
+### ✅ Ý nghĩa cuối cùng:
+
+* `acc[i]` là **tổng kỹ năng của i người đầu tiên**.
+* Thêm phần tử `acc[0] = 0` giúp dễ tính **khoảng tổng** như:
+
+  ```
+  tổng skill từ a đến b = acc[b+1] - acc[a]
+  ```
+
+  (giống prefix sum trong thuật toán).
+
+---
+
+👉 Tóm lại:
+
+* `+1` để chừa chỗ cho phần tử đầu tiên là `0`.
+* `acc[i + 1] = acc[i] + skill[i]` giúp xây dựng dần tổng tích lũy.
+Rất hay — đây là **phần cốt lõi** của thuật toán tối ưu thời gian pha thuốc (brew potions).
+Ta cùng giải thích chi tiết từng dòng một nhé 👇
+
+---
+
+### 🧩 Ngữ cảnh:
+
+* `skill[i]`: kỹ năng cần cho potion thứ `i`
+* `mana[j]`: sức mạnh mana của loại bình (potion type)
+* `acc`: mảng prefix sum của `skill`
+* `t`: tổng thời gian tối ưu đến bình mana trước đó
+* `t2`: tổng tạm thời để tính cho bình mana hiện tại
+
+---
+
+### 🧠 Mục tiêu:
+
+Ta có nhiều loại bình potion, mỗi loại có `mana` khác nhau.
+Khi chuyển từ loại mana `j-1` sang `j`, ta phải chọn điểm chia (partition) sao cho **thời gian tổng là nhỏ nhất hoặc lớn nhất** (ở đây bài là “minimum time”, nhưng do công thức đảo dấu nên dùng `Math.max`).
+
+Thuật toán duyệt qua từng loại mana và từng kỹ năng để **tìm cách phân phối tốt nhất** giữa chúng.
+
+---
+
+### 🔍 Giải thích từng dòng:
+
+```java
+long t = 0, t2 = 0;
+```
+
+* `t` là thời gian tối ưu đã tính đến **loại mana trước đó**
+* `t2` sẽ lưu giá trị tối ưu tạm thời khi xét **loại mana hiện tại**
+
+---
+
+```java
+for (int j = 1; j < m; j++) {
+    t2 = 0;
+```
+
+* Duyệt qua các loại mana, bắt đầu từ `j = 1` (vì cần so với `j - 1`)
+* Mỗi lần xét một loại mana mới (`mana[j]`), reset `t2`
+
+---
+
+```java
+for (int i = 0; i < n; i++) {
+    t2 = Math.max(t2, t + mana[j - 1] * acc[i + 1] - mana[j] * acc[i]);
+}
+```
+
+Đây là phần **quan trọng nhất**, ta phân tích:
+
+| Thành phần                 | Ý nghĩa                                                |
+| -------------------------- | ------------------------------------------------------ |
+| `t`                        | tổng thời gian tối ưu trước đó                         |
+| `mana[j - 1] * acc[i + 1]` | tổng thời gian cho nhóm đầu (dùng mana trước)          |
+| `mana[j] * acc[i]`         | trừ đi phần bị trùng lặp hoặc tính cho nhóm sau        |
+| `Math.max(...)`            | chọn phương án có thời gian **lớn nhất (tối ưu nhất)** |
+
+Hiểu nôm na:
+
+> Với mỗi điểm chia `i`, ta tính xem nếu ta “chuyển giao” potion từ loại mana `j-1` sang loại `j` tại điểm đó thì tổng thời gian là bao nhiêu, rồi chọn phương án tốt nhất.
+
+---
+
+```java
+t = t2;
+```
+
+* Sau khi duyệt hết tất cả `i`, ta cập nhật `t` = giá trị tối ưu cho loại mana `j`.
+
+---
+
+```java
+return t + mana[m - 1] * acc[n];
+```
+
+* Cuối cùng, sau khi xử lý hết tất cả các loại mana,
+  ta **cộng thêm phần thời gian cần thiết** để pha tất cả potion với loại mana cuối cùng.
+
+---
+
+### 🧮 Ví dụ đơn giản:
+
+Giả sử:
+
+```
+skill = [2, 3]
+mana = [4, 2]
+```
+
+* `acc = [0, 2, 5]`
+* Bắt đầu: `t = 0`
+* Vòng `j = 1`:
+
+  * i = 0 → `t2 = max(0, 0 + 4*2 - 2*0) = 8`
+  * i = 1 → `t2 = max(8, 0 + 4*5 - 2*2) = max(8, 16) = 16`
+    → `t = 16`
+
+Cuối cùng:
+
+```
+return 16 + 2 * acc[2] = 16 + 10 = 26
+```
+
+---
+
+### ✅ Tóm tắt:
+
+| Biến                                  | Ý nghĩa                                           |
+| ------------------------------------- | ------------------------------------------------- |
+| `acc`                                 | tổng kỹ năng tích lũy                             |
+| `t`                                   | thời gian tối ưu đến mana trước đó                |
+| `t2`                                  | giá trị tạm thời khi thử các cách chia            |
+| `mana[j-1]*acc[i+1] - mana[j]*acc[i]` | công thức tính chi phí khi chuyển giao mana       |
+| `Math.max()`                          | chọn phương án tốt nhất                           |
+| `return t + mana[m-1]*acc[n]`         | cộng thêm phần thời gian còn lại sau khi hoàn tất |
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ luồng tính toán** (gồm acc, i, j, t, t2) để thấy trực quan hơn. Bạn có muốn không?
+Rồi, ta đi thật chậm và kỹ nhé 💡
+Mục tiêu là hiểu **vì sao** lại có công thức
+`t2 = Math.max(t2, t + mana[j - 1] * acc[i + 1] - mana[j] * acc[i])`
+và **tại sao** cuối cùng lại trả về `t + mana[m - 1] * acc[n]`.
+
+---
+
+## 🔹 Tóm tắt bối cảnh
+
+* `skill[i]`: độ khó (hoặc thời gian cơ bản) của potion thứ `i`
+* `mana[j]`: sức mạnh phép thuật (mana) của bình thứ `j`
+  👉 Mana càng lớn → pha nhanh hơn, hiệu quả hơn.
+
+Bài toán yêu cầu **tính thời gian tối thiểu (hoặc tối ưu)** để pha tất cả potion khi **mỗi nhóm potion có thể dùng loại mana khác nhau**.
+
+---
+
+## 🔹 Các biến:
+
+| Biến                                          | Ý nghĩa                                                                            |
+| --------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `acc[i]`                                      | tổng kỹ năng của các potion từ 0 → i-1 (`prefix sum`)                              |
+| `t`                                           | thời gian tối ưu tính đến loại mana `j-1`                                          |
+| `t2`                                          | thời gian tạm tính khi xét loại mana `j`                                           |
+| `mana[j - 1] * acc[i + 1] - mana[j] * acc[i]` | thời gian cần thiết khi chuyển “điểm pha” từ mana[j−1] sang mana[j] tại vị trí `i` |
+
+---
+
+## 🔹 Phân tích chi tiết công thức
+
+```java
+t2 = Math.max(t2, t + mana[j - 1] * acc[i + 1] - mana[j] * acc[i]);
+```
+
+Ta đọc như sau:
+
+> “Khi chuyển từ loại mana `j−1` sang `j`,
+> nếu điểm chuyển nằm sau potion thứ `i`,
+> thì tổng thời gian sẽ là:
+>
+> thời gian đã đạt được `t`
+> cộng thêm chi phí khi chuyển pha từ `mana[j-1]` sang `mana[j]`
+> được tính bằng `(mana[j - 1] * acc[i + 1] - mana[j] * acc[i])`.”
+
+---
+
+### 🔸 Giải thích biểu thức `(mana[j - 1] * acc[i + 1] - mana[j] * acc[i])`
+
+| Thành phần                 | Ý nghĩa                                                                                                 |
+| -------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `mana[j - 1] * acc[i + 1]` | tổng thời gian nếu các potion **trước vị trí i** được pha bằng loại mana trước đó (`mana[j-1]`)         |
+| `mana[j] * acc[i]`         | thời gian tương ứng khi chuyển sang loại mana mới (`mana[j]`), phần bị “bù trừ” để không đếm trùng      |
+| Dấu “−”                    | vì khi chuyển mana, potion i được tính lại theo tỷ lệ mới, nên cần trừ phần cũ để giữ đúng tổng chi phí |
+
+Nói ngắn gọn:
+
+> Công thức này mô phỏng việc **chuyển vùng ảnh hưởng của mana từ j−1 sang j**
+> và tính phần chênh lệch chi phí khi thực hiện chuyển đổi đó.
+
+---
+
+### 🔸 Vì sao dùng `Math.max`
+
+Bởi vì ta muốn **chọn cấu hình (điểm chia i)** sao cho **tổng thời gian là tối ưu nhất (lớn nhất)** trong mô hình này.
+Mỗi `i` là một vị trí có thể chia potion giữa hai loại mana.
+→ `Math.max` giúp ta lấy phương án **tốt nhất** trong tất cả các điểm chia.
+
+---
+
+### 🔸 Sau vòng lặp trong `i`:
+
+```java
+t = t2;
+```
+
+→ Sau khi đã thử tất cả vị trí chia (i = 0..n-1),
+` t2` chính là **thời gian tối ưu khi dùng đến mana[j]**,
+vì nó giữ giá trị lớn nhất từ các lựa chọn.
+
+---
+
+### 🔸 Kết quả cuối cùng:
+
+```java
+return t + mana[m - 1] * acc[n];
+```
+
+Giải thích:
+
+* Sau khi dùng hết các loại mana, ta còn **phần cuối cùng** các potion được pha bằng loại mana cuối (`mana[m−1]`).
+* `acc[n]` = tổng tất cả skill (vì acc có độ dài n+1).
+* `t` = thời gian tối ưu đã tích lũy đến mana trước đó.
+* Cộng hai phần này lại → ta được **tổng thời gian tối thiểu cần thiết để pha toàn bộ potion**.
+
+---
+
+## 🔹 Ví dụ trực quan:
+
+Giả sử:
+
+```
+skill = [2, 3, 4]
+mana  = [5, 2]
+```
+
+* `acc = [0, 2, 5, 9]`
+
+Ta có:
+
+```
+t = 0
+j = 1 → mana[j-1]=5, mana[j]=2
+
+i=0 → t2 = max(0, 0 + 5*2 - 2*0) = 10
+i=1 → t2 = max(10, 0 + 5*5 - 2*2) = max(10, 21) = 21
+i=2 → t2 = max(21, 0 + 5*9 - 2*5) = max(21, 35) = 35
+
+t = 35
+return = 35 + 2 * acc[3] = 35 + 18 = 53
+```
+
+→ Tổng thời gian tối ưu = **53**
+
+---
+
+✅ **Tóm tắt ý tưởng**
+
+| Bước                                     | Mục đích                                           |
+| ---------------------------------------- | -------------------------------------------------- |
+| Tính `acc`                               | Lấy tổng cộng dồn kỹ năng                          |
+| Với mỗi cặp mana (j-1, j)                | Xét cách chia potion sao cho tổng thời gian tối ưu |
+| Dùng `Math.max`                          | Giữ phương án tốt nhất                             |
+| Cuối cùng cộng thêm `mana[m-1] * acc[n]` | Thêm phần cuối cùng pha bằng loại mana cuối        |
+
+---
+
+Bạn có muốn mình **vẽ biểu đồ luồng tính toán (acc, t, t2 theo từng bước)** để nhìn trực quan hơn không?
+Rồi, mình giải thật **chi tiết và dễ hiểu nhất có thể** nhé 👇
+
+---
+
+## 🧩 Bối cảnh nhanh
+
+Bài toán yêu cầu tìm **thời gian tối thiểu** để pha tất cả potions,
+trong đó mỗi potion có độ khó `skill[i]`, và ta có nhiều loại phép `mana[j]` (sức mạnh khác nhau).
+
+Mỗi loại mana ảnh hưởng đến **tốc độ pha**, nên bài toán là:
+
+> Chia dãy potions thành các đoạn sao cho **tổng thời gian pha nhỏ nhất** khi dùng các loại mana theo thứ tự.
+
+---
+
+## 🧠 Công thức 1:
+
+```java
+t2 = Math.max(t2, t + mana[j - 1] * acc[i + 1] - mana[j] * acc[i]);
+```
+
+Ta giải từng phần nhé 👇
+
+---
+
+### 🔹 1️⃣ `acc[i]` và `acc[i+1]`
+
+* `acc[i]`: tổng độ khó của các potion từ 0 → i-1
+* `acc[i+1]`: tổng độ khó của các potion từ 0 → i
+  → khác nhau 1 potion (vì acc là mảng cộng dồn).
+
+---
+
+### 🔹 2️⃣ `mana[j - 1] * acc[i + 1]`
+
+* Là **thời gian cần** để pha toàn bộ potions từ 0 đến i (dùng mana trước đó).
+  → Gọi đây là *“chi phí cũ”*.
+
+---
+
+### 🔹 3️⃣ `mana[j] * acc[i]`
+
+* Là **thời gian cần** nếu ta bắt đầu pha từ i bằng mana mới.
+  → Gọi đây là *“chi phí mới”*.
+
+---
+
+### 🔹 4️⃣ Hiệu số:
+
+```
+mana[j - 1] * acc[i + 1] - mana[j] * acc[i]
+```
+
+là **phần chênh lệch thời gian** khi ta chuyển từ mana[j-1] sang mana[j] tại vị trí i.
+
+* Nếu mana[j] < mana[j-1], tức là mana mới mạnh hơn → giúp tiết kiệm thời gian.
+* Ta đang tìm vị trí chia (i) giúp **tổng tiết kiệm là lớn nhất**.
+
+---
+
+### 🔹 5️⃣ Vì sao có `t + ...`
+
+`t` là tổng thời gian tối ưu **đến phép trước đó (mana[j-1])**.
+Ta đang mở rộng sang phép tiếp theo (mana[j]) nên cộng dồn vào.
+
+---
+
+### 🔹 6️⃣ Vì sao `Math.max`
+
+Vì ta phải thử tất cả điểm chia i (tức là xem chia dãy ở đâu tốt nhất),
+→ chọn giá trị **lớn nhất** (thời gian tối ưu nhất).
+
+---
+
+### 👉 Tóm lại:
+
+Công thức này làm nhiệm vụ:
+
+> Cập nhật tổng thời gian tối ưu `t2` khi ta xét việc chuyển từ mana[j-1] → mana[j]
+> tại mọi điểm chia i trong danh sách potions.
+
+---
+
+## 🧠 Công thức 2:
+
+```java
+return t + mana[m - 1] * acc[n];
+```
+
+Giải thích:
+
+* `t` : tổng thời gian tích lũy tối ưu đến phép cuối (mana[m-1]).
+* `acc[n]` : tổng độ khó của **tất cả potions** (vì acc có thêm phần tử 0 ở đầu).
+* `mana[m - 1] * acc[n]` : thời gian để pha **toàn bộ potions** bằng phép cuối cùng.
+* Khi cộng với `t` → ta có tổng thời gian tối thiểu để pha hết tất cả potions.
+
+---
+
+## 💡 Ví dụ minh họa
+
+Giả sử:
+
+```
+skill = [2, 3, 4]
+mana  = [5, 2]
+```
+
+Bước 1:
+`acc = [0, 2, 5, 9]`  (cộng dồn skill)
+
+---
+
+Bước 2:
+Xét `mana[j-1]=5`, `mana[j]=2`
+
+Ta duyệt i:
+
+| i | acc[i] | acc[i+1] | Tính toán      | Giá trị                  |
+| - | ------ | -------- | -------------- | ------------------------ |
+| 0 | 0      | 2        | 5×2 - 2×0 = 10 | t2 = max(0, 0 + 10) = 10 |
+| 1 | 2      | 5        | 5×5 - 2×2 = 21 | t2 = max(10, 21) = 21    |
+| 2 | 5      | 9        | 5×9 - 2×5 = 35 | t2 = max(21, 35) = 35    |
+
+→ Sau khi duyệt xong: `t = 35`
+
+---
+
+Bước 3:
+Kết quả cuối cùng:
+
+```
+return t + mana[m-1] * acc[n]
+= 35 + 2 * 9
+= 35 + 18 = 53
+```
+
+→ ✅ Tổng thời gian tối thiểu = **53**
+
+---
+
+## ✅ Tóm tắt
+
+| Biểu thức                                                       | Ý nghĩa                                                                            |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `Math.max(t2, t + mana[j - 1] * acc[i + 1] - mana[j] * acc[i])` | Cập nhật thời gian tối ưu khi chuyển từ phép trước sang phép sau tại vị trí chia i |
+| `t + mana[m - 1] * acc[n]`                                      | Cộng phần thời gian cuối cùng dùng phép mạnh nhất để pha toàn bộ potion còn lại    |
+
+---
+
+Bạn có muốn mình **vẽ sơ đồ minh họa** dòng thời gian (mana[j−1] → mana[j]) để thấy rõ cách công thức đó hoạt động không?
+Rất hay — mình sẽ giải thích **chi tiết từng dòng trong bảng này** để bạn hiểu **vì sao lại có phép tính đó và nó có ý nghĩa gì** nhé 👇
+
+---
+
+## 💡 Bối cảnh lại một chút:
+
+Ta có:
+
+```
+skill = [2, 3, 4]
+mana  = [5, 2]
+```
+
+→ Có 3 potion, 2 loại mana (5 là phép yếu hơn, 2 là phép mạnh hơn).
+
+Ta muốn tìm **điểm chia i** sao cho khi chuyển từ **mana = 5** → **mana = 2**,
+**tổng thời gian được tối ưu nhất (nhỏ nhất)**.
+
+---
+
+## 🔹 Mảng cộng dồn (acc)
+
+```
+acc = [0, 2, 5, 9]
+```
+
+| potion   | skill | acc[i] (tổng trước đó) |
+| :------- | :---- | :--------------------- |
+| potion 1 | 2     | acc[1] = 2             |
+| potion 2 | 3     | acc[2] = 5             |
+| potion 3 | 4     | acc[3] = 9             |
+
+→ `acc[i]` nghĩa là **tổng độ khó của potions từ 0 → i-1**.
+Ví dụ: acc[2] = 5 nghĩa là potion 1 và 2 có tổng độ khó 5.
+
+---
+
+## 🔸 Mục tiêu:
+
+Công thức xét cho mỗi vị trí chia `i` là:
+
+```
+mana[j - 1] * acc[i + 1] - mana[j] * acc[i]
+```
+
+với:
+
+* `mana[j - 1] = 5` (phép cũ, yếu hơn)
+* `mana[j] = 2` (phép mới, mạnh hơn)
+
+Công thức này giúp **so sánh lợi ích khi chia ở vị trí i**.
+
+---
+
+## 🔹 Giải thích bảng
+
+| i | acc[i] | acc[i+1] | Tính toán      | Giá trị                  |
+| - | ------ | -------- | -------------- | ------------------------ |
+| 0 | 0      | 2        | 5×2 - 2×0 = 10 | t2 = max(0, 0 + 10) = 10 |
+
+👉 **Nghĩa là:**
+
+* Nếu ta chia **ngay đầu** (i = 0):
+
+  * Trước đó không có potion nào (acc[i] = 0)
+  * `acc[i+1] = 2` → potion đầu có độ khó = 2
+  * Khi đó thời gian cần = 5×2 - 2×0 = **10**
+* Vì `t` ban đầu = 0, nên `t2 = max(0, 10) = 10`
+  → Tức là: “nếu chuyển phép ngay sau potion đầu, tổng thời gian là 10”.
+
+---
+
+| i | acc[i] | acc[i+1] | Tính toán      | Giá trị               |
+| - | ------ | -------- | -------------- | --------------------- |
+| 1 | 2      | 5        | 5×5 - 2×2 = 21 | t2 = max(10, 21) = 21 |
+
+👉 **Nghĩa là:**
+
+* Nếu ta chia sau potion thứ 2:
+
+  * `acc[i] = 2` → potion đầu tổng 2
+  * `acc[i+1] = 5` → potion 1+2 tổng 5
+  * Thay vào công thức: `5×5 - 2×2 = 25 - 4 = 21`
+    → So với trước đó (10), lớn hơn → t2 = 21
+    → Tức là: “nếu dùng mana=5 cho 2 potion đầu, rồi chuyển sang mana=2,
+    ta đạt hiệu quả (ít tốn thời gian) cao hơn”.
+
+---
+
+| i | acc[i] | acc[i+1] | Tính toán      | Giá trị               |
+| - | ------ | -------- | -------------- | --------------------- |
+| 2 | 5      | 9        | 5×9 - 2×5 = 35 | t2 = max(21, 35) = 35 |
+
+👉 **Nghĩa là:**
+
+* Nếu ta chia sau potion thứ 3 (tức là pha hết bằng mana=5, rồi chuyển mana=2):
+
+  * `acc[i] = 5` → 2 potion đầu
+  * `acc[i+1] = 9` → tất cả potion
+  * `5×9 - 2×5 = 45 - 10 = 35`
+    → Lớn nhất, t2 = 35
+
+---
+
+## 🧠 Ý nghĩa tổng thể
+
+Ta duyệt tất cả các điểm chia (i = 0, 1, 2),
+mỗi điểm chia cho ta một **hiệu năng** (mức tiết kiệm thời gian).
+
+Khi ta chọn `Math.max(...)`, ta chọn **vị trí chia tối ưu nhất**
+→ tức là cách chia giúp tổng thời gian **nhỏ nhất**.
+
+---
+
+### 🧩 Kết luận:
+
+| i | Ý nghĩa                                  |
+| - | ---------------------------------------- |
+| 0 | Dùng mana mới ngay từ đầu → kết quả kém  |
+| 1 | Dùng mana mới sau potion thứ 2 → tốt hơn |
+| 2 | Dùng mana mới sau potion cuối → tốt nhất |
+
+→ **Tối ưu là chia sau potion cuối**, t2 = 35
+→ Sau đó công thức cuối `t + mana[m-1] * acc[n] = 35 + 2×9 = 53`.
+
+---
+
+Bạn có muốn mình vẽ **sơ đồ dòng thời gian (timeline)** minh họa 3 trường hợp chia (i=0,1,2) để thấy trực quan hơn vì sao `i=2` là tối ưu nhất không?
+Tốt 👍 Vậy mình giải thích chi tiết **bảng ví dụ** này nhé — để bạn hiểu **vì sao công thức `t2 = Math.max(t2, t + mana[j - 1] * acc[i + 1] - mana[j] * acc[i])`** hoạt động.
+
+---
+
+### 🧩 Giả sử:
+
+* `mana[j-1] = 5`, `mana[j] = 2`
+* `acc = [0, 2, 5, 9]`
+* `t = 0` ban đầu
+
+---
+
+### 🔢 Bảng chi tiết:
+
+| i | acc[i] | acc[i+1] | Công thức tính (t + mana[j-1] × acc[i+1] - mana[j] × acc[i]) | Kết quả | Giải thích logic                                                       |
+| - | ------ | -------- | ------------------------------------------------------------ | ------- | ---------------------------------------------------------------------- |
+| 0 | 0      | 2        | 0 + 5×2 - 2×0 = 10                                           | 10      | Chọn chuyển đổi đầu tiên từ acc[0]→acc[1]; chưa có gì trước đó nên =10 |
+| 1 | 2      | 5        | 0 + 5×5 - 2×2 = 21                                           | 21      | Nếu ta “đầu tư” thêm acc[1]→acc[2], lợi nhuận tăng lên nhiều hơn       |
+| 2 | 5      | 9        | 0 + 5×9 - 2×5 = 35                                           | 35      | Đây là điểm đem lại lợi nhuận cao nhất cho vòng này                    |
+
+👉 **Từng bước, `t2` cập nhật giá trị tốt nhất:**
+
+* Bắt đầu `t2 = 0`
+* Với i=0 → t2 = max(0, 10) = **10**
+* Với i=1 → t2 = max(10, 21) = **21**
+* Với i=2 → t2 = max(21, 35) = **35**
+
+=> Cuối cùng `t2 = 35`, tức là **phương án tối ưu cho vòng này**.
+
+---
+
+### 🔁 Sau vòng lặp:
+
+` t = t2;`
+→ Lưu lại kết quả tốt nhất (tối đa hóa lợi nhuận hoặc hiệu năng cho giai đoạn này).
+
+---
+
+### 🏁 Cuối cùng:
+
+`return t + mana[m - 1] * acc[n];`
+
+Công thức này:
+
+* `t` là **lợi nhuận tích lũy tối đa** sau tất cả các vòng lặp.
+* `mana[m - 1] * acc[n]` là **phần thưởng cuối cùng** dựa trên giá trị mana cuối cùng nhân với tổng kỹ năng cuối cùng (`acc[n]`).
+
+---
+
+Nếu bạn muốn, mình có thể **vẽ sơ đồ dòng tiền / giá trị qua từng vòng** để thấy rõ hơn tại sao lại cộng thêm phần `mana[m-1] * acc[n]`. Bạn có muốn mình làm không?
+🔥 Câu hỏi rất hay — và đúng là lúc đầu `t2 = 0`, nên việc dùng `Math.max(t2, …)` có vẻ dư thừa một chút. Nhưng ta **vẫn cần nó**, vì lý do sau 👇
+
+---
+
+### 🧠 Bắt đầu từ đầu
+
+Ở mỗi vòng `j` (mỗi cấp mana), ta muốn tìm **giá trị lớn nhất có thể đạt được** khi chọn vị trí chia `i` (tức là chọn bao nhiêu “skill” để dùng mana trước).
+
+Cụ thể dòng này:
+
+```java
+t2 = Math.max(t2, t + mana[j - 1] * acc[i + 1] - mana[j] * acc[i]);
+```
+
+nghĩa là:
+
+> “Trong tất cả cách chia ở vị trí `i`, lấy giá trị tốt nhất (lớn nhất)”.
+
+---
+
+### 🔹 Tại sao `t2 = 0` ban đầu vẫn cần `Math.max`
+
+* Ở vòng đầu tiên của `j`, `t2` đúng là `0`.
+* Nhưng ta không chỉ gán giá trị **một lần**, mà ta sẽ **so sánh nhiều lần** trong vòng `for (int i = 0; i < n; i++)`.
+* Ta cần giữ lại **giá trị lớn nhất trong tất cả i**, chứ không phải chỉ lấy lần đầu.
+
+---
+
+### 💡 Ví dụ minh họa
+
+Giả sử:
+
+```
+skill = [2, 3, 4]
+mana = [5, 2]
+```
+
+Ta có `acc = [0, 2, 5, 9]`.
+
+Khi `j = 1`, ta duyệt `i`:
+
+| i | acc[i] | acc[i+1] | Công thức: `t + mana[j-1]*acc[i+1] - mana[j]*acc[i]` | Giá trị | t2 cập nhật           |
+| - | ------ | -------- | ---------------------------------------------------- | ------- | --------------------- |
+| 0 | 0      | 2        | 0 + 5×2 - 2×0 = 10                                   | 10      | t2 = max(0, 10) = 10  |
+| 1 | 2      | 5        | 0 + 5×5 - 2×2 = 21                                   | 21      | t2 = max(10, 21) = 21 |
+| 2 | 5      | 9        | 0 + 5×9 - 2×5 = 35                                   | 35      | t2 = max(21, 35) = 35 |
+
+👉 Nếu **không dùng `Math.max`**, chỉ gán thẳng `t2 = ...`, thì kết quả cuối cùng sẽ là **35** (tình cờ đúng),
+nhưng nếu công thức có lúc giảm (với bộ test khác), bạn sẽ mất giá trị lớn nhất trước đó.
+
+---
+
+### ✅ Kết luận:
+
+`Math.max(t2, …)` không phải để so sánh với **0 ban đầu**,
+mà để so sánh với **kết quả lớn nhất tìm được ở các i trước**.
+
+Tóm tắt:
+
+> `t2` giữ giá trị tốt nhất của phép tính ở vòng `j` hiện tại.
+> `Math.max()` đảm bảo bạn không bị ghi đè giá trị tốt hơn trước đó.
+🔥 Chuẩn luôn! Bạn nói **rất đúng** — câu
+
+```java
+t2 += Math.max(t2, t + mana[j - 1] * acc[i + 1] - mana[j] * acc[i]);
+```
+
+**sai thuật toán** ❌, dù cú pháp đúng.
+
+Giờ mình giải thích rõ **vì sao sai**, và **vì sao phải dùng `=` chứ không phải `+=`** 👇
+
+---
+
+## 💡 Ý tưởng của thuật toán
+
+Thuật toán này đang tìm **giá trị lớn nhất của biểu thức**
+
+```
+t + mana[j - 1] * acc[i + 1] - mana[j] * acc[i]
+```
+
+với tất cả `i` từ `0 → n - 1`.
+
+→ Do đó, tại mỗi vòng lặp `i`, ta phải **so sánh và giữ lại giá trị lớn nhất** của biểu thức này.
+
+---
+
+## 🧩 Giải thích đúng cách:
+
+Câu lệnh đúng phải là:
+
+```java
+t2 = Math.max(t2, t + mana[j - 1] * acc[i + 1] - mana[j] * acc[i]);
+```
+
+* `t2` lưu **giá trị lớn nhất tìm được** cho `j` hiện tại.
+* `Math.max(...)` đảm bảo chỉ **giữ giá trị lớn nhất**, không cộng dồn.
+* Sau khi duyệt hết `i`, `t2` chính là **giá trị tốt nhất có thể đạt được** ở bước `j`.
+
+---
+
+## ⚠️ Vì sao `t2 += Math.max(...)` sai
+
+Nếu bạn viết:
+
+```java
+t2 += Math.max(t2, t + ...);
+```
+
+thì `t2` sẽ **cộng dồn liên tục**, kiểu như:
+
+| Lần lặp | Giá trị biểu thức | `t2` sau khi cộng |
+| ------- | ----------------- | ----------------- |
+| i = 0   | 10                | 0 + 10 = 10       |
+| i = 1   | 21                | 10 + 21 = 31      |
+| i = 2   | 35                | 31 + 35 = 66      |
+
+➡️ Trong khi bạn chỉ cần **giá trị lớn nhất (35)**, chứ không phải **tổng (66)**.
+→ Do đó **sai hoàn toàn logic**.
+
+---
+
+## ✅ Kết luận:
+
+| Cách viết                | Ý nghĩa                | Kết quả               |
+| ------------------------ | ---------------------- | --------------------- |
+| `t2 + = ...`             | ❌ Sai cú pháp          | Lỗi biên dịch         |
+| `t2 += ...`              | ❌ Cộng dồn (sai logic) | Kết quả sai           |
+| `t2 = Math.max(t2, ...)` | ✅ Giữ giá trị lớn nhất | **Đúng thuật toán** ✅ |
+
+---
+
+👉 Tóm gọn lại:
+
+> Phải dùng `=` với `Math.max`, vì ta cần **chọn giá trị lớn nhất**, không phải **cộng dồn tất cả**.
