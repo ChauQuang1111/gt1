@@ -1,0 +1,243 @@
+ Calculate Money in Leetcode Bank
+ class Solution:
+    def totalMoney(self, n: int) -> int:
+        weeks = n // 7
+        days = n % 7
+        total = 0
+        for i in range(weeks):
+            total += 28 + 7 * i
+        start = weeks + 1
+        for i in range(days):
+            total += start + i
+        return total
+Hai dòng này chia số ngày `n` thành **tuần đầy đủ** và **ngày còn lại**.
+
+👉 Giải thích cụ thể:
+
+```python
+weeks = n // 7
+days = n % 7
+```
+
+* `n // 7` (chia lấy phần **nguyên**)
+  → cho biết có **bao nhiêu tuần trọn vẹn** (mỗi tuần có 7 ngày).
+
+* `n % 7` (chia lấy phần **dư**)
+  → cho biết **số ngày còn lại** sau khi tách hết các tuần trọn vẹn.
+
+---
+
+### 🔹 Ví dụ:
+
+Giả sử `n = 10`
+
+* `weeks = 10 // 7 = 1` → có **1 tuần trọn vẹn**
+* `days = 10 % 7 = 3` → còn **3 ngày dư** (tuần kế tiếp)
+
+---
+
+### 🔹 Ý nghĩa trong bài toán:
+
+Trong ngân hàng LeetCode:
+
+* Mỗi tuần bắt đầu từ số tiền gửi ngày đầu tiên cao hơn tuần trước 1.
+* Vì thế ta cần biết bao nhiêu **tuần đầy đủ** (để tính phần tuần trọn)
+  và **mấy ngày dư** (để cộng thêm phần còn lại của tuần kế tiếp).
+Rất hay 👇 Mình sẽ giải thích từng dòng rõ ràng nhé:
+
+---
+
+### 🔹 Bối cảnh của bài:
+
+Trong **LeetCode Bank**, mỗi tuần người ta gửi tiền như sau:
+
+* Tuần 1: gửi 1, 2, 3, 4, 5, 6, 7 → tổng là **28**.
+* Tuần 2: gửi 2, 3, 4, 5, 6, 7, 8 → tổng là **35**.
+* Tuần 3: gửi 3, 4, 5, 6, 7, 8, 9 → tổng là **42**, ...
+
+Ta thấy:
+
+* Mỗi tuần tổng tiền **tăng thêm 7** so với tuần trước (vì mỗi ngày đều tăng 1).
+
+---
+
+### 🔹 Giải thích code:
+
+```python
+total = 0
+for i in range(weeks):
+    total += 28 + 7 * i
+```
+
+👉 Giải thích:
+
+* Ban đầu `total = 0`.
+* `weeks` là số tuần trọn vẹn.
+* `i` chạy từ `0` → `weeks - 1`.
+* Tuần đầu tiên (i = 0): tổng là **28 + 7 * 0 = 28**
+* Tuần thứ hai (i = 1): tổng là **28 + 7 * 1 = 35**
+* Tuần thứ ba (i = 2): tổng là **28 + 7 * 2 = 42**
+  → Mỗi tuần cộng thêm 7 vào tổng của tuần trước.
+
+---
+
+```python
+start = weeks + 1
+for i in range(days):
+    total += start + i
+```
+
+👉 Giải thích:
+
+* Sau các tuần trọn, tuần mới bắt đầu bằng giá trị `weeks + 1`.
+
+  * Ví dụ: nếu có 2 tuần trọn (`weeks = 2`) → tuần mới bắt đầu từ **3**.
+* Vòng lặp `for i in range(days)` xử lý các **ngày còn lại** chưa đủ 1 tuần.
+
+  * Ngày 1: gửi `start + 0`
+  * Ngày 2: gửi `start + 1`
+  * Ngày 3: gửi `start + 2`
+* Cộng dồn các giá trị đó vào `total`.
+
+---
+
+### 🔹 Ví dụ cụ thể:
+
+Giả sử `n = 10`
+→ `weeks = 1`, `days = 3`.
+
+* Tuần đầu: 1 + 2 + 3 + 4 + 5 + 6 + 7 = **28**
+  (`total = 28`)
+* Tuần tiếp theo (3 ngày): 2 + 3 + 4 = **9**
+  (`total = 28 + 9 = 37`)
+
+✅ **Kết quả:** `total = 37`
+
+---
+
+Tóm lại:
+
+* `28 + 7*i` → tính tổng tiền của mỗi tuần đầy đủ.
+* `start + i` → tính phần tiền của những ngày lẻ còn lại.
+Rất hay — câu hỏi “**số 2, 3, 4 ở đâu ra**” chính là cốt lõi để hiểu bài này 👍
+
+---
+
+### 🔹 Nhắc lại quy tắc của ngân hàng LeetCode:
+
+* Mỗi **tuần mới**, **ngày đầu tiên** bạn gửi nhiều hơn **1** so với ngày đầu tiên của tuần trước.
+* Mỗi **ngày trong tuần**, số tiền tăng thêm **1** so với ngày hôm trước.
+
+---
+
+### 🔹 Diễn giải tuần đầu tiên:
+
+| Ngày  | Số tiền gửi |
+| ----- | ----------- |
+| Thứ 2 | 1           |
+| Thứ 3 | 2           |
+| Thứ 4 | 3           |
+| Thứ 5 | 4           |
+| Thứ 6 | 5           |
+| Thứ 7 | 6           |
+| CN    | 7           |
+
+Tổng = **28**
+
+---
+
+### 🔹 Sang tuần thứ 2:
+
+* Vì tuần 1 bắt đầu từ **1**,
+  → tuần 2 bắt đầu từ **2** (nhiều hơn 1).
+* Vậy các ngày tuần 2 sẽ là:
+  | Ngày | Số tiền gửi |
+  |------|--------------|
+  | Thứ 2 | 2 |
+  | Thứ 3 | 3 |
+  | Thứ 4 | 4 |
+  | Thứ 5 | 5 |
+  | Thứ 6 | 6 |
+  | Thứ 7 | 7 |
+  | CN | 8 |
+
+Tổng = **35**
+
+---
+
+### 🔹 Khi n = 10
+
+* Có **1 tuần đầy đủ** (1→7) → tổng = **28**
+* Còn **3 ngày** của tuần kế tiếp → bắt đầu từ **2** (vì `weeks + 1 = 1 + 1 = 2`)
+
+👉 3 ngày đầu của tuần 2 là:
+
+| Ngày  | Số tiền gửi |
+| ----- | ----------- |
+| Thứ 2 | 2           |
+| Thứ 3 | 3           |
+| Thứ 4 | 4           |
+
+Tổng = **9**
+
+---
+
+### 🔹 Kết quả cuối cùng:
+
+`28 (tuần đầu) + 9 (3 ngày tuần sau) = 37`
+
+---
+
+✅ **Tóm gọn lại:**
+
+* Số **2** là giá trị bắt đầu của tuần mới = `weeks + 1`.
+* Các số **3, 4** là những ngày tiếp theo trong tuần đó, mỗi ngày tăng thêm 1.
+Tốt lắm — ta cùng đi thật kỹ chỗ số **4** nhé 👇
+
+---
+
+### 🔹 Bối cảnh:
+
+Giả sử `n = 10`.
+
+Khi đó:
+
+```python
+weeks = n // 7 = 1
+days = n % 7 = 3
+start = weeks + 1 = 2
+```
+
+---
+
+### 🔹 Vòng lặp tính phần “ngày dư”:
+
+```python
+for i in range(days):  # i = 0, 1, 2
+    total += start + i
+```
+
+Ta thay giá trị vào:
+
+| i | start + i | Giải thích                                |
+| - | --------- | ----------------------------------------- |
+| 0 | 2 + 0 = 2 | Ngày đầu tuần mới, bắt đầu từ 2           |
+| 1 | 2 + 1 = 3 | Ngày thứ hai của tuần mới, tăng thêm 1    |
+| 2 | 2 + 2 = 4 | Ngày thứ ba của tuần mới, tăng thêm 1 nữa |
+
+→ **Số 4** xuất hiện ở đây vì đó là **ngày thứ ba** của tuần kế tiếp.
+Mỗi ngày trong tuần mới đều tăng thêm 1, nên dãy là **2, 3, 4**.
+
+---
+
+### 🔹 Tổng kết:
+
+* Tuần đầu đủ 7 ngày: 1 → 7 (tổng 28)
+* Tuần sau còn 3 ngày: **2, 3, 4**
+* Tổng = 28 + (2 + 3 + 4) = **37**
+
+✅ Vậy **số 4** là giá trị ngày thứ 3 trong tuần mới, được tính bằng công thức `start + i`, trong đó:
+
+* `start = weeks + 1 = 2`
+* `i = 2` (ngày thứ ba trong tuần)
+  → `2 + 2 = 4`.
