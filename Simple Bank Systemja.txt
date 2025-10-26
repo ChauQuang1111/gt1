@@ -1,0 +1,389 @@
+Simple Bank System
+class Bank {
+
+    private long[] balance;
+
+    public Bank(long[] balance) {
+        this.balance = balance;
+    }
+    
+    public boolean transfer(int account1, int account2, long money) {
+        if(account1-1 >= balance.length || account2-1 >= balance.length) return false;
+            
+        if(withdraw(account1, money)) {
+            return deposit(account2, money);
+        }
+
+        return false;
+    }
+    
+    public boolean deposit(int account, long money) {
+        if(account-1 < balance.length) {
+            this.balance[account-1] += money;
+            return true;
+        }
+
+        return false;
+    }
+    
+    public boolean withdraw(int account, long money) {
+        if(account-1 >= this.balance.length) return false;
+
+        if(this.balance[account-1] < money) return false;
+
+        this.balance[account-1] -= money;
+        return true;
+    }
+}
+Rất hay 👍 — cùng giải thích **từng dòng** của hàm `transfer` trong Java nhé 👇
+
+---
+
+### 🧩 Mục đích
+
+Phương thức `transfer` dùng để **chuyển tiền từ tài khoản `account1` sang tài khoản `account2`** với số tiền `money`.
+
+---
+
+### 💡 Giải thích chi tiết
+
+```java
+public boolean transfer(int account1, int account2, long money) {
+```
+
+➡️ Hàm nhận 3 tham số:
+
+* `account1`: tài khoản gửi tiền.
+* `account2`: tài khoản nhận tiền.
+* `money`: số tiền cần chuyển.
+  Trả về `true` nếu chuyển thành công, `false` nếu thất bại.
+
+---
+
+```java
+if(account1-1 >= balance.length || account2-1 >= balance.length) return false;
+```
+
+➡️ Kiểm tra **tài khoản có hợp lệ không**:
+
+* Vì mảng `balance` trong Java là **0-based index** (bắt đầu từ 0),
+  nên `account1 - 1` và `account2 - 1` mới là chỉ số thật trong mảng.
+* Nếu `account1 - 1` hoặc `account2 - 1` ≥ `balance.length`, nghĩa là tài khoản đó **không tồn tại** → trả về `false`.
+
+*(Lưu ý: Đoạn này nên thêm điều kiện `< 0` nữa cho chặt chẽ hơn.)*
+
+---
+
+```java
+if(withdraw(account1, money)) {
+    return deposit(account2, money);
+}
+```
+
+➡️ Ý nghĩa:
+
+* Gọi hàm `withdraw(account1, money)` để **rút tiền** từ tài khoản gửi.
+* Nếu rút thành công (`true`), thì gọi tiếp `deposit(account2, money)` để **nạp tiền** vào tài khoản nhận.
+* Nếu cả hai đều thành công, hàm trả về `true`.
+
+---
+
+```java
+return false;
+```
+
+➡️ Nếu bước rút tiền thất bại → không thể chuyển tiền → trả về `false`.
+
+---
+
+### 📘 Ví dụ minh họa
+
+Giả sử có mảng số dư:
+
+```java
+long[] balance = {100, 200, 300};
+Bank bank = new Bank(balance);
+```
+
+Gọi:
+
+```java
+System.out.println(bank.transfer(1, 2, 50));
+```
+
+Diễn giải:
+
+1. Kiểm tra tài khoản 1 và 2 hợp lệ. ✅
+2. Gọi `withdraw(1, 50)` → rút 50 từ tài khoản 1 → còn 50. ✅
+3. Gọi `deposit(2, 50)` → cộng 50 vào tài khoản 2 → thành 250. ✅
+4. Kết quả trả về `true`.
+
+👉 Sau khi chạy xong:
+
+```
+balance = [50, 250, 300]
+```
+
+---
+
+### ⚠️ Gợi ý cải thiện nhỏ:
+
+Bạn có thể viết điều kiện kiểm tra hợp lệ an toàn hơn:
+
+```java
+if (account1 <= 0 || account1 > balance.length || account2 <= 0 || account2 > balance.length) {
+    return false;
+}
+```
+
+→ Dễ hiểu và tránh lỗi âm chỉ số.
+Rất tốt 👍 — cùng phân tích chi tiết từng dòng trong hàm **`deposit`** nhé 👇
+
+---
+
+### 🧩 Mục đích
+
+Phương thức **`deposit`** dùng để **nạp tiền vào một tài khoản cụ thể** trong ngân hàng.
+
+---
+
+### 💡 Giải thích từng dòng
+
+```java
+public boolean deposit(int account, long money) {
+```
+
+➡️ Hàm nhận 2 tham số:
+
+* `account`: số tài khoản cần nạp tiền.
+* `money`: số tiền muốn nạp.
+  Trả về `true` nếu nạp thành công, ngược lại `false`.
+
+---
+
+```java
+if (account - 1 < balance.length) {
+```
+
+➡️ Kiểm tra xem tài khoản có hợp lệ không.
+
+* Mảng `balance` là **0-based** (bắt đầu từ 0).
+  → Nếu người dùng nhập `account = 1`, thì trong mảng là `balance[0]`.
+  → Vì vậy cần **trừ 1** để chuyển sang chỉ số thật.
+
+* Ở đây chỉ kiểm tra `account - 1 < balance.length`, tức là **chỉ cần nhỏ hơn chiều dài mảng** là hợp lệ.
+  ❗ Tuy nhiên, **chưa kiểm tra trường hợp `account <= 0`**, nên vẫn có thể lỗi nếu người dùng nhập `account = 0` hoặc số âm.
+  Nên dùng:
+
+```java
+if (account <= 0 || account > balance.length) return false;
+```
+
+---
+
+```java
+this.balance[account - 1] += money;
+```
+
+➡️ Cộng thêm `money` vào tài khoản tương ứng.
+Ví dụ:
+
+```java
+balance = [100, 200, 300];
+deposit(2, 50);
+```
+
+→ `balance[1] += 50`
+→ `balance = [100, 250, 300];`
+
+---
+
+```java
+return true;
+```
+
+➡️ Trả về `true` nếu nạp thành công.
+
+---
+
+```java
+return false;
+```
+
+➡️ Nếu tài khoản không hợp lệ (ví dụ vượt quá số lượng tài khoản) → trả về `false`.
+
+---
+
+### ✅ Tóm lại, cách hoạt động:
+
+1. Kiểm tra xem tài khoản hợp lệ chưa.
+2. Nếu hợp lệ → cộng tiền vào tài khoản.
+3. Nếu không hợp lệ → trả về `false`.
+
+---
+
+### ⚙️ Bản viết chuẩn hơn (an toàn và rõ ràng):
+
+```java
+public boolean deposit(int account, long money) {
+    // Kiểm tra tài khoản hợp lệ
+    if (account <= 0 || account > balance.length) {
+        return false;
+    }
+
+    // Nạp tiền
+    balance[account - 1] += money;
+    return true;
+}
+```
+
+---
+
+### 💰 Ví dụ:
+
+```java
+long[] balance = {100, 200, 300};
+Bank bank = new Bank(balance);
+bank.deposit(2, 50);
+System.out.println(Arrays.toString(balance));
+```
+
+📤 Output:
+
+```
+[100, 250, 300]
+```
+
+✅ Đã nạp thành công 50 vào tài khoản số 2.
+Rất hay 👍 — đây là phương thức **`withdraw`**, dùng để **rút tiền** trong hệ thống ngân hàng.
+Cùng phân tích chi tiết từng dòng nhé 👇
+
+---
+
+### 🧩 Mục đích
+
+Hàm **`withdraw`** cho phép người dùng **rút tiền** khỏi tài khoản của họ.
+Nếu tài khoản hợp lệ **và** có đủ tiền, thì số dư sẽ giảm đi.
+
+---
+
+### 💡 Giải thích từng dòng
+
+```java
+public boolean withdraw(int account, long money) {
+```
+
+➡️ Hàm nhận hai tham số:
+
+* `account`: số tài khoản muốn rút tiền.
+* `money`: số tiền muốn rút.
+  Trả về `true` nếu rút thành công, `false` nếu không.
+
+---
+
+```java
+if (account - 1 >= this.balance.length) return false;
+```
+
+➡️ Kiểm tra xem tài khoản có tồn tại không.
+
+* Vì mảng `balance` dùng chỉ số **0-based**, nên tài khoản `1` tương ứng với `balance[0]`.
+* Nếu `account - 1 >= balance.length`, nghĩa là người dùng nhập số tài khoản **vượt quá số lượng tài khoản hiện có** → **không hợp lệ** → trả về `false`.
+
+⚠️ Tuy nhiên:
+Nếu người dùng nhập `account = 0` hoặc âm thì điều kiện này **không phát hiện được lỗi**.
+✅ Nên dùng kiểm tra đầy đủ hơn:
+
+```java
+if (account <= 0 || account > this.balance.length) return false;
+```
+
+---
+
+```java
+if (this.balance[account - 1] < money) return false;
+```
+
+➡️ Kiểm tra xem tài khoản có **đủ tiền để rút** hay không.
+Nếu **số dư nhỏ hơn số tiền cần rút**, trả về `false`.
+
+Ví dụ:
+
+```java
+balance = [100, 200, 300];
+withdraw(1, 150); // thất bại, vì 100 < 150
+```
+
+---
+
+```java
+this.balance[account - 1] -= money;
+```
+
+➡️ Nếu hợp lệ và đủ tiền → trừ tiền khỏi tài khoản.
+Ví dụ:
+
+```java
+balance = [100, 200, 300];
+withdraw(2, 50); // balance[1] -= 50
+→ balance = [100, 150, 300];
+```
+
+---
+
+```java
+return true;
+```
+
+➡️ Trả về `true` để báo là giao dịch rút tiền thành công.
+
+---
+
+### ✅ Tóm lại luồng hoạt động:
+
+1. Kiểm tra tài khoản hợp lệ.
+2. Kiểm tra đủ tiền hay không.
+3. Nếu đủ → trừ tiền và trả `true`.
+4. Nếu không hợp lệ hoặc không đủ → trả `false`.
+
+---
+
+### ⚙️ Bản viết hoàn chỉnh và an toàn hơn:
+
+```java
+public boolean withdraw(int account, long money) {
+    // Kiểm tra tài khoản hợp lệ
+    if (account <= 0 || account > this.balance.length) {
+        return false;
+    }
+
+    // Kiểm tra đủ tiền
+    if (this.balance[account - 1] < money) {
+        return false;
+    }
+
+    // Trừ tiền
+    this.balance[account - 1] -= money;
+    return true;
+}
+```
+
+---
+
+### 💰 Ví dụ:
+
+```java
+long[] balance = {100, 200, 300};
+Bank bank = new Bank(balance);
+System.out.println(bank.withdraw(2, 50));  // true
+System.out.println(Arrays.toString(balance));
+```
+
+📤 Output:
+
+```
+true
+[100, 150, 300]
+```
+
+✅ Tài khoản 2 đã rút thành công 50 đơn vị.

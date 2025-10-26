@@ -1,0 +1,344 @@
+2043. Simple Bank System
+class Bank:
+
+    def __init__(self, balance: List[int]):
+        self.balance = balance
+
+    def transfer(self, account1: int, account2: int, money: int) -> bool:
+        if (account1 <= 0 or account1 > len(self.balance) or 
+            account2 <= 0 or account2 > len(self.balance)):
+            return False
+        
+        if self.balance[account1 - 1] - money < 0:
+            return False
+        
+        self.balance[account1 - 1] -= money
+        self.balance[account2 - 1] += money
+        return True
+
+    def deposit(self, account: int, money: int) -> bool:
+        if account <= 0 or account > len(self.balance):
+            return False
+        
+        self.balance[account - 1] += money
+        return True
+
+    def withdraw(self, account: int, money: int) -> bool:
+        if account <= 0 or account > len(self.balance):
+            return False
+        
+        if self.balance[account - 1] - money < 0:
+            return False
+        
+        self.balance[account - 1] -= money
+        return True
+Hàm `transfer()` có nhiệm vụ **chuyển tiền từ tài khoản `account1` sang tài khoản `account2`** nếu đủ điều kiện.
+Dưới đây là **giải thích chi tiết từng dòng code** 👇
+
+---
+
+```python
+def transfer(self, account1: int, account2: int, money: int) -> bool:
+```
+
+* Hàm `transfer` nhận 3 tham số:
+
+  * `account1`: số tài khoản gửi tiền
+  * `account2`: số tài khoản nhận tiền
+  * `money`: số tiền cần chuyển
+* Kiểu trả về là `bool` — tức là `True` nếu chuyển thành công, `False` nếu thất bại.
+
+---
+
+```python
+if (account1 <= 0 or account1 > len(self.balance) or 
+    account2 <= 0 or account2 > len(self.balance)):
+    return False
+```
+
+✅ **Kiểm tra hợp lệ tài khoản**
+
+* Nếu `account1` hoặc `account2` **không tồn tại** (tức là nhỏ hơn 1 hoặc lớn hơn số lượng tài khoản),
+  → Trả về `False` ngay.
+  📌 Vì danh sách `balance` trong Python dùng **chỉ số 0-based**, còn tài khoản đánh số **1-based**.
+
+---
+
+```python
+if self.balance[account1 - 1] - money < 0:
+    return False
+```
+
+✅ **Kiểm tra số dư của tài khoản gửi (`account1`)**
+
+* Nếu sau khi trừ tiền, số dư nhỏ hơn 0 → tức là **không đủ tiền để chuyển**
+  → Trả về `False`.
+
+---
+
+```python
+self.balance[account1 - 1] -= money
+self.balance[account2 - 1] += money
+```
+
+✅ **Thực hiện giao dịch chuyển tiền**
+
+* Trừ tiền khỏi tài khoản `account1`
+* Cộng tiền vào tài khoản `account2`
+
+---
+
+```python
+return True
+```
+
+✅ **Trả về `True`** nếu giao dịch chuyển tiền **thành công** (tức là qua được mọi kiểm tra).
+
+---
+
+📘 **Tóm tắt logic thuật toán:**
+
+1. Kiểm tra tài khoản hợp lệ
+2. Kiểm tra tài khoản gửi có đủ tiền không
+3. Nếu hợp lệ → trừ tiền bên gửi, cộng tiền bên nhận
+4. Trả về `True` nếu thành công, ngược lại `False`
+
+---
+
+Ví dụ:
+
+```python
+bank = Bank([100, 200, 300])
+print(bank.transfer(1, 2, 50))  # True (100→50, 200→250)
+print(bank.balance)              # [50, 250, 300]
+
+print(bank.transfer(1, 3, 100))  # False (không đủ tiền)
+```
+Rất hay 👏 — câu hỏi này rất quan trọng khi làm việc với **chỉ số (index)** trong Python.
+Giải thích cụ thể nhé 👇
+
+---
+
+### 🧠 Lý do phải dùng `-1`
+
+Trong đề bài, **các tài khoản được đánh số từ 1 → n**,
+nhưng trong **Python list**, chỉ số (index) bắt đầu từ **0 → n-1**.
+
+👉 Nghĩa là:
+
+| Tài khoản (`account`) | Vị trí thật trong `balance` (index) |
+| --------------------- | ----------------------------------- |
+| 1                     | 0                                   |
+| 2                     | 1                                   |
+| 3                     | 2                                   |
+| ...                   | ...                                 |
+| n                     | n-1                                 |
+
+---
+
+### 🔍 Ví dụ minh họa:
+
+Giả sử:
+
+```python
+self.balance = [100, 200, 300]
+```
+
+Tức là có:
+
+* account 1 có 100
+* account 2 có 200
+* account 3 có 300
+
+---
+
+Nếu người dùng nhập `account1 = 1` và `account2 = 2`,
+thì trong Python:
+
+```python
+self.balance[account1]  # = self.balance[1] = 200 ❌ (sai, lẽ ra phải là tài khoản 2)
+```
+
+Vì index `1` là **tài khoản thứ hai** chứ không phải tài khoản đầu tiên.
+
+Nên ta phải trừ đi 1:
+
+```python
+self.balance[account1 - 1]  # = self.balance[0] = 100 ✅
+```
+
+---
+
+### 🧩 Tóm lại:
+
+* Dùng `-1` để **chuyển đổi từ số tài khoản (1-based)** sang **chỉ số mảng (0-based)**.
+* Nếu không có `-1`, code sẽ **lấy nhầm tài khoản khác** hoặc thậm chí gây **lỗi IndexError** khi truy cập ngoài giới hạn mảng.
+
+---
+
+Ví dụ kiểm chứng:
+
+```python
+bank = Bank([100, 200, 300])
+bank.transfer(1, 2, 50)  
+# => trừ ở balance[0], cộng vào balance[1]
+# => [50, 250, 300]
+```
+Rất tốt 👍 — cùng giải thích chi tiết từng dòng nhé:
+
+---
+
+### 🧩 Mục tiêu hàm `deposit`
+
+Hàm này **nạp tiền (deposit)** vào một tài khoản trong ngân hàng.
+
+---
+
+### 💡 Giải thích từng dòng:
+
+```python
+def deposit(self, account: int, money: int) -> bool:
+```
+
+➡️ Định nghĩa hàm `deposit`, nhận vào:
+
+* `account`: số tài khoản (từ 1 → n)
+* `money`: số tiền cần nạp
+  Trả về `True` nếu nạp thành công, `False` nếu có lỗi.
+
+---
+
+```python
+if account <= 0 or account > len(self.balance):
+    return False
+```
+
+➡️ Kiểm tra tính hợp lệ của tài khoản:
+
+* Nếu `account` nhỏ hơn hoặc bằng 0 → **không tồn tại**
+* Nếu `account` lớn hơn số lượng tài khoản (`len(self.balance)`) → **ngoài phạm vi**
+
+Trong hai trường hợp trên, trả về `False` vì không thể nạp tiền.
+
+---
+
+```python
+self.balance[account - 1] += money
+```
+
+➡️ Cộng thêm tiền vào tài khoản tương ứng.
+Lưu ý: phải dùng **`account - 1`** vì:
+
+* `account` trong đề là **1-based** (bắt đầu từ 1)
+* nhưng `list` trong Python là **0-based** (bắt đầu từ 0)
+
+👉 Ví dụ:
+Nếu người dùng nhập `account = 2`,
+thì thao tác thật là `self.balance[1] += money`.
+
+---
+
+```python
+return True
+```
+
+➡️ Trả về `True` để báo rằng việc nạp tiền **thành công** ✅
+
+---
+
+### 📘 Ví dụ minh họa:
+
+```python
+bank = Bank([100, 200, 300])
+print(bank.deposit(2, 50))  # True
+print(bank.balance)         # [100, 250, 300]
+```
+
+✅ Giải thích:
+
+* Tài khoản 2 (index 1) được cộng thêm 50
+* Số dư mới: `[100, 250, 300]`
+Rất tốt 👌 — giờ ta cùng **giải thích chi tiết hàm `withdraw`** nhé:
+
+---
+
+### 🧩 Mục tiêu hàm
+
+Hàm **rút tiền (withdraw)** — cho phép người dùng rút `money` từ tài khoản `account`.
+
+---
+
+### 💡 Phân tích từng dòng:
+
+```python
+def withdraw(self, account: int, money: int) -> bool:
+```
+
+➡️ Định nghĩa hàm `withdraw`, nhận vào:
+
+* `account`: số tài khoản cần rút tiền.
+* `money`: số tiền muốn rút.
+  Trả về `True` nếu rút thành công, `False` nếu thất bại.
+
+---
+
+```python
+if account <= 0 or account > len(self.balance):
+    return False
+```
+
+➡️ Kiểm tra tài khoản hợp lệ:
+
+* Nếu số tài khoản ≤ 0 → không tồn tại.
+* Nếu số tài khoản > số lượng tài khoản trong ngân hàng → ngoài phạm vi.
+  => Trong 2 trường hợp đó, trả về `False`.
+
+---
+
+```python
+if self.balance[account - 1] - money < 0:
+    return False
+```
+
+➡️ Kiểm tra xem tài khoản có **đủ tiền** để rút hay không.
+
+* `self.balance[account - 1]`: số dư hiện tại.
+* Nếu sau khi trừ `money` mà nhỏ hơn 0 → **không đủ tiền**, trả về `False`.
+
+👉 Dùng `account - 1` vì:
+
+* Danh sách `balance` trong Python bắt đầu từ chỉ số 0.
+* Còn tài khoản thật bắt đầu từ 1.
+  → Phải trừ 1 để khớp.
+
+---
+
+```python
+self.balance[account - 1] -= money
+```
+
+➡️ Nếu đủ tiền, trừ số tiền `money` khỏi tài khoản tương ứng.
+
+---
+
+```python
+return True
+```
+
+➡️ Rút tiền thành công ✅
+
+---
+
+### 📘 Ví dụ minh họa:
+
+```python
+bank = Bank([100, 200, 300])
+print(bank.withdraw(2, 50))   # True
+print(bank.balance)           # [100, 150, 300]
+print(bank.withdraw(3, 500))  # False (không đủ tiền)
+```
+
+✅ Giải thích:
+
+* Rút 50 từ tài khoản 2 (index 1): thành công → còn 150
+* Rút 500 từ tài khoản 3 (index 2): thất bại → không đủ tiền.
