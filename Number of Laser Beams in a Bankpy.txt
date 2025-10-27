@@ -1,0 +1,115 @@
+Number of Laser Beams in a Bank
+from typing import List
+
+class Solution:
+    def numberOfBeams(self, bank: List[str]) -> int:
+        ans = 0
+        prev = 0
+        
+        for row in bank:
+            cnt = row.count('1')
+            if cnt > 0:
+                ans += prev * cnt
+                prev = cnt
+        return ans
+Đây là phiên bản **Python** của cùng thuật toán trong Java mà bạn vừa hỏi (`numberOfBeams`).
+Mình sẽ giải thích chi tiết từng dòng nhé 👇
+
+---
+
+### 🧩 Ý tưởng bài toán (giống Java)
+
+Mỗi chuỗi trong `bank` là **một hàng thiết bị an ninh** gồm `'0'` và `'1'`.
+
+* `'1'` → có thiết bị.
+* `'0'` → không có thiết bị.
+  Tia laser chỉ được tạo **giữa hai hàng liên tiếp có thiết bị**,
+  và số tia giữa hai hàng = (số thiết bị hàng trên) × (số thiết bị hàng dưới).
+
+---
+
+### 🔍 Giải thích từng dòng:
+
+```python
+for row in bank:
+```
+
+→ Duyệt từng hàng (`row`) trong mảng `bank`.
+
+---
+
+```python
+    cnt = row.count('1')
+```
+
+→ Đếm xem hàng đó có bao nhiêu thiết bị (`'1'`).
+Ví dụ:
+
+* `"011001"` → `cnt = 3`
+* `"000000"` → `cnt = 0`
+
+---
+
+```python
+    if cnt > 0:
+```
+
+→ Chỉ xử lý khi hàng này **có thiết bị** (vì nếu không, không tạo được tia laser).
+
+---
+
+```python
+        ans += prev * cnt
+```
+
+→ Tính **số tia laser giữa hàng trước có thiết bị** (`prev`) và hàng hiện tại (`cnt`).
+
+* `prev` là số thiết bị của **hàng gần nhất có thiết bị trước đó**.
+* Nhân chúng lại để tính số tia giữa hai hàng đó.
+* Cộng vào `ans` (tổng kết quả).
+
+---
+
+```python
+        prev = cnt
+```
+
+→ Cập nhật `prev` để hàng hiện tại trở thành “hàng trước” cho lần kế tiếp.
+
+---
+
+```python
+return ans
+```
+
+→ Trả về tổng số tia laser.
+
+---
+
+### 💡 Ví dụ minh họa:
+
+```python
+bank = ["011001", "000000", "010100", "001000"]
+```
+
+Đếm từng hàng:
+
+```
+Hàng 1: cnt = 3 → prev = 3
+Hàng 2: cnt = 0 → bỏ qua
+Hàng 3: cnt = 2 → ans += 3*2 = 6, prev = 2
+Hàng 4: cnt = 1 → ans += 2*1 = 2
+Tổng ans = 8
+```
+
+---
+
+✅ **Tóm tắt logic:**
+
+* Bỏ qua các hàng trống (`cnt == 0`).
+* Cộng tích giữa 2 hàng liên tiếp có thiết bị.
+* Cập nhật `prev` cho lần tiếp theo.
+
+---
+
+Nếu bạn muốn mình viết lại **đầy đủ hàm Python** có tên `numberOfBeams` với chú thích từng dòng, mình có thể viết luôn cho bạn nhé — bạn muốn mình viết ra không?

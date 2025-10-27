@@ -1,0 +1,188 @@
+Number of Laser Beams in a Bank
+
+class Solution {
+    public int numberOfBeams(String[] bank) {
+        int number = 0, last = mun(bank[0]);
+        for (int i = 1; i < bank.length; i++) {
+            int current = mun(bank[i]);
+            if (current == 0) continue;
+            number += (last * (last = current));
+        }
+        return number;
+    }
+
+    int mun(String s) {
+        int res = 0;
+        for (int i = 0; i < s.length(); i++)
+            res += (s.charAt(i) - '0');
+        return res;
+    }
+}
+Tốt lắm 👍
+Giờ mình giải thích **chi tiết hàm `mun(String s)`** nhé 👇
+
+---
+
+### 🧩 Mục đích của hàm:
+
+Hàm `mun` **đếm số lượng ký tự `'1'` trong chuỗi `s`**, tức là **đếm số thiết bị trong một hàng của ngân hàng (bank)**.
+
+Mỗi hàng trong `bank` là một chuỗi gồm `'0'` và `'1'`, ví dụ:
+
+```
+"011001"
+```
+
+→ có 3 ký tự `'1'`, nghĩa là hàng đó có **3 thiết bị**.
+
+---
+
+### 🔍 Giải thích từng dòng:
+
+```java
+int mun(String s) {
+    int res = 0;
+```
+
+👉 Khởi tạo biến `res` để lưu tổng số `'1'`.
+
+---
+
+```java
+for (int i = 0; i < s.length(); i++)
+```
+
+👉 Duyệt qua từng ký tự trong chuỗi `s`.
+
+---
+
+```java
+res += (s.charAt(i) - '0');
+```
+
+👉 Dòng này là **mẹo trong Java** để chuyển ký tự `'0'` hoặc `'1'` thành số nguyên tương ứng:
+
+| Ký tự | Giá trị ASCII | `'kí tự' - '0'` |
+| ----- | ------------- | --------------- |
+| `'0'` | 48            | 0               |
+| `'1'` | 49            | 1               |
+
+➡️ Nếu ký tự là `'1'`, ta cộng thêm `1` vào `res`.
+➡️ Nếu ký tự là `'0'`, ta cộng thêm `0`.
+
+---
+
+```java
+return res;
+```
+
+👉 Sau khi duyệt hết chuỗi, `res` chính là **tổng số thiết bị (số ký tự '1')** trong hàng đó.
+
+---
+
+### 🧠 Ví dụ minh họa:
+
+```java
+String s = "011001";
+```
+
+* i=0 → `'0'` → 0
+* i=1 → `'1'` → +1
+* i=2 → `'1'` → +1
+* i=3 → `'0'` → +0
+* i=4 → `'0'` → +0
+* i=5 → `'1'` → +1
+
+➡️ Tổng `res = 3`
+→ Hàm `mun("011001")` trả về `3`.
+
+---
+
+👉 Tóm lại:
+Hàm `mun()` đếm bao nhiêu `'1'` có trong mỗi dòng — chính là **số thiết bị trong hàng** để từ đó dùng tính **số tia laser giữa các hàng**.
+Đây là **hàm chính** trong thuật toán giải bài **“2125. Number of Laser Beams in a Bank”** (LeetCode).
+Mình sẽ **giải thích từng dòng** nhé 👇
+
+---
+
+### 🧩 Ý tưởng bài toán:
+
+* Mỗi chuỗi `bank[i]` biểu diễn **một hàng trong ngân hàng** (dãy gồm '0' và '1').
+* Mỗi `'1'` tượng trưng cho **một thiết bị bảo mật**.
+* **Laser beam** (tia laser) chỉ được hình thành **giữa hai hàng liên tiếp có ít nhất một thiết bị**,
+  và **số tia giữa hai hàng = (số thiết bị hàng trên) × (số thiết bị hàng dưới)**.
+
+---
+
+### 🔍 Giải thích từng dòng code:
+
+```java
+public int numberOfBeams(String[] bank) {
+    int number = 0, last = mun(bank[0]);
+```
+
+* `number`: tổng số tia laser.
+* `last`: số lượng thiết bị ('1') ở hàng trước (ban đầu là hàng đầu tiên).
+* `mun(bank[0])`: gọi hàm `mun` để đếm số thiết bị trong hàng đầu tiên.
+
+---
+
+```java
+for (int i = 1; i < bank.length; i++) {
+    int current = mun(bank[i]);
+```
+
+* Duyệt từng hàng từ hàng thứ 2 trở đi (`i = 1` đến hết).
+* `current`: số lượng thiết bị trong hàng hiện tại.
+
+---
+
+```java
+    if (current == 0) continue;
+```
+
+* Nếu hàng hiện tại **không có thiết bị ('1')**, thì **bỏ qua**, vì không tạo ra tia laser nào.
+
+---
+
+```java
+    number += (last * (last = current));
+```
+
+* Biểu thức này có 2 việc:
+
+  1. **Tính số tia laser giữa hai hàng có thiết bị liên tiếp**: `last * current`.
+  2. **Gán `last = current`** để hàng hiện tại trở thành hàng trước cho lần sau.
+* `(last * (last = current))` là một cách viết gọn trong Java.
+
+Ví dụ:
+
+```
+bank = ["011001", "000000", "010100", "001000"]
+→ số thiết bị: [3, 0, 2, 1]
+Tính toán:
+  Giữa 3 và 2 → 3×2 = 6
+  Giữa 2 và 1 → 2×1 = 2
+=> Tổng = 8
+```
+
+---
+
+```java
+return number;
+```
+
+→ Trả về tổng số tia laser.
+
+---
+
+✅ **Tóm tắt ý tưởng:**
+
+* Duyệt qua từng hàng trong `bank`.
+* Bỏ qua các hàng không có thiết bị.
+* Mỗi khi gặp hàng có thiết bị, nhân với số thiết bị của hàng trước (có thiết bị) để cộng vào tổng.
+* Cập nhật `last` để chuẩn bị cho lần nhân tiếp theo.
+
+---
+
+Nếu bạn muốn mình viết lại thuật toán này **theo cách dễ đọc hơn (không dùng `(last = current)` trong biểu thức)**, mình có thể chỉnh lại giúp nhé — bạn có muốn không?
