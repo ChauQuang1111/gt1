@@ -1,0 +1,427 @@
+3354. Make Array Elements Equal to Zero
+class Solution {
+    public int countValidSelections(int[] nums) {
+        int total = 0, ls = 0, cases = 0;
+        for (int num : nums) total += num;
+
+        for (int num : nums) {
+            int rs = total - ls - num;
+            if (num == 0) {
+                if (ls == rs) {
+                    cases += 2;
+                } else if (ls == rs - 1 || ls - 1 == rs) {
+                    cases += 1;
+                }
+            }
+            ls += num;
+        }
+        return cases;
+    }
+}
+Rất hay — ta cùng **phân tích kỹ 2 dòng này** trong Java nhé 👇
+
+---
+
+### 💡 Code:
+
+```java
+int total = 0, ls = 0, cases = 0;
+for (int num : nums) total += num;
+```
+
+---
+
+### 🧩 Giải thích từng phần:
+
+#### 1️⃣ `int total = 0, ls = 0, cases = 0;`
+
+Khai báo 3 biến quan trọng:
+
+| Biến    | Ý nghĩa                                        | Vai trò                                   |
+| ------- | ---------------------------------------------- | ----------------------------------------- |
+| `total` | Tổng toàn bộ phần tử trong mảng `nums`         | Dùng để tính tổng bên phải (`rs`) sau này |
+| `ls`    | Tổng các phần tử bên trái của phần tử hiện tại | Dùng để so sánh với tổng bên phải         |
+| `cases` | Đếm số trường hợp hợp lệ (valid selections)    | Kết quả cuối cùng cần trả về              |
+
+---
+
+#### 2️⃣ `for (int num : nums) total += num;`
+
+➡ Đây là **vòng lặp for-each**, duyệt qua **từng phần tử `num` trong mảng `nums`**
+Và **cộng dồn tất cả vào `total`** để có tổng toàn bộ mảng.
+
+🧠 Ví dụ:
+
+```java
+nums = [1, 0, 1]
+```
+
+* Lúc đầu: `total = 0`
+* Lặp 1: `num = 1` → total = 1
+* Lặp 2: `num = 0` → total = 1
+* Lặp 3: `num = 1` → total = 2
+
+➡ Kết quả cuối cùng:
+
+```java
+total = 2  // tổng toàn bộ mảng nums
+```
+
+---
+
+### ✅ Tóm lại:
+
+Hai dòng này có nhiệm vụ:
+
+> **Tính tổng toàn bộ mảng (`total`) để sau đó có thể tính tổng bên phải (`rs`) của từng phần tử khi duyệt mảng.**
+
+---
+
+Bạn có muốn mình giải thích **phần kế tiếp trong code Java (bắt đầu từ `for (int num : nums) { ... }`)** theo kiểu chi tiết từng dòng tương tự như trên không?
+Đoạn code này là **phần chính** của lời giải bài **LeetCode 3354 – Make Array Elements Equal to Zero**, và ta sẽ giải thích **từng dòng chi tiết** nhé 👇
+
+---
+
+### 🔹 Ngữ cảnh trước đoạn code:
+
+```java
+int total = 0, ls = 0, cases = 0;
+for (int num : nums) total += num;
+```
+
+Ở đây `total` là **tổng tất cả các phần tử** trong mảng `nums`.
+
+---
+
+### 🔹 Giải thích đoạn chính:
+
+```java
+for (int num : nums) {
+    int rs = total - ls - num;
+```
+
+* `ls` (left sum) là **tổng của các phần tử bên trái** phần tử hiện tại.
+* `rs` (right sum) là **tổng của các phần tử bên phải**, được tính bằng:
+  [
+  rs = total - ls - num
+  ]
+  tức là lấy tổng toàn mảng `total`, trừ đi phần đã cộng bên trái (`ls`), và trừ phần tử hiện tại (`num`).
+
+---
+
+```java
+if (num == 0) {
+```
+
+Chỉ xử lý khi phần tử hiện tại bằng **0**, vì ta đang xét các vị trí mà giá trị là 0.
+
+---
+
+```java
+if (ls == rs) {
+    cases += 2;
+}
+```
+
+Nếu **tổng bên trái bằng tổng bên phải**, thì có **2 cách** để biến mảng thành tất cả 0 (từ hai phía), nên ta tăng `cases` lên 2.
+
+---
+
+```java
+else if (ls == rs - 1 || ls - 1 == rs) {
+    cases += 1;
+}
+```
+
+Nếu tổng bên trái **chênh lệch đúng 1 đơn vị** so với tổng bên phải, thì chỉ có **1 cách hợp lệ**, nên cộng thêm 1 vào `cases`.
+
+Cụ thể:
+
+* `ls == rs - 1`: bên trái nhỏ hơn bên phải đúng 1.
+* `ls - 1 == rs`: bên trái lớn hơn bên phải đúng 1.
+
+---
+
+```java
+}
+ls += num;
+```
+
+Sau khi xử lý xong phần tử hiện tại, ta **cộng nó vào tổng bên trái** để chuẩn bị xét phần tử tiếp theo.
+
+---
+
+```java
+return cases;
+```
+
+Cuối cùng, trả về tổng số trường hợp (`cases`) thỏa điều kiện.
+
+---
+
+### 🔹 Tóm tắt ý tưởng:
+
+* Duyệt từng phần tử `num` trong mảng.
+* Giữ `ls` là tổng bên trái, tính `rs` là tổng bên phải.
+* Nếu `num == 0`, kiểm tra xem `ls` và `rs` có bằng nhau hay chênh lệch 1 không.
+* Cộng số lượng trường hợp hợp lệ vào `cases`.
+
+---
+
+Nếu bạn muốn, mình có thể **thêm chú thích chi tiết từng dòng ngay trong code Java** (giống như ví dụ trước). Bạn có muốn mình làm vậy không?
+Rất hay — dòng này 👇
+
+```java
+int rs = total - ls - num;
+```
+
+chính là **cách tính tổng của các phần tử nằm bên phải (`rs`)** của phần tử hiện tại trong mảng.
+Giải thích chi tiết nhé 👇
+
+---
+
+### 🔹 Giả sử:
+
+Ta có mảng:
+
+```
+nums = [1, 0, 2, 0, 3]
+```
+
+Khi ta duyệt mảng bằng vòng `for (int num : nums)`, ở **mỗi bước** ta đang đứng tại 1 phần tử `num`.
+
+Ví dụ, khi ta đang ở phần tử `num = 2` (vị trí thứ 2):
+
+* Các phần tử **bên trái** là `[1, 0]`
+* Các phần tử **bên phải** là `[0, 3]`
+
+---
+
+### 🔹 Ký hiệu:
+
+* `total` = tổng toàn mảng = `1 + 0 + 2 + 0 + 3 = 6`
+* `ls` (left sum) = tổng bên trái = `1 + 0 = 1`
+* `num` = phần tử hiện tại = `2`
+
+---
+
+### 🔹 Vậy tổng bên phải là gì?
+
+Tổng bên phải (`rs`) = tổng toàn mảng − tổng bên trái − phần tử hiện tại
+[
+rs = total - ls - num
+]
+👉 thay số vào:
+[
+rs = 6 - 1 - 2 = 3
+]
+
+Đúng rồi! `rs = 3` chính là tổng của `[0, 3]`.
+
+---
+
+### 🔹 Tổng quát:
+
+Dòng code này:
+
+```java
+int rs = total - ls - num;
+```
+
+chính là **cách tính nhanh tổng bên phải mà không cần duyệt mảng thêm lần nữa**.
+Ta tận dụng `total` (đã biết trước), và `ls` (đã cộng dồn khi duyệt từ trái sang phải).
+
+---
+
+Tóm lại:
+
+| Biến    | Ý nghĩa                     | Cách tính           |
+| ------- | --------------------------- | ------------------- |
+| `total` | Tổng toàn mảng              | Cộng tất cả phần tử |
+| `ls`    | Tổng bên trái (trước `num`) | Cộng dồn khi duyệt  |
+| `num`   | Phần tử hiện tại            | Lấy từ mảng         |
+| `rs`    | Tổng bên phải               | `total - ls - num`  |
+
+---
+
+Bạn có muốn mình minh họa thêm **1 vòng lặp mẫu** (in giá trị `ls`, `rs`, `num`) để thấy rõ cách nó thay đổi qua từng bước không?
+Rất tốt — đoạn này là **phần cốt lõi** của bài toán ✅
+Giải thích kỹ nhé 👇
+
+---
+
+### 🔹 Ngữ cảnh của đề bài 3354 — *Make Array Elements Equal to Zero*
+
+Mục tiêu là:
+Ta cần **đếm số cách hợp lệ (valid selections)** để chọn 1 vị trí `i` (vị trí chứa số `0`) sao cho **có thể làm toàn bộ mảng bằng 0** bằng cách trừ hoặc cộng 1 liên tục theo luật bài ra.
+
+(Chi tiết bài gốc: chọn 1 vị trí bằng 0, rồi trừ dần các số bên trái hoặc cộng dần các số bên phải sao cho cân bằng về tổng.)
+
+---
+
+### 🔹 Biến trong thuật toán
+
+* `ls` = tổng các phần tử bên **trái** vị trí hiện tại
+* `rs` = tổng các phần tử bên **phải** vị trí hiện tại
+* `num` = giá trị hiện tại của phần tử (ở đây đang xét các vị trí có `num == 0`)
+* `cases` = tổng số cách hợp lệ tìm được
+
+---
+
+### 🔹 Giải thích từng dòng:
+
+#### 🧩 Điều kiện:
+
+```java
+if (num == 0) {
+```
+
+Chỉ xét các phần tử có giá trị bằng **0**, vì chỉ từ những vị trí này ta mới có thể "bắt đầu" quá trình làm cân bằng mảng.
+
+---
+
+#### 🧩 Nếu tổng trái và tổng phải **bằng nhau**:
+
+```java
+if (ls == rs) {
+    cases += 2;
+}
+```
+
+Điều này có nghĩa là:
+
+👉 Tổng của các phần tử bên trái **bằng** tổng của các phần tử bên phải.
+
+Khi đó:
+
+* Ta có **2 hướng hợp lệ** để “trừ dần” hay “cộng dần” để đưa mảng về 0:
+
+  1. Giảm dần từ trái sang phải
+  2. Giảm dần từ phải sang trái
+
+=> Vì vậy `cases += 2;`
+Tức là **đếm thêm 2 trường hợp hợp lệ**.
+
+---
+
+### 🔹 Ví dụ minh họa
+
+Giả sử:
+
+```
+nums = [1, 0, 1]
+```
+
+* `total = 2`
+* Khi `num = 0` ở giữa:
+
+  * `ls = 1` (bên trái)
+  * `rs = 1` (bên phải)
+
+=> `ls == rs` → cân bằng
+=> Có **2 cách hợp lệ** → `cases += 2`
+
+---
+
+Tóm lại:
+
+| Điều kiện  | Ý nghĩa                                               | Số cách cộng thêm |
+| ---------- | ----------------------------------------------------- | ----------------- |
+| `ls == rs` | Tổng hai bên bằng nhau → có thể làm 0 từ cả hai hướng | `+2`              |
+
+---
+
+Bạn có muốn mình giải thích luôn phần tiếp theo
+
+```java
+else if (ls == rs - 1 || ls - 1 == rs)
+```
+
+(tức là trường hợp lệch nhau 1 đơn vị → `cases += 1`)
+để thấy toàn bộ ý tưởng của thuật toán không?
+Câu hỏi rất hay — đây chính là **chìa khóa để hiểu bài 3354 (Make Array Elements Equal to Zero)** 👇
+
+---
+
+## 🧠 Mục tiêu của bài toán
+
+Ta được cho một mảng `nums`, mỗi phần tử là 0 hoặc 1.
+Ta cần **đếm số vị trí hợp lệ** (vị trí có giá trị = 0) mà nếu ta bắt đầu **"làm mảng thành toàn số 0"** từ vị trí đó, thì có thể thành công.
+
+> Mỗi lần, ta có thể chọn vị trí bắt đầu là 0, rồi "trừ 1" hoặc "cộng 1" dần về hai phía để đưa mọi phần tử về 0.
+> Điều kiện thành công là tổng bên trái và bên phải **phải cân bằng hoặc gần cân bằng (chênh 1 đơn vị)**.
+
+---
+
+## 🧩 Vì sao `+2` hoặc `+1`
+
+### 🎯 Khi `ls == rs`  →  `cases += 2`
+
+* Nghĩa là tổng phần **bên trái** và **bên phải** của vị trí 0 đang **cân bằng nhau** hoàn hảo.
+* Trong trường hợp này, ta có **2 hướng hợp lệ để làm mảng về 0**:
+
+  1. **Từ trái sang phải**
+  2. **Từ phải sang trái**
+
+=> Vì có **2 khả năng hợp lệ**, nên `cases += 2`.
+
+---
+
+### 🎯 Khi `|ls - rs| == 1`  →  `cases += 1`
+
+* Nếu tổng bên trái và phải **chênh lệch đúng 1 đơn vị**, thì chỉ có **1 hướng hợp lệ** để đưa mảng về 0.
+
+Ví dụ:
+
+```
+nums = [1, 0, 0]
+```
+
+Khi xét phần tử `nums[1] = 0`:
+
+* Tổng trái `ls = 1`
+* Tổng phải `rs = 0`
+  → lệch nhau 1 đơn vị → chỉ có **1 cách hợp lệ** (giảm dần từ trái sang phải).
+
+=> `cases += 1`
+
+---
+
+### 📊 Tóm tắt quy tắc
+
+| Trường hợp | Ý nghĩa                | Cách hợp lệ                    | Cộng thêm     |                |      |
+| ---------- | ---------------------- | ------------------------------ | ------------- | -------------- | ---- |
+| `ls == rs` | Cân bằng hoàn hảo      | 2 hướng (trái→phải, phải→trái) | `+2`          |                |      |
+| `          | ls - rs                | == 1`                          | Lệch 1 đơn vị | 1 hướng hợp lệ | `+1` |
+| Khác       | Không thể làm cân bằng | 0                              | `+0`          |                |      |
+
+---
+
+### 🧩 Mô phỏng nhỏ
+
+Giả sử:
+
+```
+nums = [1, 0, 1]
+```
+
+* total = 2
+* tại `num = 0`:
+
+  * ls = 1
+  * rs = 1
+  * → `ls == rs` → `cases += 2`
+
+→ có **2 cách hợp lệ**.
+
+---
+
+👉 Tóm lại:
+
+* **+2** khi tổng hai bên **hoàn toàn bằng nhau** → 2 hướng có thể thực hiện.
+* **+1** khi tổng hai bên **chênh nhau đúng 1** → chỉ 1 hướng hợp lệ.
+* **0** nếu lệch nhiều hơn → không thể làm toàn bộ mảng bằng 0.
+
+---
+
+Bạn có muốn mình vẽ **sơ đồ minh họa** cho 2 trường hợp `+2` và `+1` để dễ hình dung trực quan không?

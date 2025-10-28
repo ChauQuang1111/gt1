@@ -1,0 +1,292 @@
+3354. Make Array Elements Equal to Zero
+class Solution:
+    def countValidSelections(self, nums: List[int]) -> int:
+        tsum = sum(nums)
+        dc = 0
+        oc = 0
+        cs = 0
+        i = 0
+        l = len(nums)
+        while i < l:
+            cs += nums[i]
+            if 2 * cs == tsum:
+                if nums[i] != 0:
+                    i += 1
+                while i < l and nums[i] == 0:
+                    i += 1
+                    dc += 1
+
+            elif 2 * cs == tsum - 1 or 2 * cs - 1 == tsum:
+                if nums[i] != 0:
+                    i += 1
+                    
+                while i < l and nums[i] == 0:
+                    i += 1
+                    oc += 1
+            
+            else:
+                i += 1
+                
+        return 2 * dc + oc
+
+Rất hay 👏 — đoạn code này là phần **cốt lõi** trong **thuật toán Python** cho bài *LeetCode 3354 – Make Array Elements Equal to Zero*.
+Giờ mình sẽ **giải thích chi tiết từng dòng**, để bạn hiểu **vì sao nó hoạt động** và **ý nghĩa logic của từng bước** nhé 👇
+
+---
+
+### 🔹 Mã gốc:
+
+```python
+while i < l:
+    cs += nums[i]
+    if 2 * cs == tsum:
+        if nums[i] != 0:
+            i += 1
+        while i < l and nums[i] == 0:
+            i += 1
+            dc += 1
+```
+
+---
+
+### 🔸 Giải thích từng dòng:
+
+#### `while i < l:`
+
+* Lặp qua từng phần tử trong mảng `nums` (giống vòng `for i in range(len(nums))`).
+* `l` là độ dài của mảng (`len(nums)`).
+
+---
+
+#### `cs += nums[i]`
+
+* `cs` là **tổng tích lũy (current sum)** của các phần tử từ đầu mảng đến vị trí `i`.
+* Dòng này cộng dồn giá trị của phần tử hiện tại `nums[i]` vào tổng bên trái.
+
+👉 Mục tiêu:
+Sau mỗi bước, ta biết tổng giá trị ở **bên trái** (kể cả phần tử hiện tại).
+
+---
+
+#### `if 2 * cs == tsum:`
+
+* `tsum` là **tổng toàn mảng** (`sum(nums)`).
+* Nếu `2 * cs == tsum`, tức là:
+
+  ```
+  cs = tsum / 2
+  ```
+
+  → nghĩa là **tổng bên trái** = **tổng bên phải**.
+
+💡 Tại điểm này, vị trí `i` là **ranh giới cân bằng** — chia mảng ra 2 phần có tổng bằng nhau.
+
+---
+
+#### `if nums[i] != 0:`
+
+* Nếu phần tử tại `i` **không bằng 0**, ta **bỏ qua nó**, vì điều kiện bài yêu cầu chỉ xét **các vị trí có giá trị = 0**.
+
+→ Khi `nums[i] != 0`, ta chỉ cần dịch `i` sang phải (`i += 1`), rồi tiếp tục kiểm tra phần còn lại.
+
+---
+
+#### `while i < l and nums[i] == 0:`
+
+* Nếu `nums[i] == 0`, tức là **vị trí hiện tại có thể là điểm bắt đầu hợp lệ** (vì nó chia mảng thành hai phần cân bằng nhau).
+* Vòng lặp này chạy liên tiếp qua **các số 0 liền kề**.
+
+---
+
+#### `i += 1`
+
+* Dịch con trỏ sang phải để kiểm tra các phần tử 0 tiếp theo.
+
+---
+
+#### `dc += 1`
+
+* Tăng bộ đếm `dc` lên 1 mỗi khi gặp một `0` hợp lệ (nằm ở vị trí có thể chia mảng thành hai phần bằng nhau).
+
+💡 Nói cách khác:
+`dc` là **số lượng vị trí 0 hợp lệ** có thể được chọn để làm mảng trở thành toàn số 0.
+
+---
+
+### 🔸 Tổng kết logic
+
+| Biến             | Ý nghĩa                              |
+| ---------------- | ------------------------------------ |
+| `tsum`           | Tổng toàn bộ mảng                    |
+| `cs`             | Tổng bên trái đến vị trí i           |
+| `i`              | Chỉ số đang duyệt                    |
+| `dc`             | Số vị trí 0 hợp lệ                   |
+| `2 * cs == tsum` | Hai nửa trái phải bằng nhau          |
+| `nums[i] == 0`   | Vị trí có thể là điểm bắt đầu hợp lệ |
+
+---
+
+### 🔹 Ví dụ minh họa
+
+```
+nums = [1, 0, 0, 1]
+tsum = 2
+
+Bước 1: i = 0 → cs = 1 → 2*cs = 2 == tsum ✅
+nums[i] != 0 → bỏ qua
+
+Bước 2: i = 1 → cs = 1 → 2*cs = 2 == tsum ✅
+nums[i] == 0 → dc = 1
+
+Bước 3: i = 2 → cs = 1 → 2*cs = 2 == tsum ✅
+nums[i] == 0 → dc = 2
+```
+
+➡️ Kết quả: `dc = 2`
+(nghĩa là có 2 vị trí 0 hợp lệ: index 1 và 2)
+
+---
+
+👉 Tóm lại:
+
+* `cs` dùng để xác định ranh giới cân bằng.
+* `2 * cs == tsum` kiểm tra xem tổng 2 bên bằng nhau.
+* Nếu gặp `0` tại vị trí cân bằng → đó là một vị trí hợp lệ → tăng `dc`.
+
+---
+
+Bạn có muốn mình viết lại **phiên bản Java tương đương** có chú thích chi tiết của đoạn Python này không?
+Rất tốt 👏 — đây là phần **hoàn chỉnh** của lời giải Python cho bài **LeetCode 3354 – Make Array Elements Equal to Zero**, xử lý **các trường hợp lệch 1 đơn vị** giữa hai nửa tổng.
+Mình sẽ giải thích chi tiết từng điều kiện và dòng code nhé 👇
+
+---
+
+### 🔹 Đoạn code:
+
+```python
+elif 2 * cs == tsum - 1 or 2 * cs - 1 == tsum:
+    if nums[i] != 0:
+        i += 1
+                    
+    while i < l and nums[i] == 0:
+        i += 1
+        oc += 1
+
+else:
+    i += 1
+
+return 2 * dc + oc
+```
+
+---
+
+## 🔸 Giải thích từng phần
+
+---
+
+### ✅ `elif 2 * cs == tsum - 1 or 2 * cs - 1 == tsum:`
+
+Đây là điều kiện **tổng hai bên lệch nhau đúng 1 đơn vị**.
+
+* `2 * cs == tsum - 1` ⟹ tổng bên **trái** nhỏ hơn bên phải **1 đơn vị**
+* `2 * cs - 1 == tsum` ⟹ tổng bên **trái** lớn hơn bên phải **1 đơn vị**
+
+💡 Nói cách khác, đây là **trường hợp gần cân bằng**, chỉ lệch 1 đơn vị, nên **vẫn có thể trở thành hợp lệ** nếu ta có thể điều chỉnh bằng các số `0` ở giữa.
+
+---
+
+### ✅ `if nums[i] != 0:`
+
+Nếu phần tử hiện tại không phải `0`, thì nó không thể là điểm chia hợp lệ → bỏ qua nó:
+
+```python
+i += 1
+```
+
+---
+
+### ✅ `while i < l and nums[i] == 0:`
+
+Giống logic ở phần trước, ta kiểm tra **các số 0 liên tiếp** sau điểm hiện tại.
+
+---
+
+### ✅ `oc += 1`
+
+* `oc` là **số lượng vị trí 0 hợp lệ** khi hai nửa tổng **lệch nhau 1 đơn vị**.
+* Mỗi khi gặp 1 số `0` ở vị trí như vậy, ta tăng `oc` lên 1.
+
+---
+
+### ✅ `else: i += 1`
+
+Nếu không rơi vào hai trường hợp:
+
+1. Hai nửa bằng nhau (`2 * cs == tsum`)
+2. Hai nửa lệch nhau 1 (`2 * cs == tsum - 1 or 2 * cs - 1 == tsum`)
+
+→ thì đơn giản **bỏ qua phần tử này**, chuyển sang phần tử tiếp theo.
+
+---
+
+### ✅ `return 2 * dc + oc`
+
+Đây là phần quan trọng nhất 👇
+
+* `dc` = số lượng vị trí 0 **hoàn toàn cân bằng** (tổng hai bên bằng nhau)
+  → mỗi vị trí như vậy **có 2 cách chọn hợp lệ**, nên nhân `2`.
+
+* `oc` = số lượng vị trí 0 **gần cân bằng (lệch 1 đơn vị)**
+  → mỗi vị trí như vậy **chỉ có 1 cách chọn hợp lệ**, nên cộng `oc`.
+
+💡 Vì vậy:
+
+```python
+return 2 * dc + oc
+```
+
+cho ta **tổng số lựa chọn hợp lệ**.
+
+---
+
+## 🔹 Tổng kết ý nghĩa các biến:
+
+| Biến          | Ý nghĩa                                                |
+| ------------- | ------------------------------------------------------ |
+| `tsum`        | Tổng toàn mảng                                         |
+| `cs`          | Tổng bên trái đến vị trí hiện tại                      |
+| `dc`          | Đếm số 0 tại điểm cân bằng (hai nửa bằng nhau)         |
+| `oc`          | Đếm số 0 tại điểm gần cân bằng (hai nửa lệch 1 đơn vị) |
+| `2 * dc + oc` | Tổng số cách chọn hợp lệ                               |
+
+---
+
+### 🔹 Ví dụ minh họa
+
+Giả sử:
+
+```python
+nums = [1, 0, 0, 0, 1]
+tsum = 2
+```
+
+| i | cs | 2*cs | So sánh với tsum | Loại                 |
+| - | -- | ---- | ---------------- | -------------------- |
+| 0 | 1  | 2    | = tsum           | Cân bằng → `dc += 1` |
+| 1 | 1  | 2    | = tsum           | Cân bằng → `dc += 1` |
+| 2 | 1  | 2    | = tsum           | Cân bằng → `dc += 1` |
+
+→ `dc = 3`, `oc = 0`
+→ `return 2*3 + 0 = 6`
+
+---
+
+✅ **Tóm tắt ngắn gọn:**
+
+* `dc`: số 0 tại vị trí mà 2 nửa mảng **bằng nhau** → 2 cách chọn.
+* `oc`: số 0 tại vị trí mà 2 nửa mảng **lệch 1 đơn vị** → 1 cách chọn.
+* Tổng kết quả: `2 * dc + oc`.
+
+---
+
+Bạn có muốn mình viết lại **phiên bản Java tương đương của đoạn này** kèm chú thích chi tiết không?
