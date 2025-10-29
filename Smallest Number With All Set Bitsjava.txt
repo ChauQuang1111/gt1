@@ -1,0 +1,72 @@
+ Smallest Number With All Set Bits
+
+
+public int smallestNumberWithAllBitsSet(int n) {
+     int x = 1;
+     while (x < n) {
+         x = (x << 1) | 1; // nhân 2 rồi cộng 1 -> tạo bit 1 mới
+    }
+    return x;
+ }
+
+
+Rất hay — dòng này là **trọng tâm** của thuật toán, và mình sẽ giải thích kỹ cho bạn nhé 👇
+
+---
+
+### 🧩 Dòng lệnh:
+
+```java
+x = (x << 1) | 1;
+```
+
+---
+
+### 🧠 Ý nghĩa từng phần:
+
+1. **`x << 1`**
+   👉 Dịch bit của `x` sang **trái 1 vị trí**, tức là **nhân đôi giá trị** của `x`.
+
+   * Ví dụ:
+
+     ```
+     x = 3 (011)
+     x << 1 = 6 (110)
+     ```
+
+2. **`| 1`**
+   👉 Toán tử **OR bit** (`|`) với `1` → giúp **đặt bit cuối cùng (bit thấp nhất)** thành **1**.
+
+   * Tiếp tục ví dụ:
+
+     ```
+     x << 1 = 6 (110)
+     (x << 1) | 1 = 7 (111)
+     ```
+
+---
+
+### ⚙️ Toàn dòng hoạt động thế nào:
+
+Cứ mỗi lần chạy `x = (x << 1) | 1`, ta **tạo ra một số có thêm 1 bit 1 ở cuối**.
+Cụ thể:
+
+| Lần lặp  | Biểu diễn nhị phân | Giá trị thập phân |
+| -------- | ------------------ | ----------------- |
+| Khởi đầu | `1`                | 1                 |
+| 1        | `11`               | 3                 |
+| 2        | `111`              | 7                 |
+| 3        | `1111`             | 15                |
+| 4        | `11111`            | 31                |
+
+---
+
+### 🔍 Tóm lại:
+
+> `x = (x << 1) | 1`
+> → Dịch trái để nhân đôi (mở rộng bit), sau đó thêm một bit 1 vào cuối → tạo **chuỗi bit toàn 1**:
+> `1 → 3 → 7 → 15 → 31 → 63 → …`
+
+---
+
+Bạn muốn mình minh họa bằng **hình biểu diễn bit (ví dụ dùng 0 và 1)** để thấy rõ sự thay đổi qua từng vòng lặp không?
