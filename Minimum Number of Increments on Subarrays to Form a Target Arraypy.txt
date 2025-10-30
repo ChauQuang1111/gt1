@@ -1,0 +1,101 @@
+Minimum Number of Increments on Subarrays to Form a Target Array
+class Solution:
+    def minNumberOperations(self, target: List[int]) -> int:
+        ans = power = prev = 0
+        for i in target:
+            if i >= prev:
+                power = i - prev
+                ans += power
+            prev = i
+
+        return ans
+
+Rất hay 👍 — mình sẽ **giải thích chi tiết từng dòng** trong đoạn code này để bạn hiểu rõ cách hoạt động của nó nhé 👇
+
+---
+
+```python
+for i in target:
+```
+
+👉 Duyệt từng phần tử `i` trong mảng `target`.
+
+* Ví dụ: nếu `target = [1, 2, 3, 2, 1]`, thì `i` lần lượt là `1 → 2 → 3 → 2 → 1`.
+* Biến `prev` (phần tử trước đó) giúp ta so sánh để biết **có cần tăng thêm không**.
+
+---
+
+```python
+if i >= prev:
+```
+
+👉 Nếu phần tử hiện tại `i` **lớn hơn hoặc bằng** phần tử trước `prev`,
+→ tức là chiều cao đang tăng lên, ta cần **thêm các lần tăng** để đạt tới mức này.
+
+Ngược lại, nếu `i < prev`, nghĩa là giá trị giảm — không cần thêm thao tác tăng nào cả (vì ta chỉ đếm số lần tăng, không đếm giảm).
+
+---
+
+```python
+power = i - prev
+```
+
+👉 Tính **mức tăng thêm cần thiết** từ phần tử trước (`prev`) để đạt đến `i`.
+
+* Nếu `i = 3`, `prev = 2` → cần tăng thêm `1`.
+* Nếu `i = 5`, `prev = 2` → cần tăng thêm `3`.
+* Nếu `i <= prev`, dòng này không chạy (vì nằm trong `if`).
+
+---
+
+```python
+ans += power
+```
+
+👉 Cộng phần tăng thêm (`power`) này vào tổng `ans`,
+vì đây chính là **số thao tác cần thêm** để đạt được phần tử hiện tại.
+
+---
+
+```python
+prev = i
+```
+
+👉 Cập nhật `prev` thành phần tử hiện tại `i`,
+để **vòng lặp tiếp theo** có thể so sánh với giá trị mới nhất.
+
+---
+
+### 🔁 Ví dụ chạy từng bước:
+
+Giả sử:
+
+```python
+target = [1, 3, 2]
+```
+
+Ban đầu:
+
+```
+ans = 0
+prev = 0
+```
+
+| i | prev | i ≥ prev? | power = i - prev | ans sau cộng | Ghi chú                      |
+| - | ---- | --------- | ---------------- | ------------ | ---------------------------- |
+| 1 | 0    | ✅         | 1                | 1            | tăng từ 0 → 1                |
+| 3 | 1    | ✅         | 2                | 3            | tăng thêm 2 để đạt 3         |
+| 2 | 3    | ❌         | —                | 3            | không tăng thêm (giảm xuống) |
+
+✅ **Kết quả cuối cùng:** `ans = 3`
+
+---
+
+Tóm lại:
+
+> Đoạn này dùng để **cộng dồn các phần tăng dương giữa các phần tử liên tiếp** của mảng.
+> Mỗi lần `target[i] > target[i-1]`, ta thêm `(target[i] - target[i-1])` vào tổng kết quả.
+
+---
+
+Bạn có muốn mình minh họa thêm **bằng sơ đồ hoặc ví dụ trực quan** (mảng thanh cao thấp giống biểu đồ cột) để dễ hình dung hơn không?

@@ -1,0 +1,96 @@
+Minimum Number of Increments on Subarrays to Form a Target Arrayclass Solution 
+    public int minNumberOperations(int[] target) {
+        int n = target.length ; 
+        int ans =  target[0] ; 
+        for( int i=1 ; i<n ; ++i ){
+            if( target[i] > target[i-1] ){
+                ans += target[i] - target[i-1] ; 
+            }
+        } 
+        return ans ; 
+    }
+Rất hay 👏 — mình sẽ **giải thích chi tiết từng dòng Java code này** để bạn hiểu rõ cách thuật toán hoạt động nhé 👇
+
+---
+
+### 💡 Ý tưởng tổng quát:
+
+Bài toán **Minimum Number of Increments on Subarrays to Form a Target Array** yêu cầu:
+Từ mảng ban đầu toàn số 0, ta có thể **tăng giá trị của một đoạn liên tiếp (subarray)** thêm 1 mỗi lần.
+Hỏi: cần ít nhất bao nhiêu lần tăng để biến thành mảng `target`.
+
+👉 Giải pháp:
+Số lần tăng tối thiểu chính là **tổng của các phần tăng dương** giữa các phần tử liên tiếp của `target`.
+
+---
+
+### 🧩 Giải thích từng dòng:
+
+```java
+for (int i = 1; i < n; ++i) {
+```
+
+* Duyệt từ **phần tử thứ 2** (`i = 1`) đến hết mảng.
+* Mỗi lần so sánh phần tử hiện tại `target[i]` với phần tử trước đó `target[i-1]`.
+
+---
+
+```java
+if (target[i] > target[i-1]) {
+```
+
+* Nếu phần tử hiện tại **lớn hơn phần tử trước**,
+  thì để tăng từ `target[i-1]` lên `target[i]`,
+  ta phải thực hiện thêm `(target[i] - target[i-1])` phép tăng.
+
+* Nếu `target[i] ≤ target[i-1]`, thì không cần thêm phép tăng nào,
+  vì giảm giá trị không cần thao tác tăng.
+
+---
+
+```java
+ans += target[i] - target[i-1];
+```
+
+* Cộng phần tăng thêm vào biến `ans`,
+  vì đây là **số phép tăng cần thiết mới** để đạt tới giá trị `target[i]`.
+
+---
+
+```java
+return ans;
+```
+
+* Sau khi duyệt hết mảng, trả về tổng số phép tăng tối thiểu.
+
+---
+
+### 🔢 Ví dụ minh họa:
+
+Giả sử:
+
+```java
+target = [1, 2, 3, 2, 1];
+```
+
+| i | target[i-1] | target[i] | target[i] > target[i-1]? | ans tăng thêm | ans tổng |
+| - | ----------- | --------- | ------------------------ | ------------- | -------- |
+| 1 | 1           | 2         | ✅                        | 1             | 1        |
+| 2 | 2           | 3         | ✅                        | 1             | 2        |
+| 3 | 3           | 2         | ❌                        | 0             | 2        |
+| 4 | 2           | 1         | ❌                        | 0             | 2        |
+
+👉 Kết quả cuối cùng `ans = 2`.
+
+---
+
+### 🧠 Giải thích trực quan:
+
+* Tăng 1 lần để mảng `[0,0,0,0,0]` → `[1,1,1,0,0]`.
+* Tăng thêm 1 lần để đạt đỉnh cao hơn → `[1,2,2,1,1]` → gần giống `target`.
+
+=> Tổng cộng **2 lần tăng**.
+
+---
+
+Bạn có muốn mình thêm **phiên bản có `Scanner` và chú thích từng dòng đầy đủ** cho đoạn code này không?

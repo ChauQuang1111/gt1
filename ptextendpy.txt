@@ -1,0 +1,142 @@
+**Iterable** trong Python là thuật ngữ dùng để chỉ **bất kỳ đối tượng nào có thể lặp qua từng phần tử** bằng vòng lặp (`for`) hoặc các hàm như `list()`, `tuple()`, `set()`,...
+
+**Những đối tượng được gọi là iterable gồm:**
+- List (danh sách): `[1][2][3]`
+- Tuple (bộ): `(4, 5, 6)`
+- Set (tập hợp): `{7, 8, 9}`
+- String (chuỗi): `"abc"`
+- Dictionary (từ điển): `{"a": 1, "b": 2}`
+- Kết quả của các hàm như `range()`, `map(..)`, `filter(..)`
+
+**Đặc điểm:**
+- Có thể duyệt qua các phần tử bằng vòng lặp `for`:
+```python
+for item in [1, 2, 3]:
+    print(item)
+```
+- Có thuộc tính `__iter__()` nên được gọi là **iterable object**.
+
+**Kiểm tra một đối tượng có phải là iterable không:**
+```python
+from collections.abc import Iterable
+print(isinstance([1,2], Iterable))      # True
+print(isinstance(100, Iterable))        # False
+print(isinstance("hello", Iterable))    # True
+```
+
+**Ứng dụng của iterable**
+- Dùng làm tham số cho các hàm/method yêu cầu giá trị lặp, ví dụ: `extend()`, `sorted()`, `list()`.
+- Cho phép xử lý tập hợp dữ liệu, chuyển đổi kiểu, phân tích, lọc, tổng hợp.
+
+**Tóm lại**, **iterable là bất cứ gì có thể lặp lại từng phần tử** bằng vòng lặp trong Python.
+
+Bạn muốn tìm hiểu về iterator (trình lặp) hoặc ví dụ cụ thể khi xử lý iterable?
+
+**Ví dụ nâng cao về phương thức `extend()` trong Python**
+
+1. **Kết hợp nhiều nguồn dữ liệu vào một list**
+```python
+numbers = [1, 2, 3]
+extra = [4, 5, 6]
+letters = ['a', 'b']
+
+numbers.extend(extra)
+numbers.extend(letters)
+print(numbers)
+# Kết quả: [1, 2, 3, 4, 5, 6, 'a', 'b']
+```
+
+2. **Extend với tập hợp (set)**
+```python
+a = [1, 2]
+s = {3, 4}
+a.extend(s)
+print(a)
+# Kết quả: [1, 2, 3, 4] (thứ tự phần tử set có thể không đảm bảo)
+```
+
+3. **Extend với tuple**
+```python
+x = [10, 20]
+y = (30, 40, 50)
+x.extend(y)
+print(x)
+# Kết quả: [10, 20, 30, 40, 50]
+```
+
+4. **Extend với chuỗi**
+```python
+lst = [7, 8]
+lst.extend("ABCD")
+print(lst)
+# Kết quả: [7, 8, 'A', 'B', 'C', 'D']
+```
+
+5. **Nối nhiều danh sách trong một dòng mã**
+```python
+a = [0]
+a.extend([1, 2, 3])
+a.extend(range(4, 7))  # range là iterable
+print(a)
+# Kết quả: [0, 1, 2, 3, 4, 5, 6]
+```
+
+6. **Nhập từ người dùng để nối vào list**
+```python
+user_input = input("Nhập các số, ngăn cách bởi dấu phẩy: ")  # ví dụ: 8,9,10
+lst = [1, 2]
+lst.extend(map(int, user_input.split(',')))
+print(lst)
+# Kết quả: [1, 2, 8, 9, 10]
+```
+
+**Lưu ý quan trọng:**  
+- Nếu truyền một dạng không phải iterable, ví dụ số nguyên, sẽ báo lỗi:  
+```python
+lst = [1, 2]
+lst.extend(5)  # TypeError: 'int' object is not iterable
+```
+- Muốn thêm nguyên từng list con (không phải rã ra từng phần tử): dùng `append()`.
+
+Bạn muốn xem cách dùng extend cho bài toán thực tế nào (ví dụ xử lý dữ liệu, cộng mảng, nối văn bản...) hãy cho mình biết nhé!
+
+**Phương thức `extend()` trong Python**  
+- Được sử dụng để **thêm từng phần tử của một iterable** (danh sách, tuple, set, v.v) vào cuối danh sách gốc.  
+- Khác với `append()` chỉ thêm một phần tử vào cuối danh sách.
+
+**Cú pháp:**  
+```python
+list1.extend(iterable)
+```
+*Trong đó*:  
+- `list1`: danh sách cần mở rộng
+- `iterable`: đối tượng có thể lặp (list, tuple, v.v) muốn thêm vào
+
+**Ví dụ:**  
+```python
+a = [1, 2, 3]
+b = [4, 5]
+a.extend(b)
+print(a)  # Kết quả: [1, 2, 3, 4, 5]
+```
+- Nếu dùng `a.append(b)`, kết quả sẽ là `[1, 2, 3, [4][5]]` vì cả b được thêm như một phần tử.
+
+**Lưu ý:**  
+- Có thể dùng với bất kỳ đối tượng iterable nào: tuple, set, string...
+- Giá trị trả về của `extend()` là `None` (thay đổi trực tiếp danh sách gốc).
+
+**Ví dụ với tuple và string:**  
+```python
+a = [1, 2, 3]
+a.extend((4, 5))
+print(a)  # [1, 2, 3, 4, 5]
+
+a.extend('67')
+print(a)  # [1, 2, 3, 4, 5, '6', '7']
+```
+
+**Tóm tắt:**  
+- `list.extend(iterable)` giúp nối các phần tử của iterable vào list, mở rộng kích thước danh sách ban đầu.
+
+Bạn muốn xem thêm các ví dụ nâng cao hoặc ứng dụng cụ thể không?
+
