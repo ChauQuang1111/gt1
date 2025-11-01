@@ -1,0 +1,244 @@
+3217. Delete Nodes From Linked List Present in Array
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def modifiedList(self, nums: List[int], head: Optional[ListNode]) -> Optional[ListNode]:
+        prev=head
+        sety=set(nums)
+        while head.val in sety:
+            head=head.next
+        prev=head
+        temp=head
+        if head.next:
+            head=head.next
+            while head:
+                if head.val not in sety:
+                    prev.next=head
+                    prev=head
+                head=head.next
+            if prev.next and  prev.next.val in sety:
+                prev.next=None
+        return temp
+
+Tốt lắm 👍 — giờ mình chỉ tập trung **giải thích đúng 5 dòng này** nhé:
+
+```python
+prev = head
+sety = set(nums)
+while head.val in sety:
+    head = head.next
+prev = head
+temp = head
+```
+
+---
+
+### 🧠 Mục tiêu của đoạn này:
+
+→ Xử lý **phần đầu của danh sách liên kết** (head)
+→ Bỏ qua các node đầu tiên có giá trị nằm trong `nums`
+→ Xác định lại **điểm bắt đầu mới (head)** của danh sách sau khi xóa.
+
+---
+
+### 🔍 Giải thích từng dòng:
+
+#### 1️⃣ `prev = head`
+
+* Ban đầu, `prev` trỏ cùng vị trí với `head` (node đầu danh sách).
+* `prev` sẽ được dùng sau này để **nối các node không bị xóa** lại với nhau.
+
+---
+
+#### 2️⃣ `sety = set(nums)`
+
+* Chuyển danh sách `nums` thành **tập hợp (set)** để tìm kiếm nhanh hơn.
+  → ví dụ: nếu `nums = [1, 2, 5]`, thì `sety = {1, 2, 5}`.
+* Kiểm tra xem `head.val in sety` sẽ nhanh hơn rất nhiều (O(1)).
+
+---
+
+#### 3️⃣ `while head.val in sety:`
+
+* Kiểm tra xem **node đầu tiên** có cần bị xóa không.
+* Nếu `head.val` nằm trong `sety`, thì **bỏ qua node đó**:
+
+  ```python
+  head = head.next
+  ```
+* Vòng lặp tiếp tục cho đến khi tìm được **node đầu tiên mà giá trị KHÔNG nằm trong `nums`**.
+
+👉 Khi vòng `while` kết thúc, `head` trỏ tới **node đầu tiên nên được giữ lại** (head mới của danh sách).
+
+---
+
+#### 4️⃣ `prev = head`
+
+* Sau khi đã tìm được node đầu tiên hợp lệ, gán `prev = head`
+  → `prev` giờ trỏ đến node đầu tiên **không bị xóa**
+  → để sau này có thể nối với các node tiếp theo.
+
+---
+
+#### 5️⃣ `temp = head`
+
+* Lưu lại node đầu tiên hợp lệ trong `temp`,
+  vì sau này `head` sẽ tiếp tục di chuyển trong quá trình duyệt.
+* Cuối hàm, `temp` sẽ được **return** làm **head mới của danh sách**.
+
+---
+
+### 📊 Ví dụ minh họa:
+
+Giả sử:
+
+```
+nums = [1, 2]
+Danh sách: 1 → 2 → 3 → 4
+```
+
+Khi chạy:
+
+| Bước | head.val | Hành động                         | head sau đó |
+| ---- | -------- | --------------------------------- | ----------- |
+| 1    | 1        | `1 in sety` → bỏ qua              | head = 2    |
+| 2    | 2        | `2 in sety` → bỏ qua              | head = 3    |
+| 3    | 3        | `3 not in sety` → dừng vòng while | head = 3    |
+
+→ Giờ `head = 3`, `prev = 3`, `temp = 3`
+→ Danh sách mới sẽ bắt đầu từ node có giá trị 3.
+
+---
+
+Bạn có muốn mình tiếp tục giải thích **phần còn lại của hàm** (sau `temp = head`) để thấy cách nó xóa các node giữa danh sách không?
+Rất hay 👍 — bây giờ ta giải thích **đoạn thứ hai** của hàm nhé.
+Đây là phần **duyệt tiếp danh sách liên kết** để **xóa các node nằm trong `nums`** (không chỉ ở đầu, mà cả giữa hoặc cuối).
+
+---
+
+### 💡 Code cần giải thích:
+
+```python
+if head.next:
+    head = head.next
+    while head:
+        if head.val not in sety:
+            prev.next = head
+            prev = head
+        head = head.next
+    if prev.next and prev.next.val in sety:
+        prev.next = None
+return temp
+```
+
+---
+
+### 🧩 Giải thích từng phần
+
+#### 1️⃣ `if head.next:`
+
+* Nếu danh sách còn phần tử tiếp theo (`head.next` tồn tại),
+  thì mới bắt đầu quá trình duyệt tiếp.
+
+---
+
+#### 2️⃣ `head = head.next`
+
+* Dịch con trỏ `head` sang node kế tiếp.
+  (vì lúc này `prev` đang trỏ ở node đầu hợp lệ rồi).
+
+---
+
+#### 3️⃣ `while head:`
+
+* Duyệt qua **toàn bộ phần còn lại** của danh sách.
+
+---
+
+#### 4️⃣ `if head.val not in sety:`
+
+* Nếu giá trị **không nằm trong tập cần xóa (`sety`)**
+  → nghĩa là **giữ lại node này**.
+
+---
+
+#### 5️⃣ `prev.next = head`
+
+* Nối node hợp lệ (`head`) vào sau node trước đó (`prev`).
+  → Giúp “xây lại” danh sách liên kết chỉ gồm các node được giữ lại.
+
+---
+
+#### 6️⃣ `prev = head`
+
+* Di chuyển `prev` sang node hiện tại (vì node này đã được giữ lại).
+
+---
+
+#### 7️⃣ `head = head.next`
+
+* Tiếp tục sang node tiếp theo trong danh sách (duyệt đến hết).
+
+---
+
+#### 8️⃣ `if prev.next and prev.next.val in sety:`
+
+* Sau khi kết thúc vòng lặp, có thể `prev.next` vẫn trỏ đến **một node bị xóa** (node cuối).
+* Kiểm tra nếu đúng vậy → **ngắt kết nối danh sách ở đó**.
+
+```python
+prev.next = None
+```
+
+---
+
+#### 9️⃣ `return temp`
+
+* `temp` chính là **head mới của danh sách** (đã lưu từ đầu).
+* Trả về danh sách sau khi đã loại bỏ hết các node có giá trị nằm trong `nums`.
+
+---
+
+### 🧠 Ví dụ minh họa:
+
+Giả sử:
+
+```
+nums = [2, 4]
+Danh sách: 1 → 2 → 3 → 4 → 5
+```
+
+**Bước 1:**
+
+* Sau khi xử lý phần đầu (`while head.val in sety`), ta có:
+  `head = 1`, `prev = 1`, `temp = 1`
+
+**Bước 2:**
+
+* Duyệt tiếp từ node `2`:
+
+  * Node 2 ∈ sety → bỏ qua
+  * Node 3 ∉ sety → nối vào: `1 → 3`
+  * Node 4 ∈ sety → bỏ qua
+  * Node 5 ∉ sety → nối vào: `3 → 5`
+
+**Kết quả cuối:**
+`temp (head mới)` → 1 → 3 → 5
+
+---
+
+### ✅ Tóm tắt logic toàn hàm
+
+| Bước | Mục tiêu                             | Kết quả                             |
+| ---- | ------------------------------------ | ----------------------------------- |
+| 1    | Bỏ qua các node đầu nằm trong `nums` | Xác định head mới                   |
+| 2    | Duyệt phần còn lại                   | Giữ node không trong `nums`         |
+| 3    | Cắt phần đuôi (nếu còn node cần xóa) | Tránh danh sách dính node thừa      |
+| 4    | Trả về `temp`                        | Head mới của danh sách đã chỉnh sửa |
+
+---
+
+Bạn có muốn mình **viết lại phiên bản ngắn gọn và sạch hơn** (không lặp logic, không cần `if head.next`) nhưng vẫn chạy đúng 100% không?

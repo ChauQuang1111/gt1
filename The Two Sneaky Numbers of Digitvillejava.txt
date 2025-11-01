@@ -1,0 +1,212 @@
+3289. The Two Sneaky Numbers of Digitville
+class Solution {
+    public int[] getSneakyNumbers(int[] nums) {
+        int[] result = new int[2];
+        int count = 0;
+        for (int i = 0; i < nums.length; i++) {
+            for (int j = i + 1; j < nums.length; j++) {  
+                if (nums[i] == nums[j]) {
+                    result[count] = nums[i];
+                    count++;
+                    break;  
+                }
+            }
+        }     return result;
+    }
+}
+Câu hỏi của bạn rất hay 👏 — dòng
+
+```java
+int[] result = new int[2];
+```
+
+**không có nghĩa là “bắt đầu từ vị trí thứ 2”**, mà là **tạo một mảng có độ dài 2**.
+👉 Nghĩa là: mảng `result` có **2 ô nhớ**, để lưu **2 số bị trùng**.
+
+---
+
+### 🔍 Giải thích chi tiết:
+
+Cụ thể trong bài **"The Two Sneaky Numbers of Digitville"**,
+đề bài nói rằng:
+
+> Có **chính xác hai số** trong mảng xuất hiện **hai lần**.
+
+Ví dụ:
+
+```
+nums = [0, 3, 2, 1, 3, 2]
+```
+
+* Số `3` xuất hiện 2 lần
+* Số `2` xuất hiện 2 lần
+  → Vậy đáp án là `[3, 2]`
+
+---
+
+### 🧠 Vì sao là `new int[2]`?
+
+* `int[] result = new int[2];`
+  → tạo ra một **mảng rỗng gồm 2 phần tử**, mặc định đều là `0`:
+
+  ```
+  result = [0, 0]
+  ```
+
+* Sau khi tìm được số trùng đầu tiên (ví dụ `3`):
+
+  ```
+  result[0] = 3
+  ```
+
+* Khi tìm được số trùng thứ hai (ví dụ `2`):
+
+  ```
+  result[1] = 2
+  ```
+
+=> Cuối cùng:
+
+```
+result = [3, 2]
+```
+
+---
+
+### ⚙️ Không phải “bắt đầu từ vị trí thứ 2”
+
+* Chỉ đơn giản là **khởi tạo mảng có 2 phần tử**.
+* Các phần tử trong mảng **vẫn được đánh chỉ số từ 0**:
+
+  * `result[0]` → số trùng đầu tiên
+  * `result[1]` → số trùng thứ hai
+
+---
+
+👉 Tóm lại:
+
+> `new int[2]` nghĩa là “tạo mảng có thể chứa 2 giá trị”,
+> không liên quan gì đến việc “bắt đầu từ vị trí thứ 2” cả.
+Rất hay 👍 — mình sẽ giải thích từng dòng của đoạn code này để bạn hiểu rõ **thuật toán hoạt động thế nào** nhé:
+
+---
+
+### 🔍 Mục tiêu của bài toán
+
+Tìm **2 số bị trùng** trong mảng `nums`.
+Ví dụ:
+
+```
+nums = [0, 3, 2, 1, 3, 2]
+→ Kết quả: [3, 2]
+```
+
+---
+
+### 🔢 Giải thích từng dòng:
+
+```java
+for (int i = 0; i < nums.length; i++) {
+```
+
+👉 Duyệt qua **từng phần tử** trong mảng `nums` bằng chỉ số `i`.
+Ví dụ: `i` chạy qua `0, 1, 2, 3, 4, 5` nếu mảng có 6 phần tử.
+
+---
+
+```java
+for (int j = i + 1; j < nums.length; j++) {  
+```
+
+👉 Vòng lặp thứ hai (lồng trong vòng ngoài) duyệt từ **phần tử kế tiếp của i** (`i + 1`)
+đến hết mảng để **so sánh xem có phần tử nào trùng với nums[i] không**.
+
+✅ Mục đích là:
+
+* Tránh so sánh lại chính phần tử `nums[i]`.
+* Tránh so sánh trùng lặp ngược (vì nếu đã so sánh `i=1, j=2`, thì không cần so `i=2, j=1` nữa).
+
+---
+
+```java
+if (nums[i] == nums[j]) {
+```
+
+👉 Nếu tìm thấy **2 phần tử trùng nhau** trong mảng (`nums[i]` bằng `nums[j]`),
+thì đây là **một trong hai số bị lặp lại** mà đề bài yêu cầu tìm.
+
+---
+
+```java
+result[count] = nums[i];
+```
+
+👉 Lưu số trùng (`nums[i]`) vào mảng `result`.
+
+* `count` là chỉ số hiện tại trong mảng kết quả (0 hoặc 1).
+* Khi tìm thấy số đầu tiên → lưu vào `result[0]`
+* Khi tìm thấy số thứ hai → lưu vào `result[1]`.
+
+---
+
+```java
+count++;
+```
+
+👉 Tăng biến đếm `count` để chuyển sang vị trí tiếp theo trong mảng `result`.
+
+---
+
+```java
+break;
+```
+
+👉 Khi đã tìm thấy cặp trùng cho `nums[i]`,
+thì **không cần tiếp tục so sánh i với các j còn lại**,
+nên thoát khỏi vòng `for (j...)` để tiết kiệm thời gian.
+
+---
+
+```java
+return result;
+```
+
+👉 Sau khi duyệt hết mảng, trả về mảng `result` chứa 2 số trùng.
+
+---
+
+### 🧠 Ví dụ minh họa:
+
+Giả sử:
+
+```
+nums = [0, 3, 2, 1, 3, 2]
+```
+
+| i | j   | nums[i] | nums[j]   | So sánh         | result        |
+| - | --- | ------- | --------- | --------------- | ------------- |
+| 0 | 1–5 | 0       | 3,2,1,3,2 | Không trùng     | —             |
+| 1 | 2–5 | 3       | 2,1,3,2   | ✅ Trùng tại j=4 | result[0] = 3 |
+| 2 | 3–5 | 2       | 1,3,2     | ✅ Trùng tại j=5 | result[1] = 2 |
+
+➡ Cuối cùng:
+
+```
+result = [3, 2]
+```
+
+---
+
+### ✅ Tổng kết thuật toán:
+
+* Duyệt qua từng cặp phần tử `(i, j)` trong mảng.
+* Nếu hai phần tử bằng nhau → đó là số bị trùng.
+* Lưu vào mảng `result` gồm đúng **2 phần tử** (vì đề bài đảm bảo chỉ có 2 số trùng).
+* Trả về kết quả `[số_trùng_1, số_trùng_2]`.
+
+---
+
+👉 Tóm gọn:
+
+> **Ý tưởng:** So sánh mọi cặp phần tử trong mảng để tìm hai số xuất hiện 2 lần.
+> **Độ phức tạp:** O(n²) vì có hai vòng lặp lồng nhau.

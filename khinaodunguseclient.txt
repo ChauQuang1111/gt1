@@ -1,0 +1,153 @@
+Bạn nên dùng `'use client'` trong Next.js khi bạn cần mã JavaScript chạy ở phía **frontend (client-side)** thay vì phía server. Dưới đây là một số trường hợp phổ biến khi cần dùng `'use client'`:
+
+- **Tương tác với trình duyệt**: Nếu component sử dụng các API của trình duyệt (như window, document, localStorage...) hoặc có thao tác DOM, bắt buộc phải là component client.
+- **Quản lý trạng thái phía client**: Sử dụng các hook như `useState`, `useEffect`, `useRef` (hoặc những hook phụ thuộc vào client-side) thì phải thêm `'use client'` ở đầu file.
+- **Event handlers**: Nếu bạn có các event như onClick, onChange,... trực tiếp trong component thì cần client component để xử lý phía người dùng.
+- **Thư viện chỉ hỗ trợ client**: Nhiều thư viện giao diện (UI libraries), animation, hoặc các thư viện không tương thích với server, ví dụ như các thư viện về chuyển động (framer-motion) hoặc authentication client.
+
+Ngược lại, không nên dùng `'use client'` nếu:
+- Component chỉ render tĩnh, không phụ thuộc gì vào phía client.
+- Bạn muốn tối ưu hiệu năng render phía server (SSR) và tận dụng Next.js server components.
+
+**Cách viết:**
+Đặt dòng `'use client'` ở đầu file component:
+```javascript
+'use client'
+
+import { useState, useEffect } from 'react'
+
+export default function MyComponent() {
+  // Mã phía client
+}
+```
+
+**Lưu ý:**
+- Chỉ cần đặt `'use client'` ở đầu file, tất cả các component con bên trong file đó sẽ đều được coi là client component.
+- Server component không thể import trực tiếp client component, ngược lại thì được.
+
+Tóm lại:  
+**Hãy dùng `'use client'` khi component của bạn cần xử lý phía trình duyệt hoặc sử dụng các hook/state phía client. Nếu không có nhu cầu này, bạn nên để là server component để tận dụng khả năng tối ưu của Next.js!**
+
+Việc này dễ gây rối cho nhiều người mới bắt đầu với Next.js! Để bạn dễ hiểu hơn, hãy xem **nguyên tắc và ví dụ phân biệt** khi phát triển FE với Next.js từ bản 13 trở lên:
+
+***
+
+**1. Khi nào KHÔNG cần `'use client'`:**
+- Nếu component chỉ để hiển thị dữ liệu tĩnh (không dùng hook, không dùng window/document, không có sự kiện như onClick).
+- Component này có thể chạy trên server để tận dụng SSR (Server Side Rendering).
+- Ví dụ:
+  ```jsx
+  export default function Title() {
+    return <h1>Hello Next.js</h1>;
+  }
+  ```
+  → Không cần `'use client'`. Next.js tự coi đây là server component.
+
+***
+
+**2. Khi nào CẦN `'use client'`:**
+- Khi dùng **các React Hook**: `useState`, `useEffect`, `useRef` v.v.
+- Khi tương tác với **biến môi trường hoặc API trình duyệt** (`window`, `localStorage`, ...)
+- Khi component có **event** như onClick, onChange,...
+- Khi dùng **thư viện chỉ hỗ trợ client-side** (animation, thao tác DOM,...)
+- Ví dụ:
+  ```jsx
+  'use client';
+
+  import { useState } from 'react';
+
+  export default function Button() {
+    const [count, setCount] = useState(0);
+    return <button onClick={() => setCount(count+1)}>Đã bấm {count}</button>;
+  }
+  ```
+  → Phải có `'use client'` ở đầu file.
+
+***
+
+**3. Mẹo nhớ:**
+- **Nếu file có hook hoặc dùng API trình duyệt** → phải `'use client'`.
+- **Nếu chỉ render dữ liệu hoặc HTML tĩnh** → KHÔNG cần.
+- Nếu chưa chắc, hãy chọn KHÔNG dùng `'use client'` trước. Nếu Next.js báo lỗi (hoặc bạn cần dùng hook/event), thì thêm.
+
+***
+
+**4. Hệ thống Next.js hoạt động thế nào:**
+- **Server Component:** render trên server, ít tốn tài nguyên FE, tốt cho SEO.
+- **Client Component:** render trên trình duyệt, cần khi xử lý tương tác và động.
+
+***
+
+**Kết luận:**  
+- **Không phải lúc nào viết FE cũng cần `'use client'`!** Chỉ dùng khi cần tương tác hoặc các tính năng phía client, còn lại cứ để mặc định server component cho tối ưu và dễ maintain.
+
+Nếu bạn muốn ví dụ rõ hơn hoặc phân biệt cụ thể case thực tế hãy đưa code bạn đang thắc mắc nhé!
+Để **phân biệt file nào là server component (SSR) và file nào là client component (FE)** trong Next.js, bạn chỉ cần dựa vào quy tắc sau:
+
+***
+
+### **Phân biệt thủ công:**
+
+- **Server Component** (chạy trên server):
+  - **Không có dòng `'use client'`** ở đầu file.
+  - Không sử dụng hook như `useState`, `useEffect`, v.v.
+  - Không truy cập các API trình duyệt (window, document,...).
+  - Thường dùng để fetch dữ liệu, render trang tĩnh/SEO, truyền props xuống client component.
+  - **File mặc định luôn là server component** nếu không có `'use client'`.
+
+- **Client Component** (chạy trên trình duyệt):
+  - **Có dòng `'use client'`** ở đầu file.
+  - Sử dụng hook, event handler (onClick, onChange,...), và các API trình duyệt.
+  - Xử lý logic/animation phía client và các tương tác trực tiếp.
+
+***
+
+### **Mẹo thực hành cho file của bạn:**
+
+1. **Xem có xài hook/event không:**  
+   - Nếu trong file có `useState`, `useEffect`, các hàm xử lý sự kiện (onClick,...) → **must dùng `'use client'` → FE**
+   - Nếu chỉ render JSX tĩnh, truyền dữ liệu xuống qua props → **bỏ qua `'use client'` → Server**
+
+2. **Kiểm tra đầu mỗi file:**  
+   - Nếu thấy dòng `'use client'` là FE.
+   - Không thấy thì cứ coi là server (trừ khi bị import từ file FE).
+
+3. **Tự tạo cấu trúc folder:**
+   - Đặt các **component FE** vào folder ví dụ `components/client/`.
+   - Đặt **component server** vào `components/server/`.
+   - Không bắt buộc, nhưng sẽ rất dễ quản lý dự án lớn!
+
+4. **Đọc và khi build:**  
+   - Next.js tự động nhận diện, nhưng bạn nên kiểm tra lại các file không có `'use client'` mà lại xài hook hoặc event thì sẽ báo lỗi/không hoạt động đúng.
+
+***
+
+### **Ví dụ thực tế:**
+
+```
+// File chỉ render data (Server component)
+export default function Product({ name }) {
+  return <h2>{name}</h2>;
+}
+```
+
+```
+// File dùng useState, event (Client component)
+'use client'
+import { useState } from 'react';
+export default function Counter() {
+  const [count, setCount] = useState(0);
+  return <button onClick={() => setCount(count+1)}>{count}</button>
+}
+```
+
+***
+
+**Tổng kết:**
+- **Server component = Không có dòng `'use client'`, không dùng hook/event**
+- **Client component = Có dòng `'use client'`, dùng hook/event hoặc cần API trình duyệt**
+- Chỉ cần kiểm tra đầu file và code bên trong là biết ngay!
+
+Nếu bạn có một file cụ thể hoặc đoạn code muốn kiểm tra giúp, gửi mình nhé!
+
+[1](comet://newtab/)
