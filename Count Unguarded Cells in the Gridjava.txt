@@ -1,0 +1,436 @@
+Count Unguarded Cells in the Grid
+class Solution {
+    public int countUnguarded(int m, int n, int[][] guards, int[][] walls) {
+          int visit[][]=new int[m][n];
+          int count=0;
+          int gr=guards.length;
+          int wr=walls.length;
+          for(int[] wall:walls){
+            visit[wall[0]][wall[1]]=2;
+          }
+          for(int gu[]:guards){
+            visit[gu[0]][gu[1]]=2;
+        }
+          int[][] dxdy={{-1,0},{1,0},{0,-1},{0,1}};
+          for(int row=0;row<gr;row++){
+                int dx=guards[row][0];
+                int dy=guards[row][1];
+                for(int i=dx+1;i<m;i++)
+                {
+                    int newdx=i;
+                    int newdy=dy;
+                    if(visit[newdx][newdy]==2)
+                    {
+                        break;
+                    } 
+                    if(visit[newdx][newdy]==1)
+                    {
+                        continue;
+                    }
+                    visit[newdx][newdy]=1;
+                    count++;
+                }
+                for(int i=dy+1;i<n;i++)
+                {
+                    int newdx=dx;
+                    int newdy=i;
+                    if(visit[newdx][newdy]==2)
+                    {
+                        break;
+                    }
+                    if(visit[newdx][newdy]==1){
+                        continue;
+                    }
+                    visit[newdx][newdy]=1;
+                    count++;
+
+                }
+                for(int i=dy-1;i>=0;i--)
+                {
+                    int newdx=dx;
+                    int newdy=i;
+                    if(visit[newdx][newdy]==2)
+                    {
+                        break;
+                    }
+                        
+                    if(visit[newdx][newdy]==1){
+                        continue;
+                    }
+                    visit[newdx][newdy]=1;
+                    count++;
+
+                }
+                for(int i=dx-1;i>=0;i--)
+                {
+                    int newdx=i;
+                    int newdy=dy;
+                    if(visit[newdx][newdy]==2)
+                    {
+                        break;
+                    }
+                        
+                    if(visit[newdx][newdy]==1){
+                        continue;
+                    }
+                    visit[newdx][newdy]=1;
+                    count++;
+                }
+            
+          }
+          
+          int sum=(m*n)-(gr+wr+count);
+          return sum;
+
+    }
+Rất tốt 👍 — hai vòng `for` này là **bước khởi tạo trạng thái ban đầu** của lưới trong bài “**Count Unguarded Cells in the Grid**”.
+Cùng mình giải thích chi tiết từng dòng nhé 👇
+
+---
+
+### 🧩 Đoạn code:
+
+```java
+for (int[] wall : walls) {
+    visit[wall[0]][wall[1]] = 2;
+}
+for (int[] gu : guards) {
+    visit[gu[0]][gu[1]] = 2;
+}
+```
+
+---
+
+### 🧠 Giải thích từng phần:
+
+#### ✅ 1️⃣ `for (int[] wall : walls)`
+
+* Biến `walls` là **mảng chứa tọa độ các bức tường** trong lưới.
+
+  * Mỗi phần tử `wall` là một mảng con gồm 2 phần tử: `[row, column]`.
+* Cú pháp `for (int[] wall : walls)` là **enhanced for loop** trong Java — giúp duyệt qua từng phần tử `wall` trong `walls`.
+
+---
+
+#### ✅ 2️⃣ `visit[wall[0]][wall[1]] = 2;`
+
+* Ta có ma trận `visit` kích thước `m x n` dùng để lưu trạng thái từng ô trong lưới.
+* `wall[0]` là **chỉ số hàng (row)**, `wall[1]` là **chỉ số cột (column)**.
+* Khi gán `visit[wall[0]][wall[1]] = 2`, nghĩa là:
+  → ô tại vị trí `(row, column)` có **tường**, nên ta **đánh dấu là “chặn tầm nhìn”**.
+
+---
+
+#### ✅ 3️⃣ `for (int[] gu : guards)`
+
+* Tương tự như trên, nhưng lần này duyệt qua danh sách `guards`.
+* Mỗi phần tử `gu` là tọa độ của một **guard** (lính canh).
+
+---
+
+#### ✅ 4️⃣ `visit[gu[0]][gu[1]] = 2;`
+
+* Đánh dấu ô có **guard** bằng giá trị `2` (cùng loại với tường, vì guard cũng “chặn tầm nhìn” của các guard khác).
+
+---
+
+### 💡 Ý tưởng tổng quát:
+
+Sau 2 vòng lặp này, **mọi ô chứa tường hoặc guard đều được đánh dấu là `2`** trong ma trận `visit`.
+→ Điều này giúp khi guard quét tầm nhìn, ta biết **nơi nào cần dừng lại** (vì không thể nhìn xuyên qua tường hoặc guard).
+
+---
+
+### 🔍 Ví dụ minh họa:
+
+Giả sử:
+
+```java
+m = 3, n = 4
+guards = [[0,1], [2,3]]
+walls = [[1,1]]
+```
+
+Ban đầu:
+
+```
+visit =
+0 0 0 0
+0 0 0 0
+0 0 0 0
+```
+
+Sau khi chạy hai vòng `for`:
+
+```
+visit =
+0 2 0 0
+0 2 0 0
+0 0 0 2
+```
+
+👉 `2` ở đây thể hiện:
+
+* Có **guard** ở (0,1) và (2,3)
+* Có **tường** ở (1,1)
+* Các ô còn lại = 0 (trống)
+
+---
+
+Bạn có muốn mình giúp thêm chú thích trực tiếp (bằng comment `// ...`) vào đoạn code Java này cho dễ hiểu không?
+Rất hay 👏 — đây chính là **phần cốt lõi** của thuật toán, nơi mỗi **guard** “quan sát” bốn hướng (trên, dưới, trái, phải) trong lưới để đánh dấu các ô mà họ có thể nhìn thấy.
+Giờ mình sẽ giải thích chi tiết từng bước, dễ hiểu nhất có thể 👇
+
+---
+
+## 🧩 Mục tiêu đoạn code:
+
+👉 Với **mỗi guard**, ta quét bốn hướng:
+
+* **trên (up)**
+* **dưới (down)**
+* **trái (left)**
+* **phải (right)**
+
+Khi guard nhìn thấy ô nào (không bị tường hoặc guard khác chắn), ta **đánh dấu ô đó là bị giám sát (giá trị `1`)**
+và **tăng biến `count`** để đếm tổng số ô bị giám sát.
+
+---
+
+## 🧠 Giải thích chi tiết từng phần:
+
+### 1️⃣ Duyệt qua từng guard
+
+```java
+for (int row = 0; row < gr; row++) {
+    int dx = guards[row][0];
+    int dy = guards[row][1];
+```
+
+* `gr` là số lượng guard.
+* `guards[row]` chứa tọa độ của guard thứ `row`.
+* `dx` = hàng (row), `dy` = cột (column) của guard.
+
+---
+
+### 2️⃣ Hướng **xuống dưới**
+
+```java
+for (int i = dx + 1; i < m; i++) {
+    int newdx = i;
+    int newdy = dy;
+    if (visit[newdx][newdy] == 2) {
+        break; // gặp tường hoặc guard khác → dừng
+    }
+    if (visit[newdx][newdy] == 1) {
+        continue; // ô đã bị giám sát rồi → bỏ qua
+    }
+    visit[newdx][newdy] = 1; // đánh dấu ô này bị giám sát
+    count++; // tăng số lượng ô bị giám sát
+}
+```
+
+🔹 Quét từ vị trí ngay dưới guard (`dx+1`) đến hết hàng (`m`).
+🔹 Dừng lại nếu gặp `2` (tường hoặc guard).
+🔹 Bỏ qua nếu ô đó đã bị đánh dấu (`1`).
+🔹 Nếu là ô trống (`0`), đánh dấu nó (`1`) và tăng `count`.
+
+---
+
+### 3️⃣ Hướng **qua phải**
+
+```java
+for (int i = dy + 1; i < n; i++) {
+    int newdx = dx;
+    int newdy = i;
+    if (visit[newdx][newdy] == 2) {
+        break;
+    }
+    if (visit[newdx][newdy] == 1) {
+        continue;
+    }
+    visit[newdx][newdy] = 1;
+    count++;
+}
+```
+
+Tương tự — quét từ phải qua, dừng khi gặp `2`, đánh dấu `1` nếu thấy ô trống.
+
+---
+
+### 4️⃣ Hướng **qua trái**
+
+```java
+for (int i = dy - 1; i >= 0; i--) {
+    int newdx = dx;
+    int newdy = i;
+    if (visit[newdx][newdy] == 2) {
+        break;
+    }
+    if (visit[newdx][newdy] == 1) {
+        continue;
+    }
+    visit[newdx][newdy] = 1;
+    count++;
+}
+```
+
+Tương tự như trên, nhưng quét từ phải sang trái (giảm dần chỉ số cột `i`).
+
+---
+
+### 5️⃣ Hướng **lên trên**
+
+```java
+for (int i = dx - 1; i >= 0; i--) {
+    int newdx = i;
+    int newdy = dy;
+    if (visit[newdx][newdy] == 2) {
+        break;
+    }
+    if (visit[newdx][newdy] == 1) {
+        continue;
+    }
+    visit[newdx][newdy] = 1;
+    count++;
+}
+```
+
+Tương tự, quét từ vị trí guard đi lên (giảm chỉ số hàng `i`).
+
+---
+
+## 🔍 Tổng hợp ý nghĩa:
+
+| Giá trị trong `visit` | Nghĩa                                 |
+| :-------------------- | :------------------------------------ |
+| `0`                   | Ô trống (chưa bị giám sát)            |
+| `1`                   | Ô bị guard giám sát                   |
+| `2`                   | Ô có guard hoặc tường (chặn tầm nhìn) |
+
+---
+
+## 💡 Ví dụ minh họa:
+
+Giả sử:
+
+```
+m = 4, n = 4
+guard = (1,1)
+walls = [(1,3)]
+```
+
+Ban đầu:
+
+```
+0 0 0 0
+0 2 0 2
+0 0 0 0
+0 0 0 0
+```
+
+Sau khi guard quét:
+
+```
+0 1 0 0
+1 2 1 2
+0 1 0 0
+0 0 0 0
+```
+
+→ Các ô có `1` là **bị giám sát**
+→ Ô có `2` là **tường hoặc guard**
+→ Ô có `0` là **chưa bị giám sát**
+
+---
+
+Bạn có muốn mình thêm chú thích trực tiếp (`// ...`) vào **từng dòng trong đoạn for này** để bạn copy học dễ hơn không?
+Rất hay 👍 — hai dòng này chính là **bước tính kết quả cuối cùng** của thuật toán.
+Chúng xác định **số lượng ô không bị giám sát (unguarded cells)** sau khi đã xử lý hết guard và tường.
+Cùng giải thích chi tiết từng phần nhé 👇
+
+---
+
+### 🧩 Đoạn code:
+
+```java
+int sum = (m * n) - (gr + wr + count);
+return sum;
+```
+
+---
+
+### 🧠 Giải thích từng bước:
+
+#### ✅ `m * n`
+
+* Tổng số ô (cells) trong lưới hình chữ nhật có kích thước `m × n`.
+  → Ví dụ: nếu `m = 3`, `n = 4` thì có `3 × 4 = 12` ô tất cả.
+
+---
+
+#### ✅ `(gr + wr + count)`
+
+Đây là **tổng số ô không “trống an toàn”**, bao gồm:
+
+* `gr` → số lượng **guards** (lính canh).
+* `wr` → số lượng **walls** (bức tường).
+* `count` → số lượng **ô bị giám sát** (guard có thể nhìn thấy).
+
+=> Ba loại ô này **không được tính là unguarded**, vì chúng:
+
+1. Hoặc **bị chiếm** (guard, wall),
+2. Hoặc **đã bị giám sát** (guard có thể nhìn thấy ô đó).
+
+---
+
+#### ✅ `(m * n) - (gr + wr + count)`
+
+* Đây là **số ô còn lại** sau khi loại bỏ hết:
+
+  * Guard,
+  * Wall,
+  * Ô bị giám sát.
+
+→ Kết quả chính là **số lượng ô "unguarded"** – tức là **an toàn, không bị nhìn thấy**.
+
+---
+
+#### ✅ `return sum;`
+
+* Trả về giá trị `sum` làm kết quả cuối cùng của hàm.
+
+---
+
+### 💡 Ví dụ minh họa:
+
+Giả sử:
+
+```
+m = 3, n = 3
+guards = [[0,0]]
+walls = [[1,1]]
+count = 4  // có 4 ô bị giám sát
+```
+
+Tổng ô: `m * n = 9`
+Số ô không trống: `gr + wr + count = 1 + 1 + 4 = 6`
+→ `sum = 9 - 6 = 3`
+
+✅ Kết quả: **3 ô unguarded**
+
+---
+
+### 🧾 Tóm lại:
+
+| Biến    | Ý nghĩa                                  |
+| ------- | ---------------------------------------- |
+| `m * n` | Tổng số ô trong lưới                     |
+| `gr`    | Số guard                                 |
+| `wr`    | Số tường                                 |
+| `count` | Số ô bị giám sát                         |
+| `sum`   | Số ô không bị giám sát (kết quả cần tìm) |
+
+---
+
+Bạn có muốn mình viết lại **toàn bộ đoạn code Java đầy đủ** (có `main` + comment chi tiết từng dòng) để bạn dễ học và chạy thử không?
